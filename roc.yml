@@ -1,0 +1,73 @@
+--- 
+GENERATOR: 
+  PackageName: roc 
+  PackageDescription: "Package roc provides Go bindings for libroc"
+  PackageLicense: ""
+  Includes:
+    - ../include/roc/address.h
+    - ../include/roc/config.h
+    - ../include/roc/context.h
+    - ../include/roc/frame.h
+    - ../include/roc/log.h
+    - ../include/roc/platform.h
+    - ../include/roc/receiver.h
+    - ../include/roc/sender.h
+  FlagGroups:
+    - {name: "CFLAGS", flags: [
+        "-I\"../include\"",
+    ]}
+    - {name: "LDFLAGS", flags: [
+      "-lroc",
+    ]} 
+    
+PARSER:
+  IncludePaths: ["include", "/usr/lib/gcc/x86_64-redhat-linux/9/include"]
+  SourcesPaths:
+    - include/roc/address.h
+    - include/roc/config.h
+    - include/roc/context.h
+    - include/roc/frame.h
+    - include/roc/log.h
+    - include/roc/platform.h
+    - include/roc/receiver.h
+    - include/roc/sender.h
+
+TRANSLATOR: 
+  ConstRules: 
+    defines: expand
+  PtrTips:
+    function:
+      - {target: "^roc_address_init$", tips: [ref,0,ref,0]}
+      - {target: "^roc_address_family$", tips: [ref]}
+      - {target: "^roc_address_ip$", tips: [ref,arr]}
+      - {target: "^roc_context", tips: [ref]}
+      - {target: "^roc_receiver_open$", tips: [ref, ref]}
+      - {target: "^roc_receiver_bind$", tips: [ref, 0, 0, ref]}
+      - {target: "^roc_receiver_read$", tips: [ref, ref]}
+      - {target: "^roc_receiver_close$", tips: [ref]}
+      - {target: "^roc_sender_open$", tips: [ref, ref]}
+      - {target: "^roc_sender_bind$", tips: [ref, ref]}
+      - {target: "^roc_sender_connect$", tips: [ref, 0, 0, ref]}
+      - {target: "^roc_sender_write$", tips: [ref, ref]}
+      - {target: "^roc_sender_close$", tips: [ref]}
+      - {target: "^roc_", tips: [sref, sref, sref, sref, sref]}
+  Rules: 
+    global: 
+      - {transform: lower}
+      - {action: accept, from: "^roc_"}
+      - {action: replace, from: "^roc_", to: _}
+      - {transform: unexport}
+    const:
+      - {transform: export}
+      - {action: accept, from: "^ROC_"}
+      - {action: replace, from: "^ROC_", to: _}
+    type: 
+      - {transform: export}
+      - {action: replace, from: "_t$"}
+    function:
+      - {transform: unexport}
+    private:
+      - {transform: unexport}
+    post-global: 
+      - {action: replace, from: _$}
+      - {load: snakecase}
