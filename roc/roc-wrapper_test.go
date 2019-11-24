@@ -2,29 +2,32 @@ package roc
 
 import "testing"
 
-func Test_convertErr(t *testing.T) {
+func Test_NewAddress(t *testing.T) {
 	testcases := []struct {
 		name    string
-		code    int32
+		ip      string
 		wantErr bool
 	}{
 		{
-			name:    "code 0 means no error",
-			code:    0,
+			name:    "correct ip is parsed with no error",
+			ip:      "127.0.0.1",
 			wantErr: false,
 		},
 		{
-			name:    "negative code means error",
-			code:    -1,
+			name:    "incorrect ip causes negative error",
+			ip:      "invalid ip string",
 			wantErr: true,
 		},
 	}
 
 	for _, tt := range testcases {
 		t.Run(tt.name, func(t *testing.T) {
-			err := convertErr(tt.code, "This error is not expected")
+			a, err := NewAddress(AfAuto, tt.ip, 23456)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Want err: %v, err: %v", tt.wantErr, err)
+				t.Errorf("WantErr: %v, got %v", tt.wantErr, err)
+			}
+			if err == nil && a == nil {
+				t.Errorf("Address is nil, no error reported")
 			}
 		})
 	}

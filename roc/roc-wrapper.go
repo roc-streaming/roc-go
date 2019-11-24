@@ -1,19 +1,28 @@
 package roc
 
-import "fmt"
+import "errors"
 
-func convertErr(err int32, errstr string) error {
-	if err == 0 {
-		return nil
-	}
-	return fmt.Errorf("%s: %d", errstr, err)
-}
+var (
+	// ErrInvalidArguments indicates that one or more arguments passed to the function
+	// are invalid
+	ErrInvalidArguments = errors.New("One or more arguments are invalid")
 
-// Init parses the `ip` and `port` and initializes the Address object
+	// ErrInvalidApi should never happen and indicates that the API don't follow the declared contract
+	ErrInvalidApi = errors.New("Invalid API")
+)
+
+// NewAddress parses the `ip`, `port` and `family` and initializes the Address object
 func NewAddress(family Family, ip string, port int) (*Address, error) {
 	a := new(Address)
-	err := addressInit(a, family, ip, int32(port))
-	return a, convertErr(err, "Error when initializing an address")
+	errCode := addressInit(a, family, ip, int32(port))
+
+	if errCode == 0 {
+		return a, nil
+	}
+	if errCode < 0 {
+		return nil, ErrInvalidArguments
+	}
+	return nil, ErrInvalidApi
 }
 
 // Family get Address family
@@ -38,7 +47,14 @@ func OpenContext(config *ContextConfig) *Context {
 }
 
 func (c *Context) Close() error {
-	return convertErr(contextClose(c), "Error when closing context")
+	errCode := contextClose(c)
+	if errCode == 0 {
+		return nil
+	}
+	if errCode < 0 {
+		return errors.New("Arguments are invalid or or there are objects attached to the context")
+	}
+	return ErrInvalidApi
 }
 
 func OpenReceiver(ctx *Context, config *ReceiverConfig) *Receiver {
@@ -46,13 +62,25 @@ func OpenReceiver(ctx *Context, config *ReceiverConfig) *Receiver {
 }
 
 func (r *Receiver) Bind(portType PortType, proto Protocol, address *Address) error {
-	err := receiverBind(r, portType, proto, address)
-	return convertErr(err, "Error while binding a receiver")
+	errCode := receiverBind(r, portType, proto, address)
+	if errCode == 0 {
+		return nil
+	}
+	if errCode < 0 {
+		return errors.New("Arguments are invalid or Address can't be bound or There aren't enough resources")
+	}
+	return ErrInvalidApi
 }
 
 func (r *Receiver) Close() error {
-	err := receiverClose(r)
-	return convertErr(err, "Error while closing a receiver")
+	errCode := receiverClose(r)
+	if errCode == 0 {
+		return nil
+	}
+	if errCode < 0 {
+		return ErrInvalidArguments
+	}
+	return ErrInvalidApi
 }
 
 func OpenSender(ctx *Context, config *SenderConfig) *Sender {
@@ -60,16 +88,31 @@ func OpenSender(ctx *Context, config *SenderConfig) *Sender {
 }
 
 func (s *Sender) Bind(address *Address) error {
-	err := senderBind(s, address)
-	return convertErr(err, "Error while binding address")
+	errCode := senderBind(s, address)
+	if errCode == 0 {
+		return nil
+	}
+	if errCode < 0 {
+		return errors.New("Arguments are invalid or Sender is already bound or Address can't be bound or There aren't enough resources")
+	}
+	return ErrInvalidApi
 }
 
 func (s *Sender) Connect(address *Address, portType PortType, proto Protocol) error {
-	err := senderConnect(s, portType, proto, address)
-	return convertErr(err, "Error while conecting sender")
+	errCode := senderConnect(s, portType, proto, address)
+	if errCode == 0 {
+		return nil
+	}
+	return errors.New("Arguments are invalid or roc_sender_write() was already called")
 }
 
 func (s *Sender) Close() error {
-	err := senderClose(s)
-	return convertErr(err, "Error while closing sender")
+	errCode := senderClose(s)
+	if errCode == 0 {
+		return nil
+	}
+	if errCode < 0 {
+		return ErrInvalidArguments
+	}
+	return ErrInvalidApi
 }
