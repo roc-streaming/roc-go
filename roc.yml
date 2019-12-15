@@ -1,40 +1,28 @@
---- 
-GENERATOR: 
-  PackageName: roc 
+---
+GENERATOR:
+  PackageName: roc
   PackageDescription: "Package roc provides Go bindings for libroc"
-  PackageLicense: ""
-  Includes:
-    - ../include/roc/address.h
-    - ../include/roc/config.h
-    - ../include/roc/context.h
-    - ../include/roc/frame.h
-    - ../include/roc/log.h
-    - ../include/roc/platform.h
-    - ../include/roc/receiver.h
-    - ../include/roc/sender.h
+  PackageLicense: "MIT"
+  Options:
+    SafeStrings: true
+  Includes: ["roc/receiver.h", "roc/sender.h", "roc/log.h"]
   FlagGroups:
-    - {name: "CFLAGS", flags: [
-        "-I\"../include\"",
-    ]}
     - {name: "LDFLAGS", flags: [
       "-lroc",
-    ]} 
-    
-PARSER:
-  IncludePaths: ["include", "/usr/lib/gcc/x86_64-redhat-linux/9/include"]
-  SourcesPaths:
-    - include/roc/address.h
-    - include/roc/config.h
-    - include/roc/context.h
-    - include/roc/frame.h
-    - include/roc/log.h
-    - include/roc/platform.h
-    - include/roc/receiver.h
-    - include/roc/sender.h
+    ]}
 
-TRANSLATOR: 
-  ConstRules: 
-    defines: expand
+PARSER:
+  SourcesPaths:
+    - /usr/include/roc/address.h
+    - /usr/include/roc/config.h
+    - /usr/include/roc/context.h
+    - /usr/include/roc/frame.h
+    - /usr/include/roc/log.h
+    - /usr/include/roc/platform.h
+    - /usr/include/roc/receiver.h
+    - /usr/include/roc/sender.h
+
+TRANSLATOR:
   PtrTips:
     function:
       - {target: "^roc_address_init$", tips: [ref,0,ref,0]}
@@ -51,23 +39,28 @@ TRANSLATOR:
       - {target: "^roc_sender_write$", tips: [ref, ref]}
       - {target: "^roc_sender_close$", tips: [ref]}
       - {target: "^roc_", tips: [sref, sref, sref, sref, sref]}
-  Rules: 
-    global: 
-      - {transform: lower}
-      - {action: accept, from: "^roc_"}
-      - {action: replace, from: "^roc_", to: _}
-      - {transform: unexport}
+  ConstRules:
+    defines: expand
+  Rules:
     const:
-      - {transform: export}
+      - {action: ignore, from: ROC_ADDRESS_SIZE}
       - {action: accept, from: "^ROC_"}
-      - {action: replace, from: "^ROC_", to: _}
-    type: 
+      - {action: replace, from: "^ROC_", to: }
+      - {transform: lower}
+      - {load: snakecase}
       - {transform: export}
-      - {action: replace, from: "_t$"}
+    type:
+      - {action: accept, from: "^roc_"}
+      - {action: replace, from: "^roc_", to: }
+      - {transform: lower}
+      - {load: snakecase}
+      - {transform: export}
+      - {action: replace, from: "^Frame$", to: frame}
     function:
+      - {action: accept, from: "^roc_"}
+      - {action: replace, from: "^roc_", to: }
+      - {transform: lower}
+      - {load: snakecase}
       - {transform: unexport}
     private:
       - {transform: unexport}
-    post-global: 
-      - {action: replace, from: _$}
-      - {load: snakecase}

@@ -25,7 +25,7 @@ func (a *Address) Family() Family {
 func (a *Address) IP() string {
 	const buflen = 50
 	buf := [buflen]byte{}
-	return addressIp(a, buf[:])
+	return addressIp(a, buf[:], buflen)
 }
 
 // Port get Address port
@@ -50,11 +50,6 @@ func (r *Receiver) Bind(portType PortType, proto Protocol, address *Address) err
 	return convertErr(err, "Error while binding a receiver")
 }
 
-func (r *Receiver) Read(frame *Frame) error {
-	err := receiverRead(r, frame)
-	return convertErr(err, "Error while reading from receiver")
-}
-
 func (r *Receiver) Close() error {
 	err := receiverClose(r)
 	return convertErr(err, "Error while closing a receiver")
@@ -72,11 +67,6 @@ func (s *Sender) Bind(address *Address) error {
 func (s *Sender) Connect(address *Address, portType PortType, proto Protocol) error {
 	err := senderConnect(s, portType, proto, address)
 	return convertErr(err, "Error while conecting sender")
-}
-
-func (s *Sender) Write(frame *Frame) error {
-	err := senderWrite(s, frame)
-	return convertErr(err, "Error while writing with sender")
 }
 
 func (s *Sender) Close() error {

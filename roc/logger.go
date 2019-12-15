@@ -2,20 +2,16 @@ package roc
 
 import "fmt"
 
-type logger interface {
+type Logger interface {
 	Print(v ...interface{})
 }
 
-var handler LogHandler
-
 func LogSetLevel(level LogLevel) {
-	logSetLevelImpl(level)
+	logSetLevel(level)
 }
 
-func LogSetHandler(l logger) {
-	handler = func(level LogLevel, component string, message string) {
-		l.Print(fmt.Sprintf("%s: %s", component, message))
-	}
-
-	logSetHandlerImpl(handler)
+func LogSetHandler(logger Logger) {
+	logSetHandler(func(level LogLevel, component string, message string) {
+		logger.Print(fmt.Sprintf("%s: %s", component, message))
+	})
 }

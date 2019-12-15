@@ -1,9 +1,16 @@
-all: build test
+all: check test
 
-.PHONY: build test
+.PHONY: gen check test
 
-build:
+gen:
+	c-for-go -ccincl ./roc.yml
+
+check:
 	go build ./roc
+	golangci-lint run ./roc
 
 test:
-	go test ./roc/...
+	go test ./roc
+
+fmt:
+	gofmt -s -w ./roc
