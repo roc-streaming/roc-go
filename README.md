@@ -4,20 +4,46 @@
 
 _Work in progress!_
 
-## Install
+## Installation
 
 ```
 go get github.com/roc-project/roc-go/roc
 ```
 
 ## Dependencies
-You will need to have libroc and libroc-devel (headers) installed. Refer to official build [instructions](https://roc-project.github.io/roc/docs/building.html) on how to install libroc. There is no official distribution for any os as of now, you will need to install from source.
 
-## Build
-Will not produce any lib/binary. It's just to check for the syntax errors:
+You will need to have libroc and libroc-devel (headers) installed. Refer to official build [instructions](https://roc-project.github.io/roc/docs/building.html) on how to install libroc. There is no official distribution for any OS as of now, you will need to install from source.
 
-`make build`
+## Development
 
-## Test
+Re-generate code:
 
-`make test`
+```
+make gen
+```
+
+Check for compilation and linter errors:
+
+```
+make check
+```
+
+Run tests:
+
+```
+make test
+```
+
+Format code:
+
+```
+make fmt
+```
+
+## Authors
+
+See [here](https://github.com/roc-project/roc-go/graphs/contributors).
+
+## License
+
+[MIT](LICENSE)
