@@ -4,15 +4,15 @@
 
 _Work in progress!_
 
+## Dependencies
+
+You will need to have libroc and libroc-devel (headers) installed. Refer to official build [instructions](https://roc-project.github.io/roc/docs/building.html) on how to install libroc. There is no official distribution for any OS as of now, you will need to install from source.
+
 ## Installation
 
 ```
 go get github.com/roc-project/roc-go/roc
 ```
-
-## Dependencies
-
-You will need to have libroc and libroc-devel (headers) installed. Refer to official build [instructions](https://roc-project.github.io/roc/docs/building.html) on how to install libroc. There is no official distribution for any OS as of now, you will need to install from source.
 
 ## Development
 
