@@ -16,12 +16,6 @@ go get github.com/roc-project/roc-go/roc
 
 ## Development
 
-Re-generate code:
-
-```
-make gen
-```
-
 Check for compilation and linter errors:
 
 ```

@@ -11,7 +11,6 @@ package roc
 #include "roc/sender.h"
 #include "roc/log.h"
 #include <stdlib.h>
-#include "cgo_helpers.h"
 */
 import "C"
 import "unsafe"

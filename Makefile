@@ -1,9 +1,6 @@
 all: check test
 
-.PHONY: gen check test
-
-gen:
-	c-for-go -ccincl ./roc.yml
+.PHONY: check test
 
 check:
 	go build ./roc
