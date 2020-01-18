@@ -17,16 +17,14 @@ import "unsafe"
 
 // Address as declared in roc/address.h:59
 type Address struct {
-	ref94efe9d7    *C.roc_address
-	allocs94efe9d7 interface{}
+	raw *C.roc_address
+	mem []byte
 }
 
 // ContextConfig as declared in roc/config.h:147
 type ContextConfig struct {
-	MaxPacketSize  uint32
-	MaxFrameSize   uint32
-	ref6685576b    *C.roc_context_config
-	allocs6685576b interface{}
+	MaxPacketSize uint32
+	MaxFrameSize  uint32
 }
 
 // SenderConfig as declared in roc/config.h:234
@@ -61,8 +59,6 @@ type ReceiverConfig struct {
 	NoPlaybackTimeout       int64
 	BrokenPlaybackTimeout   int64
 	BreakageDetectionWindow uint64
-	ref9cfc9e50             *C.roc_receiver_config
-	allocs9cfc9e50          interface{}
 }
 
 // Context as declared in roc/context.h:41
