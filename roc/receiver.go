@@ -10,12 +10,7 @@ package roc
 */
 import "C"
 
-import (
-	"unsafe"
-)
-
 func OpenReceiver(rocContext *Context, receiverConfig *ReceiverConfig) (*Receiver, error) {
-	rocContextCPtr := (*C.roc_context)(unsafe.Pointer(rocContext))
 	receiverConfigC := C.struct_roc_receiver_config{
 		frame_sample_rate:         (C.uint)(receiverConfig.FrameSampleRate),
 		frame_channels:            (C.roc_channel_set)(receiverConfig.FrameChannels),
@@ -29,7 +24,7 @@ func OpenReceiver(rocContext *Context, receiverConfig *ReceiverConfig) (*Receive
 		breakage_detection_window: (C.ulonglong)(receiverConfig.BreakageDetectionWindow),
 	}
 
-	receiver := C.roc_receiver_open(rocContextCPtr, &receiverConfigC)
+	receiver := C.roc_receiver_open((*C.roc_context)(rocContext), &receiverConfigC)
 	if receiver == nil {
 		return nil, ErrInvalidArguments
 	}
@@ -37,7 +32,7 @@ func OpenReceiver(rocContext *Context, receiverConfig *ReceiverConfig) (*Receive
 }
 
 func (r *Receiver) Close() error {
-	errCode := C.roc_receiver_close((*C.roc_receiver)(unsafe.Pointer(r)))
+	errCode := C.roc_receiver_close((*C.roc_receiver)(r))
 	if errCode == 0 {
 		return nil
 	}

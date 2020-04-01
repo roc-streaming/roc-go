@@ -27,14 +27,13 @@ func stringToCharArray(str string) []C.char {
 func NewAddress(family Family, ip string, port int) (*Address, error) {
 	a := new(Address)
 	a.mem = make([]byte, C.sizeof_roc_address)
-	a.raw = (*C.roc_address)(unsafe.Pointer(&a.mem))
+	a.raw = (*C.roc_address)(unsafe.Pointer(&a.mem[0]))
 
 	cfamily := (C.roc_family)(family)
 	ip = safeString(ip)
 	cip := stringToCharArray(ip)
 	cport := (C.int)(port)
 	errCode := C.roc_address_init(a.raw, cfamily, (*C.char)(unsafe.Pointer(&cip[0])), cport)
-	runtime.KeepAlive(a.mem)
 
 	if errCode == 0 {
 		return a, nil
@@ -57,7 +56,7 @@ func (a *Address) Family() (Family, error) {
 func (a *Address) IP() (string, error) {
 	const buflen = 255
 	sIP := make([]byte, buflen)
-	res := C.roc_address_ip(a.raw, (*C.char)(unsafe.Pointer(&sIP)), buflen)
+	res := C.roc_address_ip(a.raw, (*C.char)(unsafe.Pointer(&sIP[0])), buflen)
 	if res == nil {
 		return "", ErrInvalidArguments
 	}
