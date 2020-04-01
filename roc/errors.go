@@ -15,13 +15,3 @@ var (
 	// ErrRuntime indicates a runtime error: memory allocation error etc
 	ErrRuntime = errors.New("Runtime error")
 )
-
-// safeString ensures that the string is NULL-terminated, a NULL-terminated copy is created otherwise.
-func safeString(str string) string {
-	if len(str) > 0 && str[len(str)-1] != '\x00' {
-		str = str + "\x00"
-	} else if len(str) == 0 {
-		str = "\x00"
-	}
-	return str
-}

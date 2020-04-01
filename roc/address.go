@@ -9,14 +9,6 @@ import (
 	"unsafe"
 )
 
-func stringToCharArray(str string) []C.char {
-	charArray := make([]C.char, len(str))
-	for ind, r := range str {
-		charArray[ind] = (C.char)(r)
-	}
-	return charArray
-}
-
 // NewAddress parses the `ip`, `port` and `family` and initializes the Address object
 func NewAddress(family Family, ip string, port int) (*Address, error) {
 	a := new(Address)
@@ -24,8 +16,7 @@ func NewAddress(family Family, ip string, port int) (*Address, error) {
 	a.raw = (*C.roc_address)(unsafe.Pointer(&a.mem[0]))
 
 	cfamily := (C.roc_family)(family)
-	ip = safeString(ip)
-	cip := stringToCharArray(ip)
+	cip := toCStr(ip)
 	cport := (C.int)(port)
 	errCode := C.roc_address_init(a.raw, cfamily, (*C.char)(unsafe.Pointer(&cip[0])), cport)
 
