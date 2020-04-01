@@ -1,15 +1,6 @@
 // MIT
 package roc
 
-/*
-#cgo LDFLAGS: -lroc
-#include "roc/receiver.h"
-#include "roc/sender.h"
-#include "roc/log.h"
-#include <stdlib.h>
-*/
-import "C"
-
 // Family as declared in roc/address.h:36
 type Family int32
 

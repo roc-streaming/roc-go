@@ -1,15 +1,5 @@
 package roc
 
-/*
-#cgo LDFLAGS: -lroc
-#include <roc/receiver.h>
-#include <roc/address.h>
-#include <roc/sender.h>
-#include <roc/log.h>
-#include <stdlib.h>
-*/
-import "C"
-
 import (
 	"errors"
 )
