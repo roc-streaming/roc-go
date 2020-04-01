@@ -9,7 +9,6 @@ package roc
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
 
 // Address as declared in roc/address.h:59
 type Address struct {
@@ -38,8 +37,6 @@ type SenderConfig struct {
 	FecCode               FecCode
 	FecBlockSourcePackets uint32
 	FecBlockRepairPackets uint32
-	refc92542a4           *C.roc_sender_config
-	allocsc92542a4        interface{}
 }
 
 // ReceiverConfig as declared in roc/config.h:316
@@ -59,14 +56,6 @@ type ReceiverConfig struct {
 
 // Context as declared in roc/context.h:41
 type Context C.roc_context
-
-// frame as declared in roc/frame.h:42
-type frame struct {
-	Samples       unsafe.Pointer
-	SamplesSize   uint
-	ref5cb6a60    *C.roc_frame
-	allocs5cb6a60 interface{}
-}
 
 // LogHandler type as declared in roc/log.h:64
 type LogHandler func(level LogLevel, component string, message string)
