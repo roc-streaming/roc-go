@@ -22,6 +22,10 @@ func Test_roc_receiver_open(t *testing.T) {
 				BreakageDetectionWindow: 0},
 			wantErr: nil,
 		},
+		{
+			receiverConfig: ReceiverConfig{},
+			wantErr:        ErrInvalidArguments,
+		},
 	}
 
 	for _, tt := range tests {
@@ -32,6 +36,9 @@ func Test_roc_receiver_open(t *testing.T) {
 		receiver, err := OpenReceiver(ctx, &tt.receiverConfig)
 		if err != tt.wantErr {
 			fail(tt.wantErr, err, t)
+		}
+		if err != nil {
+			continue
 		}
 
 		// cleanup

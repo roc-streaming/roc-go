@@ -20,6 +20,14 @@ func Test_roc_context_open(t *testing.T) {
 			fail(tt.wantErr, err, t)
 		}
 
+		if err != nil {
+			continue
+		}
+
+		if ctx == nil {
+			fail("Context initialized", "Contenxt is nil", t)
+		}
+
 		err = ctx.Close()
 		if err != nil {
 			fail(nil, err, t)
