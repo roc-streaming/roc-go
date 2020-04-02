@@ -7,7 +7,7 @@ check:
 	golangci-lint run ./roc
 
 test:
-	go test ./roc
+	go test -race ./roc
 
 fmt:
 	gofmt -s -w ./roc
