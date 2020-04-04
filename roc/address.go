@@ -6,6 +6,7 @@ package roc
 import "C"
 
 import (
+	"runtime"
 	"unsafe"
 )
 
@@ -45,7 +46,9 @@ func (a *Address) IP() (string, error) {
 	if res == nil {
 		return "", ErrInvalidArguments
 	}
-	return C.GoString(res), nil
+	ret := C.GoString(res)
+	runtime.KeepAlive(sIP)
+	return ret, nil
 }
 
 func (a *Address) Port() (int, error) {

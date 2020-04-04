@@ -14,6 +14,7 @@ func OpenReceiver(rocContext *Context, receiverConfig *ReceiverConfig) (*Receive
 		resampler_profile:         (C.roc_resampler_profile)(receiverConfig.ResamplerProfile),
 		target_latency:            (C.ulonglong)(receiverConfig.TargetLatency),
 		max_latency_overrun:       (C.ulonglong)(receiverConfig.MaxLatencyOverrun),
+		max_latency_underrun:      (C.ulonglong)(receiverConfig.MaxLatencyUnderrun),
 		no_playback_timeout:       (C.longlong)(receiverConfig.NoPlaybackTimeout),
 		broken_playback_timeout:   (C.longlong)(receiverConfig.BrokenPlaybackTimeout),
 		breakage_detection_window: (C.ulonglong)(receiverConfig.BreakageDetectionWindow),
