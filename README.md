@@ -26,6 +26,7 @@ Run tests:
 
 ```
 make test
+make race # run tests under race detector
 ```
 
 Format code:
