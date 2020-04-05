@@ -21,3 +21,11 @@ script:
   - go test -coverprofile profile.cov
   - ${GOPATH}/bin/golangci-lint run .
   - ${GOPATH}/bin/goveralls -coverprofile profile.cov -service=travis-ci
+
+jobs:
+  include:
+    - stage: "Tests"
+      name: "Unit tests"
+      script: make test
+    - name: "Unit tests with race flag"
+      script: make race
