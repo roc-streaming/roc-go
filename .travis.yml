@@ -1,31 +1,40 @@
 language: go
-dist: bionic
+
+os:
+  - linux
+  - osx
+
+dist:
+  - bionic
 
 go:
   - 1.12.x
+  - 1.x
+
+env:
+  - GOTESTFLAGS=""
+  - GOTESTFLAGS="-race"
+
+jobs:
+  exclude:
+    - os: osx
+      go: 1.12.x
 
 install:
-  - sudo apt-get install -y g++ pkg-config scons ragel gengetopt libuv1-dev libunwind-dev libpulse-dev libsox-dev libcpputest-dev libtool intltool autoconf automake make cmake
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -y g++ pkg-config scons ragel gengetopt libuv1-dev libunwind-dev libpulse-dev libsox-dev libcpputest-dev libtool intltool autoconf automake make cmake; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install scons ragel gengetopt libuv speexdsp sox cpputest; fi
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.27.0
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
-  - go get github.com/golangci/golangci-lint/cmd/golangci-lint
 
 before_script:
   - git clone https://github.com/roc-project/roc.git /tmp/roc
-  - scons -C /tmp/roc -Q --compiler=gcc --build-3rdparty=openfec
-  - sudo scons -C /tmp/roc -Q --compiler=gcc --build-3rdparty=openfec install
+  - scons -C /tmp/roc -Q --build-3rdparty=openfec
+  - sudo scons -C /tmp/roc -Q --build-3rdparty=openfec install
 
 script:
   - cd roc
   - go get -v .
-  - go test -coverprofile profile.cov
+  - go test ${GOTESTFLAGS} -coverprofile profile.cov
   - ${GOPATH}/bin/golangci-lint run .
   - ${GOPATH}/bin/goveralls -coverprofile profile.cov -service=travis-ci
-
-jobs:
-  include:
-    - stage: "Tests"
-      name: "Unit tests"
-      script: make test
-    - name: "Unit tests with race flag"
-      script: make race
