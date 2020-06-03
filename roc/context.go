@@ -5,6 +5,9 @@ package roc
 */
 import "C"
 
+// Context as declared in roc/context.h:41
+type Context C.roc_context
+
 func OpenContext(contextConfig *ContextConfig) (*Context, error) {
 	var cCtxConfig C.struct_roc_context_config
 	cCtxConfig.max_packet_size = C.uint(contextConfig.MaxPacketSize)

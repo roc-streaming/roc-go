@@ -10,6 +10,12 @@ import (
 	"unsafe"
 )
 
+// Address as declared in roc/address.h:59
+type Address struct {
+	raw *C.roc_address
+	mem []byte
+}
+
 // NewAddress parses the `ip`, `port` and `family` and initializes the Address object
 func NewAddress(family Family, ip string, port int) (*Address, error) {
 	a := new(Address)

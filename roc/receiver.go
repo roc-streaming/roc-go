@@ -5,6 +5,9 @@ package roc
 */
 import "C"
 
+// Receiver as declared in roc/receiver.h:117
+type Receiver C.roc_receiver
+
 func OpenReceiver(rocContext *Context, receiverConfig *ReceiverConfig) (*Receiver, error) {
 	receiverConfigC := C.struct_roc_receiver_config{
 		frame_sample_rate:         (C.uint)(receiverConfig.FrameSampleRate),

@@ -1,16 +1,9 @@
-// MIT
 package roc
 
-// Family as declared in roc/address.h:36
-type Family int32
-
-// Family enumeration from roc/address.h:36
-const (
-	AfInvalid Family = -1
-	AfAuto    Family = 0
-	AfIpv4    Family = 1
-	AfIpv6    Family = 2
-)
+/*
+#include "roc/config.h"
+*/
+import "C"
 
 // PortType as declared in roc/config.h:35
 type PortType int32
@@ -80,16 +73,40 @@ const (
 	ResamplerLow     ResamplerProfile = 3
 )
 
-// LogLevel as declared in roc/log.h:53
-type LogLevel int32
+// ContextConfig as declared in roc/config.h:147
+type ContextConfig struct {
+	MaxPacketSize uint32
+	MaxFrameSize  uint32
+}
 
-// LogLevel enumeration from roc/log.h:53
-const (
-	LogNone  LogLevel = iota
-	LogError LogLevel = 1
-	LogInfo  LogLevel = 2
-	LogDebug LogLevel = 3
-	LogTrace LogLevel = 4
-)
+// SenderConfig as declared in roc/config.h:234
+type SenderConfig struct {
+	FrameSampleRate       uint32
+	FrameChannels         ChannelSet
+	FrameEncoding         FrameEncoding
+	PacketSampleRate      uint32
+	PacketChannels        ChannelSet
+	PacketEncoding        PacketEncoding
+	PacketLength          uint64
+	PacketInterleaving    uint32
+	AutomaticTiming       uint32
+	ResamplerProfile      ResamplerProfile
+	FecCode               FecCode
+	FecBlockSourcePackets uint32
+	FecBlockRepairPackets uint32
+}
 
-const ()
+// ReceiverConfig as declared in roc/config.h:316
+type ReceiverConfig struct {
+	FrameSampleRate         uint32
+	FrameChannels           ChannelSet
+	FrameEncoding           FrameEncoding
+	AutomaticTiming         uint32
+	ResamplerProfile        ResamplerProfile
+	TargetLatency           uint64
+	MaxLatencyOverrun       uint64
+	MaxLatencyUnderrun      uint64
+	NoPlaybackTimeout       int64
+	BrokenPlaybackTimeout   int64
+	BreakageDetectionWindow uint64
+}

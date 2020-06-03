@@ -9,7 +9,8 @@ var (
 	// are invalid
 	ErrInvalidArguments = errors.New("One or more arguments are invalid")
 
-	// ErrInvalidApi should never happen and indicates that the API don't follow the declared contract
+	// ErrInvalidApi should never happen and indicates that the API don't follow the
+	// declared contract
 	ErrInvalidApi = errors.New("Invalid return code from API")
 
 	// ErrRuntime indicates a runtime error: memory allocation error etc
