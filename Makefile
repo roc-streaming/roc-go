@@ -1,3 +1,6 @@
+GO111MODULE := on
+export GO111MODULE
+
 all: check test race
 
 .PHONY: check
