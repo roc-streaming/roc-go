@@ -11,8 +11,11 @@ go:
   - 1.x
 
 env:
-  - GOTESTFLAGS=""
-  - GOTESTFLAGS="-race"
+  global:
+    - GO111MODULE=on
+  jobs:
+    - GOTESTFLAGS=""
+    - GOTESTFLAGS="-race"
 
 jobs:
   exclude:
