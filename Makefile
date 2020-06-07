@@ -3,6 +3,7 @@ all: check test race
 .PHONY: check
 check:
 	go build ./roc
+	go test ./roc -run xxx
 	golangci-lint run ./roc
 
 .PHONY: test
