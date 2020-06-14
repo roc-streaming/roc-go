@@ -1,7 +1,12 @@
 package roc
 
 /*
-#include <roc/receiver.h>
+ #include <roc/receiver.h>
+ #include <roc/config.h>
+int rocGoReceiverReadFloats(roc_receiver* receiver, float* samples, unsigned long samples_size) {
+    roc_frame frame = {(void*)samples, samples_size*sizeof(float)};
+    return roc_receiver_read(receiver, &frame);
+}
 */
 import "C"
 
@@ -32,6 +37,38 @@ func OpenReceiver(rocContext *Context, receiverConfig *ReceiverConfig) (*Receive
 		return nil, ErrInvalidArgs
 	}
 	return (*Receiver)(receiver), nil
+}
+
+func (r *Receiver) Bind(portType PortType, proto Protocol, a *Address) error {
+	errCode := C.roc_receiver_bind(
+		(*C.roc_receiver)(r),
+		(C.roc_port_type)(portType),
+		(C.roc_protocol)(proto),
+		a.raw)
+	if errCode == 0 {
+		return nil
+	}
+	if errCode < 0 {
+		return ErrInvalidArgs
+	}
+	panic(fmt.Sprintf(
+		"unexpected return code %d from roc_receiver_bind()", errCode))
+}
+
+func (r *Receiver) ReadFloats(frame []float32) error {
+	if frame == nil {
+		return ErrInvalidArgs
+	}
+	errCode := C.rocGoReceiverReadFloats((*C.roc_receiver)(r), (*C.float)(&frame[0]), (C.ulong)(len(frame)))
+	if errCode == 0 {
+		return nil
+	}
+
+	if errCode < 0 {
+		return ErrInvalidArgs
+	}
+	panic(fmt.Sprintf(
+		"unexpected return code %d from roc_receiver_read()", errCode))
 }
 
 func (r *Receiver) Close() error {
