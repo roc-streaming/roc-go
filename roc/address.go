@@ -6,6 +6,7 @@ package roc
 import "C"
 
 import (
+	"fmt"
 	"runtime"
 	"unsafe"
 )
@@ -48,33 +49,35 @@ func NewAddress(family Family, ip string, port int) (*Address, error) {
 	if errCode < 0 {
 		return nil, ErrInvalidArguments
 	}
-	return nil, ErrInvalidApi
+
+	panic(fmt.Sprintf(
+		"unexpected return code %d from roc_address_init()", errCode))
 }
 
 // Family returns address family.
 //
 // If AfAuto was used to construct address, the actually selected family, i.e.
 // either AfIPv4 or AfIPv6, is reported.
-func (a *Address) Family() (Family, error) {
+func (a *Address) Family() Family {
 	f := C.roc_address_family(a.raw)
 	family := (Family)(f)
 	if family == afInvalid {
-		return family, ErrInvalidArguments
+		panic("unexpected failure in roc_address_family()")
 	}
-	return family, nil
+	return family
 }
 
 // IP returns IP address formatted to string.
-func (a *Address) IP() (string, error) {
+func (a *Address) IP() string {
 	const buflen = 255
 	sIP := make([]byte, buflen)
 	res := C.roc_address_ip(a.raw, (*C.char)(unsafe.Pointer(&sIP[0])), buflen)
 	if res == nil {
-		return "", ErrInvalidArguments
+		panic("unexpected failure in roc_address_ip()")
 	}
 	ret := C.GoString(res)
 	runtime.KeepAlive(sIP)
-	return ret, nil
+	return ret
 }
 
 // Port return UDP or TCP port number.
@@ -82,10 +85,10 @@ func (a *Address) IP() (string, error) {
 // If Address was passed to sender or receiver bind and the initial port number was
 // zero, which means "use random port", this function will return the actually
 // selected port number.
-func (a *Address) Port() (int, error) {
+func (a *Address) Port() int {
 	res := C.roc_address_port(a.raw)
 	if res < 0 {
-		return (int)(res), ErrInvalidArguments
+		panic("unexpected failure in roc_address_port()")
 	}
-	return (int)(res), nil
+	return (int)(res)
 }

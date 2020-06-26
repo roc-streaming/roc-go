@@ -5,6 +5,10 @@ package roc
 */
 import "C"
 
+import (
+	"fmt"
+)
+
 // Receiver as declared in roc/receiver.h:117
 type Receiver C.roc_receiver
 
@@ -32,11 +36,14 @@ func OpenReceiver(rocContext *Context, receiverConfig *ReceiverConfig) (*Receive
 
 func (r *Receiver) Close() error {
 	errCode := C.roc_receiver_close((*C.roc_receiver)(r))
+
 	if errCode == 0 {
 		return nil
 	}
 	if errCode < 0 {
 		return ErrInvalidArguments
 	}
-	return ErrInvalidApi
+
+	panic(fmt.Sprintf(
+		"unexpected return code %d from roc_receiver_close()", errCode))
 }
