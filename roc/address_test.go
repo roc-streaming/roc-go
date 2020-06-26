@@ -10,19 +10,19 @@ func Test_roc_address_init(t *testing.T) {
 		err  error
 	}{
 		{
-			f:    AfIpv4,
+			f:    AfIPv4,
 			ip:   "192.168.0.1",
 			port: 4567,
 			err:  nil,
 		},
 		{
-			f:    AfIpv6,
+			f:    AfIPv6,
 			ip:   "2001:db8:85a3:1:2:8a2e:37:7334",
 			port: 9858,
 			err:  nil,
 		},
 		{
-			f:    AfIpv6,
+			f:    AfIPv6,
 			ip:   "192.168.0.1",
 			port: 9858,
 			err:  ErrInvalidArguments,
