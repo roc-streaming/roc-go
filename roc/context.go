@@ -5,6 +5,10 @@ package roc
 */
 import "C"
 
+import (
+	"fmt"
+)
+
 // Context as declared in roc/context.h:41
 type Context C.roc_context
 
@@ -29,5 +33,7 @@ func (c *Context) Close() error {
 	if errCode < 0 {
 		return ErrInvalidArguments
 	}
-	return ErrInvalidApi
+
+	panic(fmt.Sprintf(
+		"unexpected return code %d from roc_context_close()", errCode))
 }

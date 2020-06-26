@@ -44,26 +44,17 @@ func Test_roc_address_init(t *testing.T) {
 			fail("Address initialized", "Address is nil", t)
 		}
 
-		fam, err := a.Family()
-		if err != nil {
-			fail(nil, err, t)
-		}
+		fam := a.Family()
 		if fam != tt.f {
 			fail(tt.f, fam, t)
 		}
 
-		ip, err := a.IP()
-		if err != nil {
-			fail(nil, err, t)
-		}
+		ip := a.IP()
 		if ip != tt.ip {
 			fail(tt.ip, ip, t)
 		}
 
-		port, err := a.Port()
-		if err != nil {
-			fail(nil, err, t)
-		}
+		port := a.Port()
 		if port != tt.port {
 			fail(tt.port, port, t)
 		}
