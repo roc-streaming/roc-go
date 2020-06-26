@@ -50,18 +50,18 @@ func (defaultLogger) Print(v ...interface{}) {
 
 func makeLoggerFunc(logger Logger) LoggerFunc {
 	return func(level LogLevel, component string, message string) {
-		level_str := ""
+		levStr := ""
 		switch level {
 		case LogError:
-			level_str = "err"
+			levStr = "err"
 		case LogInfo:
-			level_str = "inf"
+			levStr = "inf"
 		case LogDebug:
-			level_str = "dbg"
+			levStr = "dbg"
 		case LogTrace:
-			level_str = "trc"
+			levStr = "trc"
 		}
-		logger.Print(fmt.Sprintf("[%s] %s: %s", level_str, component, message))
+		logger.Print(fmt.Sprintf("[%s] %s: %s", levStr, component, message))
 	}
 }
 
