@@ -47,7 +47,7 @@ func NewAddress(family Family, ip string, port int) (*Address, error) {
 		return a, nil
 	}
 	if errCode < 0 {
-		return nil, ErrInvalidArguments
+		return nil, ErrInvalidArgs
 	}
 
 	panic(fmt.Sprintf(

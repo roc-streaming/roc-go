@@ -19,7 +19,7 @@ func OpenContext(contextConfig *ContextConfig) (*Context, error) {
 
 	c := C.roc_context_open(&cCtxConfig)
 	if c == nil {
-		return nil, ErrInvalidArguments
+		return nil, ErrInvalidArgs
 	}
 	return (*Context)(c), nil
 }
@@ -31,7 +31,7 @@ func (c *Context) Close() error {
 		return nil
 	}
 	if errCode < 0 {
-		return ErrInvalidArguments
+		return ErrInvalidArgs
 	}
 
 	panic(fmt.Sprintf(
