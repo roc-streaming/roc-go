@@ -25,7 +25,7 @@ func Test_roc_address_init(t *testing.T) {
 			f:    AfIPv6,
 			ip:   "192.168.0.1",
 			port: 9858,
-			err:  ErrInvalidArguments,
+			err:  ErrInvalidArgs,
 		},
 	}
 

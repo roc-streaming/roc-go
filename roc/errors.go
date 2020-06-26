@@ -5,7 +5,6 @@ import (
 )
 
 var (
-	// ErrInvalidArguments indicates that one or more arguments
-	// passed to the function are invalid
-	ErrInvalidArguments = errors.New("One or more arguments are invalid")
+	// ErrInvalidArgs indicates that one or more function arguments are invalid
+	ErrInvalidArgs = errors.New("One or more arguments are invalid")
 )

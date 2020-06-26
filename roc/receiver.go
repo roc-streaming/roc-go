@@ -29,7 +29,7 @@ func OpenReceiver(rocContext *Context, receiverConfig *ReceiverConfig) (*Receive
 
 	receiver := C.roc_receiver_open((*C.roc_context)(rocContext), &receiverConfigC)
 	if receiver == nil {
-		return nil, ErrInvalidArguments
+		return nil, ErrInvalidArgs
 	}
 	return (*Receiver)(receiver), nil
 }
@@ -41,7 +41,7 @@ func (r *Receiver) Close() error {
 		return nil
 	}
 	if errCode < 0 {
-		return ErrInvalidArguments
+		return ErrInvalidArgs
 	}
 
 	panic(fmt.Sprintf(

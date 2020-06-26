@@ -24,7 +24,7 @@ func Test_roc_receiver_open(t *testing.T) {
 		},
 		{
 			receiverConfig: ReceiverConfig{},
-			wantErr:        ErrInvalidArguments,
+			wantErr:        ErrInvalidArgs,
 		},
 	}
 
