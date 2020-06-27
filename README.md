@@ -1,15 +1,17 @@
-# Go bindings for Roc [![GoDev](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/roc-project/roc-go/roc) [![Build Status](https://travis-ci.org/roc-project/roc-go.svg?branch=master)](https://travis-ci.org/roc-project/roc-go) [![Coverage Status](https://coveralls.io/repos/github/roc-project/roc-go/badge.svg?branch=master)](https://coveralls.io/github/roc-project/roc-go?branch=master)
+# Go bindings for Roc Toolkit
+
+[![GoDev](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/roc-streaming/roc-go/roc) [![Build Status](https://travis-ci.org/roc-streaming/roc-go.svg?branch=master)](https://travis-ci.org/roc-streaming/roc-go) [![Coverage Status](https://coveralls.io/repos/github/roc-streaming/roc-go/badge.svg?branch=master)](https://coveralls.io/github/roc-streaming/roc-go?branch=master)
 
 _Work in progress!_
 
 ## Dependencies
 
-You will need to have libroc and libroc-devel (headers) installed. Refer to official build [instructions](https://roc-project.github.io/roc/docs/building.html) on how to install libroc. There is no official distribution for any OS as of now, you will need to install from source.
+You will need to have libroc and libroc-devel (headers) installed. Refer to official build [instructions](https://roc-streaming.org/toolkit/docs/building.html) on how to install libroc. There is no official distribution for any OS as of now, you will need to install from source.
 
 ## Installation
 
 ```
-go get github.com/roc-project/roc-go/roc
+go get github.com/roc-streaming/roc-go/roc
 ```
 
 ## Development
@@ -35,7 +37,7 @@ make fmt
 
 ## Authors
 
-See [here](https://github.com/roc-project/roc-go/graphs/contributors).
+See [here](https://github.com/roc-streaming/roc-go/graphs/contributors).
 
 ## License
 
