@@ -5,18 +5,18 @@ all: check test race
 
 .PHONY: check
 check:
-	go build ./roc
-	go test ./roc -run xxx
-	golangci-lint run ./roc
+	cd roc && go build .
+	cd roc && go test . -run xxx
+	cd roc && golangci-lint run .
 
 .PHONY: test
 test:
-	go test ./roc
+	cd roc && go test .
 
 .PHONY: race
 race:
-	go test -race ./roc
+	cd roc && go test -race .
 
 .PHONY: fmt
 fmt:
-	gofmt -s -w ./roc
+	cd roc && gofmt -s -w .
