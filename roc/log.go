@@ -2,6 +2,7 @@ package roc
 
 /*
 #include <roc/log.h>
+
 void rocGoLogHandlerProxy(roc_log_level level, char* component, char* message);
 */
 import "C"
@@ -11,18 +12,38 @@ import (
 	"sync"
 )
 
+// LogLevel defines the logging verbosity.
 type LogLevel int
 
 const (
-	LogNone  LogLevel = 0
+	// LogNone disables logging completely
+	LogNone LogLevel = 0
+
+	// LogError enables only error messages
 	LogError LogLevel = 1
-	LogInfo  LogLevel = 2
+
+	// LogError enables informational messages and above
+	LogInfo LogLevel = 2
+
+	// LogDebug enables debugging messages and above
 	LogDebug LogLevel = 3
+
+	// LogDebug enables extra verbose logging, which may hurt performance
+	// and should not be used in production
 	LogTrace LogLevel = 4
 )
 
+// LogFunc is a handler for log messages.
+//
+// It is called for every message, if the corresponding log level is enabled.
+//
+// Its calls are serialized, so it doesn't need to be thread-safe.
 type LoggerFunc func(level LogLevel, component string, message string)
 
+// Logger interface is an alternative way to handle log messages.
+//
+// It is used like LoggerFunc, but receives a single string with formatted message.
+// This interface is compatible with log.Logger from standard library.
 type Logger interface {
 	Print(v ...interface{})
 }
@@ -69,10 +90,26 @@ func init() {
 	SetLoggerFunc(nil)
 }
 
+// SetLogLevel changes the logging level.
+//
+// Messages with higher verbosity than the given level will be dropped.
+// Default log level is LogError.
+//
+// This function is thread-safe.
 func SetLogLevel(level LogLevel) {
 	C.roc_log_set_level(C.roc_log_level(level))
 }
 
+// SetLoggerFunc sets the handler for log messages.
+//
+// Starting from this call, all log messages produced by the library, will be passed
+// to the given function. It may be called from different threads, but the calls will
+// be always serialized, so it doesn't need to be thread-safe.
+//
+// If a nil function is passed, default logger is used, which passes all messages to
+// the standard logger using log.Print.
+//
+// This function is thread-safe.
 func SetLoggerFunc(logFn LoggerFunc) {
 	if logFn == nil {
 		logFn = makeLoggerFunc(defaultLogger{})
@@ -85,6 +122,12 @@ func SetLoggerFunc(logFn LoggerFunc) {
 	C.roc_log_set_handler(C.roc_log_handler(C.rocGoLogHandlerProxy))
 }
 
+// SetLogger is like SetLoggerFunc, but uses Logger interface instead of LoggerFunc.
+//
+// If a nil Logger is passed, default logger is used, which passes all messages to
+// the standard logger using log.Print.
+//
+// This function is thread-safe.
 func SetLogger(logger Logger) {
 	if logger == nil {
 		logger = defaultLogger{}
