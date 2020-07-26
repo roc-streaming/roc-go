@@ -39,4 +39,6 @@ script:
   - go get -v .
   - go test ${GOTESTFLAGS} -coverprofile profile.cov
   - ${GOPATH}/bin/golangci-lint run .
+
+after_success:
   - if [ "$TRAVIS_REPO_SLUG" = "roc-streaming/roc-go" ]; then ${GOPATH}/bin/goveralls -coverprofile profile.cov -service=travis-ci; fi
