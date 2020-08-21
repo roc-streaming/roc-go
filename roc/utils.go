@@ -10,3 +10,10 @@ func toCStr(str string) []C.char {
 	charArray[len(str)] = '\x00'
 	return charArray
 }
+
+func boolToUint(b bool) C.uint {
+	if b {
+		return 1
+	}
+	return 0
+}

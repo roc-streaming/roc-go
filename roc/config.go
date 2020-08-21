@@ -6,7 +6,7 @@ package roc
 import "C"
 
 // Network port type
-type PortType int32
+type PortType int
 
 const (
 	// Network port for audio source packets.
@@ -22,7 +22,7 @@ const (
 )
 
 // Network protocol
-type Protocol int32
+type Protocol int
 
 const (
 	// Bare RTP (RFC 3550).
@@ -42,7 +42,7 @@ const (
 )
 
 // Forward Error Correction code
-type FecCode int32
+type FecCode int
 
 const (
 	// No FEC code.
@@ -67,7 +67,7 @@ const (
 )
 
 // Packet encoding
-type PacketEncoding int32
+type PacketEncoding int
 
 const (
 	// PCM signed 16-bit.
@@ -78,7 +78,7 @@ const (
 )
 
 // Frame encoding
-type FrameEncoding int32
+type FrameEncoding int
 
 const (
 	// PCM floats.
@@ -88,7 +88,7 @@ const (
 )
 
 // Channel set
-type ChannelSet int32
+type ChannelSet int
 
 const (
 	// Stereo.
@@ -97,7 +97,7 @@ const (
 )
 
 // Resampler profile
-type ResamplerProfile int32
+type ResamplerProfile int
 
 const (
 	// No resampling.
@@ -171,14 +171,14 @@ type SenderConfig struct {
 	PacketLength uint64
 
 	// Enable packet interleaving.
-	// If non-zero, the sender shuffles packets before sending them. This
+	// If true, the sender shuffles packets before sending them. This
 	// may increase robustness but also increases latency.
-	PacketInterleaving uint32
+	PacketInterleaving bool
 
 	// Enable automatic timing.
-	// If non-zero, the sender write operation restricts the write rate according
+	// If true, the sender write operation restricts the write rate according
 	// to the frame_sample_rate parameter. If zero, no restrictions are applied.
-	AutomaticTiming uint32
+	AutomaticTiming bool
 
 	// Resampler profile to use.
 	// If non-zero, the sender employs resampler if the frame sample rate differs
@@ -220,9 +220,9 @@ type ReceiverConfig struct {
 	FrameEncoding FrameEncoding
 
 	// Enable automatic timing.
-	// If non-zero, the receiver read operation restricts the read rate according
+	// If true, the receiver read operation restricts the read rate according
 	// to the FrameSampleRate parameter. If zero, no restrictions are applied.
-	AutomaticTiming uint32
+	AutomaticTiming bool
 
 	// Resampler profile to use.
 	// If non-zero, the receiver employs resampler for two purposes:

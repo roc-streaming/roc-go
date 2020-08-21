@@ -17,7 +17,7 @@ func OpenReceiver(rocContext *Context, receiverConfig *ReceiverConfig) (*Receive
 		frame_sample_rate:         (C.uint)(receiverConfig.FrameSampleRate),
 		frame_channels:            (C.roc_channel_set)(receiverConfig.FrameChannels),
 		frame_encoding:            (C.roc_frame_encoding)(receiverConfig.FrameEncoding),
-		automatic_timing:          (C.uint)(receiverConfig.AutomaticTiming),
+		automatic_timing:          boolToUint(receiverConfig.AutomaticTiming),
 		resampler_profile:         (C.roc_resampler_profile)(receiverConfig.ResamplerProfile),
 		target_latency:            (C.ulonglong)(receiverConfig.TargetLatency),
 		max_latency_overrun:       (C.ulonglong)(receiverConfig.MaxLatencyOverrun),

@@ -12,7 +12,7 @@ func Test_roc_receiver_open(t *testing.T) {
 				FrameSampleRate:         44100,
 				FrameChannels:           ChannelSetStereo,
 				FrameEncoding:           FrameEncodingPcmFloat,
-				AutomaticTiming:         1,
+				AutomaticTiming:         true,
 				ResamplerProfile:        ResamplerDisable,
 				TargetLatency:           0,
 				MaxLatencyOverrun:       0,
