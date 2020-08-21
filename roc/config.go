@@ -5,108 +5,270 @@ package roc
 */
 import "C"
 
-// PortType as declared in roc/config.h:35
+// Network port type
 type PortType int32
 
-// PortType enumeration from roc/config.h:35
 const (
+	// Network port for audio source packets.
+	// If FEC is not used, this type of port is used to send or receive audio packets.
+	// If FEC is used, this type of port is used to send or receive FEC source packets
+	// containing audio data plus some FEC headers.
 	PortAudioSource PortType = 1
+
+	// Network port for audio repair packets.
+	// If FEC is used, this type of port is used to send or receive FEC repair packets
+	// containing redundant data for audio plus some FEC headers.
 	PortAudioRepair PortType = 2
 )
 
-// Protocol as declared in roc/config.h:54
+// Network protocol
 type Protocol int32
 
-// Protocol enumeration from roc/config.h:54
 const (
-	ProtoRtp           Protocol = 1
+	// Bare RTP (RFC 3550).
+	ProtoRtp Protocol = 1
+
+	// RTP source packet (RFC 3550) + FECFRAME Reed-Solomon footer (RFC 6865) with m=8.
 	ProtoRtpRs8mSource Protocol = 2
-	ProtoRs8mRepair    Protocol = 3
+
+	// FEC repair packet + FECFRAME Reed-Solomon header (RFC 6865) with m=8.
+	ProtoRs8mRepair Protocol = 3
+
+	// RTP source packet (RFC 3550) + FECFRAME LDPC-Staircase footer (RFC 6816).
 	ProtoRtpLdpcSource Protocol = 4
-	ProtoLdpcRepair    Protocol = 5
+
+	// FEC repair packet + FECFRAME LDPC-Staircase header (RFC 6816).
+	ProtoLdpcRepair Protocol = 5
 )
 
-// FecCode as declared in roc/config.h:81
+// Forward Error Correction code
 type FecCode int32
 
-// FecCode enumeration from roc/config.h:81
 const (
-	FecDisable       FecCode = -1
-	FecDefault       FecCode = 0
-	FecRs8m          FecCode = 1
+	// No FEC code.
+	// Compatible with ProtoRtp protocol.
+	FecDisable FecCode = -1
+
+	// Default FEC code.
+	// Current default is FecRs8m.
+	FecDefault FecCode = 0
+
+	// Reed-Solomon FEC code (RFC 6865) with m=8.
+	// Good for small block sizes (below 256 packets).
+	// Compatible with ProtoRtpRs8mSource and ProtoRs8mRepair
+	// protocols for source and repair ports.
+	FecRs8m FecCode = 1
+
+	// LDPC-Staircase FEC code (RFC 6816).
+	// Good for large block sizes (above 1024 packets).
+	// Compatible with ProtoRtpLdpcSource and ProtoLdpcRepair
+	// protocols for source and repair ports.
 	FecLdpcStaircase FecCode = 2
 )
 
-// PacketEncoding as declared in roc/config.h:91
+// Packet encoding
 type PacketEncoding int32
 
-// PacketEncoding enumeration from roc/config.h:91
 const (
+	// PCM signed 16-bit.
+	// "L16" encoding from RTP A/V Profile (RFC 3551).
+	// Uncompressed samples coded as interleaved 16-bit signed big-endian
+	// integers in two's complement notation.
 	PacketEncodingAvpL16 PacketEncoding = 2
 )
 
-// FrameEncoding as declared in roc/config.h:100
+// Frame encoding
 type FrameEncoding int32
 
-// FrameEncoding enumeration from roc/config.h:100
 const (
+	// PCM floats.
+	// Uncompressed samples coded as floats in range [-1; 1].
+	// Channels are interleaved, e.g. two channels are encoded as "L R L R ...".
 	FrameEncodingPcmFloat FrameEncoding = 1
 )
 
-// ChannelSet as declared in roc/config.h:108
+// Channel set
 type ChannelSet int32
 
-// ChannelSet enumeration from roc/config.h:108
 const (
+	// Stereo.
+	// Two channels: left and right.
 	ChannelSetStereo ChannelSet = 2
 )
 
-// ResamplerProfile as declared in roc/config.h:128
+// Resampler profile
 type ResamplerProfile int32
 
-// ResamplerProfile enumeration from roc/config.h:128
 const (
+	// No resampling.
 	ResamplerDisable ResamplerProfile = -1
+
+	// Default profile.
+	// Current default is ResamplerMedium.
 	ResamplerDefault ResamplerProfile = 0
-	ResamplerHigh    ResamplerProfile = 1
-	ResamplerMedium  ResamplerProfile = 2
-	ResamplerLow     ResamplerProfile = 3
+
+	// High quality, low speed.
+	ResamplerHigh ResamplerProfile = 1
+
+	// Medium quality, medium speed.
+	ResamplerMedium ResamplerProfile = 2
+
+	// Low quality, high speed.
+	ResamplerLow ResamplerProfile = 3
 )
 
-// ContextConfig as declared in roc/config.h:147
+// Context configuration
 type ContextConfig struct {
+	// Maximum size in bytes of a network packet.
+	// Defines the amount of bytes allocated per network packet.
+	// Sender and receiver won't handle packets larger than this.
+	// If zero, default value is used.
 	MaxPacketSize uint32
-	MaxFrameSize  uint32
+
+	// Maximum size in bytes of an audio frame.
+	// Defines the amount of bytes allocated per intermediate internal frame in the
+	// pipeline. Does not limit the size of the frames provided by user.
+	// If zero, default value is used.
+	MaxFrameSize uint32
 }
 
-// SenderConfig as declared in roc/config.h:234
+// Sender configuration
 type SenderConfig struct {
-	FrameSampleRate       uint32
-	FrameChannels         ChannelSet
-	FrameEncoding         FrameEncoding
-	PacketSampleRate      uint32
-	PacketChannels        ChannelSet
-	PacketEncoding        PacketEncoding
-	PacketLength          uint64
-	PacketInterleaving    uint32
-	AutomaticTiming       uint32
-	ResamplerProfile      ResamplerProfile
-	FecCode               FecCode
+	// The rate of the samples in the frames passed to sender.
+	// Number of samples per channel per second.
+	// If FrameSampleRate and PacketSampleRate are different,
+	// resampler should be enabled.
+	// Should be set.
+	FrameSampleRate uint32
+
+	// The channel set in the frames passed to sender.
+	// Should be set.
+	FrameChannels ChannelSet
+
+	// The sample encoding in the frames passed to sender.
+	// Should be set.
+	FrameEncoding FrameEncoding
+
+	// The rate of the samples in the packets generated by sender.
+	// Number of samples per channel per second.
+	// If zero, default value is used.
+	PacketSampleRate uint32
+
+	// The channel set in the packets generated by sender.
+	// If zero, default value is used.
+	PacketChannels ChannelSet
+
+	// The sample encoding in the packets generated by sender.
+	// If zero, default value is used.
+	PacketEncoding PacketEncoding
+
+	// The length of the packets produced by sender, in nanoseconds.
+	// Number of nanoseconds encoded per packet.
+	// The samples written to the sender are buffered until the full packet is
+	// accumulated or the sender is flushed or closed. Larger number reduces
+	// packet overhead but also increases latency.
+	// If zero, default value is used.
+	PacketLength uint64
+
+	// Enable packet interleaving.
+	// If non-zero, the sender shuffles packets before sending them. This
+	// may increase robustness but also increases latency.
+	PacketInterleaving uint32
+
+	// Enable automatic timing.
+	// If non-zero, the sender write operation restricts the write rate according
+	// to the frame_sample_rate parameter. If zero, no restrictions are applied.
+	AutomaticTiming uint32
+
+	// Resampler profile to use.
+	// If non-zero, the sender employs resampler if the frame sample rate differs
+	// from the packet sample rate.
+	ResamplerProfile ResamplerProfile
+
+	// FEC code to use.
+	// If non-zero, the sender employs a FEC codec to generate redundant packets
+	// which may be used on receiver to restore lost packets. This requires both
+	// sender and receiver to use two separate source and repair ports.
+	FecCode FecCode
+
+	// Number of source packets per FEC block.
+	// Used if some FEC code is selected.
+	// Larger number increases robustness but also increases latency.
+	// If zero, default value is used.
 	FecBlockSourcePackets uint32
+
+	// Number of repair packets per FEC block.
+	// Used if some FEC code is selected.
+	// Larger number increases robustness but also increases traffic.
+	// If zero, default value is used.
 	FecBlockRepairPackets uint32
 }
 
-// ReceiverConfig as declared in roc/config.h:316
+// Receiver configuration
 type ReceiverConfig struct {
-	FrameSampleRate         uint32
-	FrameChannels           ChannelSet
-	FrameEncoding           FrameEncoding
-	AutomaticTiming         uint32
-	ResamplerProfile        ResamplerProfile
-	TargetLatency           uint64
-	MaxLatencyOverrun       uint64
-	MaxLatencyUnderrun      uint64
-	NoPlaybackTimeout       int64
-	BrokenPlaybackTimeout   int64
+	// The rate of the samples in the frames returned to the user.
+	// Number of samples per channel per second.
+	// Should be set.
+	FrameSampleRate uint32
+
+	// The channel set in the frames returned to the user.
+	// Should be set.
+	FrameChannels ChannelSet
+
+	// The sample encoding in the frames returned to the user.
+	// Should be set.
+	FrameEncoding FrameEncoding
+
+	// Enable automatic timing.
+	// If non-zero, the receiver read operation restricts the read rate according
+	// to the FrameSampleRate parameter. If zero, no restrictions are applied.
+	AutomaticTiming uint32
+
+	// Resampler profile to use.
+	// If non-zero, the receiver employs resampler for two purposes:
+	//  - adjust the sender clock to the receiver clock, which may differ a bit
+	//  - convert the packet sample rate to the frame sample rate if they are different
+	ResamplerProfile ResamplerProfile
+
+	// Target latency, in nanoseconds.
+	// The session will not start playing until it accumulates the requested latency.
+	// Then, if resampler is enabled, the session will adjust its clock to keep actual
+	// latency as close as close as possible to the target latency.
+	// If zero, default value is used.
+	TargetLatency uint64
+
+	// Maximum delta between current and target latency, in nanoseconds.
+	// If current latency becomes larger than the target latency plus this value, the
+	// session is terminated.
+	// If zero, default value is used.
+	MaxLatencyOverrun uint64
+
+	// Maximum delta between target and current latency, in nanoseconds.
+	// If current latency becomes smaller than the target latency minus this value, the
+	// session is terminated.
+	// May be larger than the target latency because current latency may be negative,
+	// which means that the playback run ahead of the last packet received from network.
+	// If zero, default value is used.
+	MaxLatencyUnderrun uint64
+
+	// Timeout for the lack of playback, in nanoseconds.
+	// If there is no playback during this period, the session is terminated.
+	// This mechanism allows to detect dead, hanging, or broken clients
+	// generating invalid packets.
+	// If zero, default value is used. If negative, the timeout is disabled.
+	NoPlaybackTimeout int64
+
+	// Timeout for broken playback, in nanoseconds.
+	// If there the playback is considered broken during this period, the session
+	// is terminated. The playback is broken if there is a breakage detected at every
+	// BreakageDetectionWindow during BrokenPlaybackTimeout.
+	// This mechanism allows to detect vicious circles like when all client packets
+	// are a bit late and receiver constantly drops them producing unpleasant noise.
+	// If zero, default value is used. If negative, the timeout is disabled.
+	BrokenPlaybackTimeout int64
+
+	// Breakage detection window, in nanoseconds.
+	// If zero, default value is used.
+	// @see broken_playback_timeout.
 	BreakageDetectionWindow uint64
 }
