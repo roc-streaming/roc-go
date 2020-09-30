@@ -16,7 +16,7 @@ func makeReceiverConfig() *ReceiverConfig {
 		FrameSampleRate:  44100,
 		FrameChannels:    ChannelSetStereo,
 		FrameEncoding:    FrameEncodingPcmFloat,
-		AutomaticTiming:  1,
+		AutomaticTiming:  true,
 		ResamplerProfile: ResamplerDisable,
 	}
 }
@@ -26,7 +26,7 @@ func makeSenderConfig() *SenderConfig {
 		FrameSampleRate:  44100,
 		FrameChannels:    ChannelSetStereo,
 		FrameEncoding:    FrameEncodingPcmFloat,
-		AutomaticTiming:  1,
+		AutomaticTiming:  true,
 		ResamplerProfile: ResamplerDisable,
 		FecCode:          FecRs8m,
 	}
