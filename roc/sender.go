@@ -48,7 +48,7 @@ func (s *Sender) Bind(a *Address) error {
 		return ErrInvalidArgs
 	}
 	panic(fmt.Sprintf(
-		"unexpected return code %d from roc_address_init()", errCode))
+		"unexpected return code %d from roc_sender_bind()", errCode))
 }
 
 func (s *Sender) Connect(portType PortType, proto Protocol, address *Address) error {
@@ -65,12 +65,15 @@ func (s *Sender) Connect(portType PortType, proto Protocol, address *Address) er
 		return ErrInvalidArgs
 	}
 	panic(fmt.Sprintf(
-		"unexpected return code %d from roc_address_init()", errCode))
+		"unexpected return code %d from roc_sender_connect()", errCode))
 }
 
 func (s *Sender) WriteFloats(frame []float32) error {
 	if frame == nil {
 		return ErrInvalidArgs
+	}
+	if len(frame) == 0 {
+		return nil
 	}
 	errCode := C.rocGoSenderWriteFloats((*C.roc_sender)(s), (*C.float)(&frame[0]), (C.ulong)(len(frame)))
 	if errCode == 0 {
@@ -80,7 +83,7 @@ func (s *Sender) WriteFloats(frame []float32) error {
 		return ErrInvalidArgs
 	}
 	panic(fmt.Sprintf(
-		"unexpected return code %d from roc_address_init()", errCode))
+		"unexpected return code %d from roc_sender_write()", errCode))
 }
 
 func (s *Sender) Close() error {
@@ -92,5 +95,5 @@ func (s *Sender) Close() error {
 		return ErrInvalidArgs
 	}
 	panic(fmt.Sprintf(
-		"unexpected return code %d from roc_address_init()", errCode))
+		"unexpected return code %d from roc_sender_close()", errCode))
 }
