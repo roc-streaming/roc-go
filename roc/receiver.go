@@ -1,6 +1,7 @@
 package roc
 
 /*
+ #cgo pkg-config: roc
  #include <roc/receiver.h>
  #include <roc/config.h>
 int rocGoReceiverReadFloats(roc_receiver* receiver, float* samples, unsigned long samples_size) {

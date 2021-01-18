@@ -1,6 +1,7 @@
 package roc
 
 /*
+#cgo pkg-config: roc
 #include <roc/context.h>
 */
 import "C"

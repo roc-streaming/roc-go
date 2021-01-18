@@ -1,6 +1,7 @@
 package roc
 
 /*
+#cgo pkg-config: roc
 #include <roc/sender.h>
 int rocGoSenderWriteFloats(roc_sender* sender, float* samples, unsigned long samples_size) {
     roc_frame frame = {(void*)samples, samples_size*sizeof(float)};

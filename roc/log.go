@@ -1,6 +1,7 @@
 package roc
 
 /*
+#cgo pkg-config: roc
 #include <roc/log.h>
 
 void rocGoLogHandlerProxy(roc_log_level level, char* component, char* message);
