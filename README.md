@@ -1,6 +1,6 @@
 # Go bindings for Roc Toolkit
 
-[![GoDev](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/roc-streaming/roc-go/roc) [![Build Status](https://travis-ci.org/roc-streaming/roc-go.svg?branch=master)](https://travis-ci.org/roc-streaming/roc-go) [![Coverage Status](https://coveralls.io/repos/github/roc-streaming/roc-go/badge.svg?branch=master)](https://coveralls.io/github/roc-streaming/roc-go?branch=master)
+[![GoDev](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/roc-streaming/roc-go/roc) [![Build](https://github.com/roc-streaming/roc-go/workflows/build/badge.svg)](https://github.com/roc-streaming/roc-go/actions) [![Coverage Status](https://coveralls.io/repos/github/roc-streaming/roc-go/badge.svg?branch=master)](https://coveralls.io/github/roc-streaming/roc-go?branch=master)
 
 _Work in progress!_
 
