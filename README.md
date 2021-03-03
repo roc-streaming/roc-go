@@ -27,7 +27,7 @@ Key features:
 
 ## Documentation
 
-Documentation for the bindings is availabe [on pkg.go.dev](https://pkg.go.dev/github.com/roc-streaming/roc-go/roc).
+Documentation for the bindings is availabe on [pkg.go.dev](https://pkg.go.dev/github.com/roc-streaming/roc-go/roc).
 
 Documentation for the underlying C API can be found [here](https://roc-streaming.org/toolkit/docs/api.html).
 
