@@ -26,6 +26,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Update source.list
+        run: |
+          sudo sed -i 's/azure\.//' /etc/apt/sources.list
+          sudo apt-get update
+
       - name: Install system dependencies
         run: >
           sudo apt-get -y install g++ pkg-config scons ragel gengetopt \
