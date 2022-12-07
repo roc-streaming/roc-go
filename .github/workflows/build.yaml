@@ -103,9 +103,9 @@ jobs:
 
       - name: Prepare coverage report
         if: ${{ matrix.coverage == 'yes' }}
-        uses: jandelgado/gcov2lcov-action@v1.0.5
+        uses: jandelgado/gcov2lcov-action@v1.0.9
         with:
-          workspace: roc
+          working-directory: roc
 
       - name: Send coverage report
         if: ${{ matrix.coverage == 'yes' }}
@@ -113,7 +113,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: roc/coverage.lcov
-          base-path: roc
 
   macos:
     runs-on: macos-latest
