@@ -75,7 +75,8 @@ func (s *Sender) WriteFloats(frame []float32) error {
 	if len(frame) == 0 {
 		return nil
 	}
-	errCode := C.rocGoSenderWriteFloats((*C.roc_sender)(s), (*C.float)(&frame[0]), (C.ulong)(len(frame)))
+	errCode := C.rocGoSenderWriteFloats(
+		(*C.roc_sender)(s), (*C.float)(&frame[0]), (C.ulong)(len(frame)))
 	if errCode == 0 {
 		return nil
 	}
