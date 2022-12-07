@@ -62,7 +62,8 @@ func (r *Receiver) ReadFloats(frame []float32) error {
 	if len(frame) == 0 {
 		return nil
 	}
-	errCode := C.rocGoReceiverReadFloats((*C.roc_receiver)(r), (*C.float)(&frame[0]), (C.ulong)(len(frame)))
+	errCode := C.rocGoReceiverReadFloats(
+		(*C.roc_receiver)(r), (*C.float)(&frame[0]), (C.ulong)(len(frame)))
 	if errCode == 0 {
 		return nil
 	}

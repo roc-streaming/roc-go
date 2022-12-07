@@ -1,15 +1,20 @@
 name: build
 
 on:
+  workflow_dispatch:
   repository_dispatch:
-
-  push:
-    branches:
-      - master
 
   pull_request:
     branches:
       - master
+      - v*
+
+  push:
+    branches:
+      - master
+      - v*
+    tags:
+      - v*
 
   schedule:
     - cron: '0 0 * * 1'
@@ -17,19 +22,42 @@ on:
 jobs:
   ubuntu:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        goversion: [ '1.12', '1.x' ]
+        include:
+          - name: Linux - Go 1.12
+            go: 1.12
+            build: yes
+            test: yes
+            lint: no
+            coverage: no
 
-    name: Ubuntu - Go ${{ matrix.goversion }}
+          - name: Linux - Go 1.x
+            go: 1.x
+            build: yes
+            test: yes
+            lint: no
+            coverage: no
+
+          - name: Linters
+            go: 1.x
+            build: no
+            test: no
+            lint: yes
+            coverage: no
+
+          - name: Coverage
+            go: 1.x
+            build: yes
+            test: yes
+            lint: no
+            coverage: yes
+
+    name: ${{ matrix.name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Update source.list
-        run: |
-          sudo sed -i 's/azure\.//' /etc/apt/sources.list
-          sudo apt-get update
+        uses: actions/checkout@v3
 
       - name: Install system dependencies
         run: >
@@ -38,9 +66,9 @@ jobs:
             intltool autoconf automake make cmake
 
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ${{ matrix.goversion }}
+          go-version: ${{ matrix.go }}
 
       - name: Build Roc
         run: |
@@ -49,32 +77,38 @@ jobs:
           sudo scons -C /tmp/roc -Q --build-3rdparty=openfec install
 
       - name: Build bindings
+        if: ${{ matrix.build == 'yes' }}
         run: |
           cd roc
           go get -v .
 
       - name: Run tests
+        if: ${{ matrix.test == 'yes' }}
         run: |
           cd roc
           go test -covermode=count -coverprofile=coverage.out
 
       - name: Run tests under race detector
+        if: ${{ matrix.test == 'yes' }}
         run: |
           cd roc
           go test -race
 
       - name: Run linters
-        uses: golangci/golangci-lint-action@v2
+        if: ${{ matrix.lint == 'yes' }}
+        uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.28
+          version: v1.50.1
           working-directory: roc
 
       - name: Prepare coverage report
+        if: ${{ matrix.coverage == 'yes' }}
         uses: jandelgado/gcov2lcov-action@v1.0.5
         with:
           workspace: roc
 
       - name: Send coverage report
+        if: ${{ matrix.coverage == 'yes' }}
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -87,13 +121,13 @@ jobs:
     name: macOS
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install system dependencies
         run: brew install scons ragel gengetopt libuv speexdsp sox cpputest
 
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: '1.x'
 
