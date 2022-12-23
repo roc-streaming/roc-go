@@ -3,9 +3,10 @@ package roc
 /*
 #include <roc/log.h>
 
-void rocGoLogHandlerProxy(roc_log_level level, char* component, char* message);
+void rocGoLogHandlerProxy(const roc_log_message* message, void* argument);
 */
 import "C"
+
 import (
 	"fmt"
 	"log"
@@ -16,32 +17,57 @@ import (
 type LogLevel int
 
 const (
-	// LogNone disables logging completely
+	// LogNone disables logging completely.
 	LogNone LogLevel = 0
 
-	// LogError enables only error messages
+	// LogError enables only error messages.
 	LogError LogLevel = 1
 
-	// LogError enables informational messages and above
+	// LogError enables informational messages and above.
 	LogInfo LogLevel = 2
 
-	// LogDebug enables debugging messages and above
+	// LogDebug enables debugging messages and above.
 	LogDebug LogLevel = 3
 
 	// LogDebug enables extra verbose logging, which may hurt performance
-	// and should not be used in production
+	// and should not be used in production.
 	LogTrace LogLevel = 4
 )
 
+// LogMessage defines message written to log.
+type LogMessage struct {
+	// Message log level.
+	Level LogLevel
+
+	// Name of the module that originated the message.
+	Module string
+
+	// Name of the source code file.
+	// May be empty.
+	File string
+
+	// Line number in the source code file.
+	Line int
+
+	// Message timestamp, nanoseconds since Unix epoch.
+	Time uint64
+
+	// Platform-specific process ID.
+	Pid uint64
+
+	// Platform-specific thread ID.
+	Tid uint64
+
+	// Message text.
+	Text string
+}
+
 // LogFunc is a handler for log messages.
-//
 // It is called for every message, if the corresponding log level is enabled.
-//
 // Its calls are serialized, so it doesn't need to be thread-safe.
-type LoggerFunc func(level LogLevel, component string, message string)
+type LoggerFunc func(LogMessage)
 
 // Logger interface is an alternative way to handle log messages.
-//
 // It is used like LoggerFunc, but receives a single string with formatted message.
 // This interface is compatible with log.Logger from standard library.
 type Logger interface {
@@ -54,12 +80,28 @@ var (
 )
 
 //export rocGoLogHandler
-func rocGoLogHandler(level C.roc_log_level, component *C.char, message *C.char) {
+func rocGoLogHandler(cMessage *C.roc_log_message) {
 	loggerMu.Lock()
 	defer loggerMu.Unlock()
 
 	if loggerFunc != nil {
-		loggerFunc(LogLevel(level), C.GoString(component), C.GoString(message))
+		message := LogMessage{
+			Level: LogLevel(cMessage.level),
+			Time:  uint64(cMessage.time),
+			Pid:   uint64(cMessage.pid),
+			Tid:   uint64(cMessage.tid),
+		}
+		if cMessage.module != nil {
+			message.Module = C.GoString(cMessage.module)
+		}
+		if cMessage.file != nil {
+			message.File = C.GoString(cMessage.file)
+			message.Line = int(cMessage.line)
+		}
+		if cMessage.text != nil {
+			message.Text = C.GoString(cMessage.text)
+		}
+		loggerFunc(message)
 	}
 }
 
@@ -70,19 +112,19 @@ func (defaultLogger) Print(v ...interface{}) {
 }
 
 func makeLoggerFunc(logger Logger) LoggerFunc {
-	return func(level LogLevel, component string, message string) {
-		levStr := ""
-		switch level {
+	return func(message LogMessage) {
+		level := ""
+		switch message.Level {
 		case LogError:
-			levStr = "err"
+			level = "err"
 		case LogInfo:
-			levStr = "inf"
+			level = "inf"
 		case LogDebug:
-			levStr = "dbg"
+			level = "dbg"
 		case LogTrace:
-			levStr = "trc"
+			level = "trc"
 		}
-		logger.Print(fmt.Sprintf("[%s] %s: %s", levStr, component, message))
+		logger.Print(fmt.Sprintf("[%s] %s: %s", level, message.Module, message.Text))
 	}
 }
 
@@ -119,7 +161,7 @@ func SetLoggerFunc(logFn LoggerFunc) {
 	defer loggerMu.Unlock()
 
 	loggerFunc = logFn
-	C.roc_log_set_handler(C.roc_log_handler(C.rocGoLogHandlerProxy))
+	C.roc_log_set_handler(C.roc_log_handler(C.rocGoLogHandlerProxy), nil)
 }
 
 // SetLogger is like SetLoggerFunc, but uses Logger interface instead of LoggerFunc.

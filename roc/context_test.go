@@ -1,36 +1,38 @@
 package roc
 
-import "testing"
+import (
+	"testing"
 
-func Test_roc_context_open(t *testing.T) {
+	"github.com/stretchr/testify/require"
+)
+
+func TestContext_Open(t *testing.T) {
 	tests := []struct {
+		name    string
 		config  ContextConfig
 		wantErr error
 	}{
 		{
+			name:    "ok",
 			config:  ContextConfig{MaxPacketSize: 50, MaxFrameSize: 70},
 			wantErr: nil,
 		},
 	}
 
 	for _, tt := range tests {
-		ctx, err := OpenContext(&tt.config)
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, err := OpenContext(tt.config)
 
-		if err != tt.wantErr {
-			fail(tt.wantErr, err, t)
-		}
+			if tt.wantErr == nil {
+				require.NoError(t, err)
+				require.NotNil(t, ctx)
 
-		if err != nil {
-			continue
-		}
-
-		if ctx == nil {
-			fail("Context initialized", "Contenxt is nil", t)
-		}
-
-		err = ctx.Close()
-		if err != nil {
-			fail(nil, err, t)
-		}
+				err = ctx.Close()
+				require.NoError(t, err)
+			} else {
+				require.Equal(t, tt.wantErr, err)
+				require.Nil(t, ctx)
+			}
+		})
 	}
 }

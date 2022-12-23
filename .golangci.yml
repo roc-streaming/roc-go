@@ -3,6 +3,7 @@ linters:
     - govet
     - revive
     - staticcheck
+    - exhaustruct
     - exportloopref
     - lll
     - misspell
@@ -12,5 +13,14 @@ linters:
     - unused
 
 linters-settings:
+  exhaustruct:
+    include:
+      - 'roc_.*'
   lll:
     line-length: 100
+
+issues:
+  exclude-rules:
+    - text: '_ is missing'
+      linters:
+        - exhaustruct

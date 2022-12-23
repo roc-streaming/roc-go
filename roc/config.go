@@ -5,68 +5,238 @@ package roc
 */
 import "C"
 
-// Network port type
-type PortType int
+// Network slot.
+//
+// A peer (sender or receiver) may have multiple slots, which may be independently
+// bound or connected. You can use multiple slots on sender to connect it to multiple
+// receiver addresses, and you can use multiple slots on receiver to bind it to
+// multiple receiver address.
+//
+// Slots are numbered from zero and are created implicitly. Just specify slot index
+// when binding or connecting endpoint, and slot will be automatically created if it
+// was not created yet.
+//
+// In simple cases, just use SlotDefault.
+//
+// Each slot has its own set of interfaces, dedicated to different kinds of endpoints.
+// See Interface for details.
+type Slot int
 
 const (
-	// Network port for audio source packets.
-	// If FEC is not used, this type of port is used to send or receive audio packets.
-	// If FEC is used, this type of port is used to send or receive FEC source packets
-	// containing audio data plus some FEC headers.
-	PortAudioSource PortType = 1
-
-	// Network port for audio repair packets.
-	// If FEC is used, this type of port is used to send or receive FEC repair packets
-	// containing redundant data for audio plus some FEC headers.
-	PortAudioRepair PortType = 2
+	// Alias for the slot with index zero.
+	SlotDefault Slot = 0
 )
 
-// Network protocol
+// Network interface.
+//
+// Interface is a way to access the peer (sender or receiver) via network.
+//
+// Each peer slot has multiple interfaces, one of each type. The user interconnects
+// peers by binding one of the first peer's interfaces to an URI and then connecting the
+// corresponding second peer's interface to that URI.
+//
+// A URI is represented by Endpoint object.
+//
+// The interface defines the type of the communication with the remote peer and the
+// set of protocols (URI schemes) that can be used with this particular interface.
+//
+// InterfaceConsolidated is an interface for high-level protocols which
+// automatically manage all necessary communication: transport streams, control messages,
+// parameter negotiation, etc. When a consolidated connection is established, peers may
+// automatically setup lower-level interfaces like InterfaceAudioSource,
+// InterfaceAudioRepair, and InterfaceAudioControl.
+//
+// InterfaceConsolidated is mutually exclusive with lower-level interfaces.
+// In most cases, the user needs only InterfaceConsolidated. However, the
+// lower-level interfaces may be useful if an external signaling mechanism is used or for
+// compatibility with third-party software.
+//
+// InterfaceAudioSource and InterfaceAudioRepair are lower-level
+// unidirectional transport-only interfaces. The first is used to transmit audio stream,
+// and the second is used to transmit redundant repair stream, if FEC is enabled.
+//
+// InterfaceAudioControl is a lower-level interface for control streams.
+// If you use InterfaceAudioSource and InterfaceAudioRepair, you
+// usually also need to use InterfaceAudioControl to enable carrying additional
+// non-transport information.
+type Interface int
+
+const (
+	// Interface that consolidates all types of streams (source, repair, control).
+	//
+	// Allowed operations:
+	//  - bind    (sender, receiver)
+	//  - connect (sender, receiver)
+	//
+	// Allowed protocols:
+	//  - ProtoRtsp
+	//
+	InterfaceConsolidated Interface = 1
+
+	// Interface for audio stream source data.
+	//
+	// Allowed operations:
+	//  - bind    (receiver)
+	//  - connect (sender)
+	//
+	// Allowed protocols:
+	//  -  ProtoRtp
+	//  -  ProtoRtpRs8mSource
+	//  -  ProtoRtpLdpcSource
+	//
+	InterfaceAudioSource Interface = 11
+
+	// Interface for audio stream repair data.
+	//
+	// Allowed operations:
+	//  - bind    (receiver)
+	//  - connect (sender)
+	//
+	// Allowed protocols:
+	//  -  ProtoRs8mRepair
+	//  -  ProtoLdpcRepair
+	//
+	InterfaceAudioRepair Interface = 12
+
+	// Interface for audio control messages.
+	//
+	// Allowed operations:
+	//  - bind    (sender, receiver)
+	//  - connect (sender, receiver)
+	//
+	// Allowed protocols:
+	//  -  ProtoRrcp
+	//
+	InterfaceAudioControl Interface = 13
+)
+
+// Network protocol.
+// Defines URI scheme of Endpoint.
 type Protocol int
 
 const (
-	// Bare RTP (RFC 3550).
-	ProtoRtp Protocol = 1
+	// RTSP 1.0 (RFC 2326) or RTSP 2.0 (RFC 7826).
+	//
+	// Interfaces:
+	//  - InterfaceConsolidated
+	//
+	// Transports:
+	//   - for signaling: TCP
+	//   - for media: RTP and RTCP over UDP or TCP
+	//
+	ProtoRtsp Protocol = 10
+
+	// RTP over UDP (RFC 3550).
+	//
+	// Interfaces:
+	//  - InterfaceAudioSource
+	//
+	// Transports:
+	//  - UDP
+	//
+	// Audio encodings:
+	//   - PacketEncodingAvpL16
+	//
+	// FEC encodings:
+	//   - none
+	//
+	ProtoRtp Protocol = 20
 
 	// RTP source packet (RFC 3550) + FECFRAME Reed-Solomon footer (RFC 6865) with m=8.
-	ProtoRtpRs8mSource Protocol = 2
+	//
+	// Interfaces:
+	//  - InterfaceAudioSource
+	//
+	// Transports:
+	//  - UDP
+	//
+	// Audio encodings:
+	//  - similar to ProtoRtp
+	//
+	// FEC encodings:
+	//  - FecEncodingRs8m
+	//
+	ProtoRtpRs8mSource Protocol = 30
 
 	// FEC repair packet + FECFRAME Reed-Solomon header (RFC 6865) with m=8.
-	ProtoRs8mRepair Protocol = 3
+	//
+	// Interfaces:
+	//  - InterfaceAudioRepair
+	//
+	// Transports:
+	//  - UDP
+	//
+	// FEC encodings:
+	//  - FecEncodingRs8m
+	//
+	ProtoRs8mRepair Protocol = 31
 
 	// RTP source packet (RFC 3550) + FECFRAME LDPC-Staircase footer (RFC 6816).
-	ProtoRtpLdpcSource Protocol = 4
+	//
+	// Interfaces:
+	//  - InterfaceAudioSource
+	//
+	// Transports:
+	//  - UDP
+	//
+	// Audio encodings:
+	//  - similar to ProtoRtp
+	//
+	// FEC encodings:
+	//  - FecEncodingLdpcStaircase
+	//
+	ProtoRtpLdpcSource Protocol = 32
 
 	// FEC repair packet + FECFRAME LDPC-Staircase header (RFC 6816).
-	ProtoLdpcRepair Protocol = 5
+	//
+	// Interfaces:
+	//  - InterfaceAudioRepair
+	//
+	// Transports:
+	//  - UDP
+	//
+	// FEC encodings:
+	//  - FecEncodingLdpcStaircase
+	//
+	ProtoLdpcRepair Protocol = 33
+
+	// RTCP over UDP (RFC 3550).
+	//
+	// Interfaces:
+	//  - InterfaceAudioControl
+	//
+	// Transports:
+	//  - UDP
+	//
+	ProtoRtcp Protocol = 70
 )
 
-// Forward Error Correction code
-type FecCode int
+// Forward Error Correction encoding.
+type FecEncoding int
 
 const (
-	// No FEC code.
+	// No FEC encoding.
 	// Compatible with ProtoRtp protocol.
-	FecDisable FecCode = -1
+	FecEncodingDisable FecEncoding = -1
 
-	// Default FEC code.
-	// Current default is FecRs8m.
-	FecDefault FecCode = 0
+	// Default FEC encoding.
+	// Current default is FecEncodingRs8m.
+	FecEncodingDefault FecEncoding = 0
 
-	// Reed-Solomon FEC code (RFC 6865) with m=8.
+	// Reed-Solomon FEC encoding (RFC 6865) with m=8.
 	// Good for small block sizes (below 256 packets).
 	// Compatible with ProtoRtpRs8mSource and ProtoRs8mRepair
-	// protocols for source and repair ports.
-	FecRs8m FecCode = 1
+	// protocols for source and repair endpoints.
+	FecEncodingRs8m FecEncoding = 1
 
-	// LDPC-Staircase FEC code (RFC 6816).
+	// LDPC-Staircase FEC encoding (RFC 6816).
 	// Good for large block sizes (above 1024 packets).
 	// Compatible with ProtoRtpLdpcSource and ProtoLdpcRepair
-	// protocols for source and repair ports.
-	FecLdpcStaircase FecCode = 2
+	// protocols for source and repair endpoints.
+	FecEncodingLdpcStaircase FecEncoding = 2
 )
 
-// Packet encoding
+// Packet encoding.
 type PacketEncoding int
 
 const (
@@ -77,7 +247,7 @@ const (
 	PacketEncodingAvpL16 PacketEncoding = 2
 )
 
-// Frame encoding
+// Frame encoding.
 type FrameEncoding int
 
 const (
@@ -87,37 +257,77 @@ const (
 	FrameEncodingPcmFloat FrameEncoding = 1
 )
 
-// Channel set
+// Channel set.
 type ChannelSet int
 
 const (
 	// Stereo.
 	// Two channels: left and right.
-	ChannelSetStereo ChannelSet = 2
+	ChannelSetStereo ChannelSet = 0x3
 )
 
-// Resampler profile
+// Resampler backend.
+// Affects speed and quality.
+// Some backends may be disabled at build time.
+type ResamplerBackend int
+
+const (
+	// Default backend.
+	// Depends on what was enabled at build time.
+	ResamplerBackendDefault ResamplerBackend = 0
+
+	// Slow built-in resampler.
+	// Always available.
+	ResamplerBackendBuiltin ResamplerBackend = 1
+
+	// Fast good-quality resampler from SpeexDSP.
+	// May be disabled at build time.
+	ResamplerBackendSpeex ResamplerBackend = 2
+)
+
+// Resampler profile.
+// Affects speed and quality.
+// Each resampler backend treats profile in its own way.
 type ResamplerProfile int
 
 const (
-	// No resampling.
-	ResamplerDisable ResamplerProfile = -1
+	// Do not perform resampling.
+	// Clock drift compensation will be disabled in this case.
+	// If in doubt, do not disable resampling.
+	ResamplerProfileDisable ResamplerProfile = -1
 
 	// Default profile.
-	// Current default is ResamplerMedium.
-	ResamplerDefault ResamplerProfile = 0
+	// Current default is ResamplerProfileMedium.
+	ResamplerProfileDefault ResamplerProfile = 0
 
 	// High quality, low speed.
-	ResamplerHigh ResamplerProfile = 1
+	ResamplerProfileHigh ResamplerProfile = 1
 
 	// Medium quality, medium speed.
-	ResamplerMedium ResamplerProfile = 2
+	ResamplerProfileMedium ResamplerProfile = 2
 
 	// Low quality, high speed.
-	ResamplerLow ResamplerProfile = 3
+	ResamplerProfileLow ResamplerProfile = 3
 )
 
-// Context configuration
+// Clock source for sender or receiver.
+type ClockSource int
+
+const (
+	// Sender or receiver is clocked by external user-defined clock.
+	// Write and read operations are non-blocking. The user is responsible
+	// to call them in time, according to the external clock.
+	ClockExternal = 0
+
+	// Sender or receiver is clocked by an internal clock.
+	// Write and read operations are blocking. They automatically wait until it's time
+	// to process the next bunch of samples according to the configured sample rate.
+	ClockInternal = 1
+)
+
+// Context configuration.
+// You can zero-initialize this struct to get a default config.
+// See also Context.
 type ContextConfig struct {
 	// Maximum size in bytes of a network packet.
 	// Defines the amount of bytes allocated per network packet.
@@ -132,7 +342,9 @@ type ContextConfig struct {
 	MaxFrameSize uint32
 }
 
-// Sender configuration
+// Sender configuration.
+// You can zero-initialize this struct to get a default config.
+// See also Sender.
 type SenderConfig struct {
 	// The rate of the samples in the frames passed to sender.
 	// Number of samples per channel per second.
@@ -175,21 +387,24 @@ type SenderConfig struct {
 	// may increase robustness but also increases latency.
 	PacketInterleaving bool
 
-	// Enable automatic timing.
-	// If true, the sender write operation restricts the write rate according
-	// to the frame_sample_rate parameter. If zero, no restrictions are applied.
-	AutomaticTiming bool
+	// Clock source to use.
+	// Defines whether write operation will be blocking or non-blocking.
+	// If zero, default value is used.
+	ClockSource ClockSource
+
+	// Resampler backend to use.
+	ResamplerBackend ResamplerBackend
 
 	// Resampler profile to use.
 	// If non-zero, the sender employs resampler if the frame sample rate differs
 	// from the packet sample rate.
 	ResamplerProfile ResamplerProfile
 
-	// FEC code to use.
+	// FEC encoding to use.
 	// If non-zero, the sender employs a FEC codec to generate redundant packets
 	// which may be used on receiver to restore lost packets. This requires both
 	// sender and receiver to use two separate source and repair ports.
-	FecCode FecCode
+	FecEncoding FecEncoding
 
 	// Number of source packets per FEC block.
 	// Used if some FEC code is selected.
@@ -204,7 +419,9 @@ type SenderConfig struct {
 	FecBlockRepairPackets uint32
 }
 
-// Receiver configuration
+// Receiver configuration.
+// You can zero-initialize this struct to get a default config.
+// See also Receiver.
 type ReceiverConfig struct {
 	// The rate of the samples in the frames returned to the user.
 	// Number of samples per channel per second.
@@ -219,10 +436,13 @@ type ReceiverConfig struct {
 	// Should be set.
 	FrameEncoding FrameEncoding
 
-	// Enable automatic timing.
-	// If true, the receiver read operation restricts the read rate according
-	// to the FrameSampleRate parameter. If zero, no restrictions are applied.
-	AutomaticTiming bool
+	// Clock source to use.
+	// Defines whether read operation will be blocking or non-blocking.
+	// If zero, default value is used.
+	ClockSource ClockSource
+
+	// Resampler backend to use.
+	ResamplerBackend ResamplerBackend
 
 	// Resampler profile to use.
 	// If non-zero, the receiver employs resampler for two purposes:
@@ -269,6 +489,6 @@ type ReceiverConfig struct {
 
 	// Breakage detection window, in nanoseconds.
 	// If zero, default value is used.
-	// @see broken_playback_timeout.
+	// See BrokenPlaybackTimeout.
 	BreakageDetectionWindow uint64
 }

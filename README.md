@@ -4,8 +4,6 @@
 
 This library provides Go (golang) bindings for [Roc Toolkit](https://github.com/roc-streaming/roc-toolkit), a toolkit for real-time audio streaming over the network.
 
-_Work in progress!_
-
 ## About Roc
 
 Compatible senders and receivers include:
@@ -49,7 +47,7 @@ Rules starting from 1.0.0 release:
 
 ## Installation
 
-You will need to have Roc Toolkit library and headers installed system-wide. Refer to official build [instructions](https://roc-streaming.org/toolkit/docs/building.html) on how to install libroc. There is no official distribution for any OS as of now, you will need to install from source.
+You will need to have Roc Toolkit library and headers installed system-wide. Refer to official build [instructions](https://roc-streaming.org/toolkit/docs/building.html) on how to install libroc from source.
 
 After installing libroc, you can install bindings using regular `go get`:
 
@@ -59,17 +57,24 @@ go get github.com/roc-streaming/roc-go/roc
 
 ## Development
 
-Check for compilation and linter errors:
+Run all checks:
 
 ```
-make check
+make
 ```
 
-Run tests:
+Only run specific checks:
 
 ```
+make build
+make lint
 make test
-make race # run tests under race detector
+```
+
+Update modules:
+
+```
+make tidy
 ```
 
 Format code:
