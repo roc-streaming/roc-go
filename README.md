@@ -29,6 +29,121 @@ Documentation for the bindings is availabe on [pkg.go.dev](https://pkg.go.dev/gi
 
 Documentation for the underlying C API can be found [here](https://roc-streaming.org/toolkit/docs/api.html).
 
+## Quick start
+
+#### Sender
+
+```go
+import (
+	"github.com/roc-streaming/roc-go/roc"
+)
+
+context, err := roc.OpenContext(roc.ContextConfig{})
+if err != nil {
+	panic(err)
+}
+defer context.Close()
+
+sender, err := roc.OpenSender(roc.SenderConfig{
+	FrameSampleRate:  44100,
+	FrameChannels:    roc.ChannelSetStereo,
+	FrameEncoding:    roc.FrameEncodingPcmFloat,
+	FecEncoding:      roc.FecEncodingRs8m,
+	ClockSource:      roc.ClockInternal,
+})
+if err != nil {
+	panic(err)
+}
+defer sender.Close()
+
+sourceEndpoint, err := roc.ParseEndpoint("rtp+rs8m://192.168.0.1:10001")
+if err != nil {
+	panic(err)
+}
+
+repairEndpoint, err := roc.ParseEndpoint("rs8m://192.168.0.1:10002")
+if err != nil {
+	panic(err)
+}
+
+err = sender.Connect(roc.SlotDefault, roc.InterfaceAudioSource, sourceEndpoint)
+if err != nil {
+	panic(err)
+}
+
+err = sender.Connect(roc.SlotDefault, roc.InterfaceAudioRepair, repairEndpoint)
+if err != nil {
+	panic(err)
+}
+
+for {
+	samples := make([]float32, 320)
+
+	/* fill samples */
+
+	err = sender.WriteFloats(samples)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+#### Receiver
+
+```go
+import (
+	"github.com/roc-streaming/roc-go/roc"
+)
+
+context, err := roc.OpenContext(roc.ContextConfig{})
+if err != nil {
+	panic(err)
+}
+defer context.Close()
+
+receiver, err := roc.OpenReceiver(roc.ReceiverConfig{
+	FrameSampleRate:  44100,
+	FrameChannels:    roc.ChannelSetStereo,
+	FrameEncoding:    roc.FrameEncodingPcmFloat,
+	ClockSource:      roc.ClockInternal,
+})
+if err != nil {
+	panic(err)
+}
+defer receiver.Close()
+
+sourceEndpoint, err := roc.ParseEndpoint("rtp+rs8m://0.0.0.0:10001")
+if err != nil {
+	panic(err)
+}
+
+repairEndpoint, err := roc.ParseEndpoint("rs8m://0.0.0.0:10002")
+if err != nil {
+	panic(err)
+}
+
+err = receiver.Bind(roc.SlotDefault, roc.InterfaceAudioSource, sourceEndpoint)
+if err != nil {
+	panic(err)
+}
+
+err = receiver.Bind(roc.SlotDefault, roc.InterfaceAudioRepair, repairEndpoint)
+if err != nil {
+	panic(err)
+}
+
+for {
+	samples := make([]float32, 320)
+
+	err = receiver.ReadFloats(samples)
+	if err != nil {
+		panic(err)
+	}
+
+	/* process samples */
+}
+```
+
 ## Versioning
 
 Go bindings and the C library both use [semantic versioning](https://semver.org/).
