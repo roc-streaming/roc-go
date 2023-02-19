@@ -1,6 +1,6 @@
 package roc
 
 /*
-#cgo LDFLAGS: -lroc
+#cgo pkg-config: roc
 */
 import "C"

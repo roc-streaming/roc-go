@@ -1,20 +1,20 @@
 name: build
 
 on:
-  workflow_dispatch:
-  repository_dispatch:
-
   pull_request:
     branches:
-      - master
+      - main
       - v*
 
   push:
     branches:
-      - master
+      - main
       - v*
     tags:
       - v*
+
+  repository_dispatch:
+  workflow_dispatch:
 
   schedule:
     - cron: '0 0 * * 1'
@@ -62,8 +62,8 @@ jobs:
       - name: Install system dependencies
         run: >
           sudo apt-get -y install g++ pkg-config scons ragel gengetopt \
-            libuv1-dev libunwind-dev libpulse-dev libsox-dev libcpputest-dev libtool \
-            intltool autoconf automake make cmake
+            libuv1-dev libunwind-dev libspeexdsp-dev libsox-dev libpulse-dev \
+            libtool intltool autoconf automake make cmake meson
 
       - name: Install Go
         uses: actions/setup-go@v3
@@ -87,6 +87,12 @@ jobs:
         run: |
           cd roc
           go test -covermode=count -coverprofile=coverage.out
+
+      - name: Run tests with cgocheck
+        if: ${{ matrix.test == 'yes' }}
+        run: |
+          cd roc
+          GODEBUG=cgocheck=2 go test -count=1 .
 
       - name: Run tests under race detector
         if: ${{ matrix.test == 'yes' }}
@@ -123,7 +129,8 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install system dependencies
-        run: brew install scons ragel gengetopt libuv speexdsp sox cpputest
+        run: |
+          brew install scons ragel gengetopt libuv speexdsp sox cpputest
 
       - name: Install Go
         uses: actions/setup-go@v3
@@ -145,6 +152,11 @@ jobs:
         run: |
           cd roc
           go test
+
+      - name: Run tests with cgocheck
+        run: |
+          cd roc
+          GODEBUG=cgocheck=2 go test -count=1 .
 
       - name: Run tests under race detector
         run: |

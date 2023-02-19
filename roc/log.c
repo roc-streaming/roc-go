@@ -1,6 +1,6 @@
 #include <roc/log.h>
 #include "_cgo_export.h"
 
-void rocGoLogHandlerProxy(roc_log_level level, char* component, char* message) {
-    rocGoLogHandler(level, component, message);
+void rocGoLogHandlerProxy(const roc_log_message* message, void* argument) {
+    rocGoLogHandler((roc_log_message*)message);
 }

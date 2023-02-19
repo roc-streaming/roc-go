@@ -41,7 +41,7 @@ func (tw testWriter) wait() string {
 	}
 }
 
-func Test_roc_log_default(t *testing.T) {
+func TestLog_Default(t *testing.T) {
 	setupFuncs := []func(){
 		func() {},
 		func() { SetLoggerFunc(nil) },
@@ -59,7 +59,7 @@ func Test_roc_log_default(t *testing.T) {
 
 		setupFn()
 
-		ctx, _ := OpenContext(&ContextConfig{})
+		ctx, _ := OpenContext(ContextConfig{})
 		ctx.Close()
 
 		if tw.wait() == "" {
@@ -68,17 +68,17 @@ func Test_roc_log_default(t *testing.T) {
 	}
 }
 
-func Test_roc_log_func(t *testing.T) {
+func TestLog_Func(t *testing.T) {
 	SetLogLevel(LogDebug)
 	defer SetLogLevel(defaultLogLevel)
 
 	tw := makeTestWriter()
-	SetLoggerFunc(func(_ LogLevel, component string, message string) {
-		_, _ = tw.Write([]byte(component + ":" + message))
+	SetLoggerFunc(func(msg LogMessage) {
+		_, _ = tw.Write([]byte(msg.Module + ":" + msg.Text))
 	})
 	defer SetLoggerFunc(nil)
 
-	ctx, _ := OpenContext(&ContextConfig{})
+	ctx, _ := OpenContext(ContextConfig{})
 	ctx.Close()
 
 	if tw.wait() == "" {
@@ -86,7 +86,7 @@ func Test_roc_log_func(t *testing.T) {
 	}
 }
 
-func Test_roc_log_interface(t *testing.T) {
+func TestLog_Interface(t *testing.T) {
 	SetLogLevel(LogDebug)
 	defer SetLogLevel(defaultLogLevel)
 
@@ -96,7 +96,7 @@ func Test_roc_log_interface(t *testing.T) {
 	SetLogger(logger)
 	defer SetLogger(nil)
 
-	ctx, _ := OpenContext(&ContextConfig{})
+	ctx, _ := OpenContext(ContextConfig{})
 	ctx.Close()
 
 	if tw.wait() == "" {
