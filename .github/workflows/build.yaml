@@ -80,6 +80,7 @@ jobs:
         if: ${{ matrix.build == 'yes' }}
         run: |
           cd roc
+          go list -f {{.IgnoredGoFiles}} .
           go get -v .
 
       - name: Run tests
@@ -146,6 +147,7 @@ jobs:
       - name: Build bindings
         run: |
           cd roc
+          go list -f {{.IgnoredGoFiles}} .
           go get -v .
 
       - name: Run tests
