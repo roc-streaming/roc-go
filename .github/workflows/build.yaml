@@ -105,7 +105,7 @@ jobs:
         if: ${{ matrix.lint == 'yes' }}
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.50.1
+          version: v1.51.2
           working-directory: roc
 
       - name: Prepare coverage report
