@@ -22,20 +22,35 @@ func Test_go2cBool(t *testing.T) {
 	}
 }
 
-func Test_go2cStr_c2goStr(t *testing.T) {
+func Test_go2cStr(t *testing.T) {
 	tests := []struct {
 		name   string
-		str    string
-		result string
+		arg    string
+		result []char
 	}{
-		{name: "nil"},
-		{name: "str", str: "str", result: "str"},
-		{name: "empty", str: "", result: ""},
-		{name: "x00", str: "\x00", result: ""},
+		{name: "str", arg: "str", result: []char{'s', 't', 'r', '\x00'}},
+		{name: "str00str", arg: "str\x00", result: []char{'s', 't', 'r', '\x00', '\x00'}},
+		{name: "empty", arg: "", result: []char{'\x00'}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.result, c2goStr(go2cStr(tt.str)))
+			assert.Equal(t, tt.result, go2cStr(tt.arg))
+		})
+	}
+}
+
+func Test_c2goStr(t *testing.T) {
+	tests := []struct {
+		name   string
+		arg    []char
+		result string
+	}{
+		{name: "str", arg: []char{'s', 't', 'r', '\x00'}, result: "str"},
+		{name: "empty", arg: []char{'\x00'}, result: ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.result, c2goStr(tt.arg))
 		})
 	}
 }

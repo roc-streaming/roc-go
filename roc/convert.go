@@ -4,6 +4,8 @@ import (
 	"C"
 )
 
+type char = C.char
+
 func go2cStr(str string) []C.char {
 	charArray := make([]C.char, len(str)+1)
 	for ind, r := range str {
