@@ -30,7 +30,7 @@ func Test_go2cStr(t *testing.T) {
 	}{
 		{name: "str", arg: "str", result: []char{'s', 't', 'r', '\x00'}},
 		{name: "str0", arg: "str\x00", result: []char{'s', 't', 'r', '\x00', '\x00'}},
-		{name: "str0str", arg: "str\x00str", result: []char{'s', 't', 'r', '\x00', 's', 't', 'r', '\x00'}},
+		{name: "str0s", arg: "str\x00s", result: []char{'s', 't', 'r', '\x00', 's', '\x00'}},
 		{name: "empty", arg: "", result: []char{'\x00'}},
 	}
 	for _, tt := range tests {
