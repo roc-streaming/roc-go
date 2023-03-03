@@ -29,7 +29,8 @@ func Test_go2cStr(t *testing.T) {
 		result []char
 	}{
 		{name: "str", arg: "str", result: []char{'s', 't', 'r', '\x00'}},
-		{name: "str00str", arg: "str\x00", result: []char{'s', 't', 'r', '\x00', '\x00'}},
+		{name: "str0", arg: "str\x00", result: []char{'s', 't', 'r', '\x00', '\x00'}},
+		{name: "str0str", arg: "str\x00str", result: []char{'s', 't', 'r', '\x00', 's', 't', 'r', '\x00'}},
 		{name: "empty", arg: "", result: []char{'\x00'}},
 	}
 	for _, tt := range tests {
@@ -45,8 +46,10 @@ func Test_c2goStr(t *testing.T) {
 		arg    []char
 		result string
 	}{
-		{name: "str", arg: []char{'s', 't', 'r', '\x00'}, result: "str"},
-		{name: "empty", arg: []char{'\x00'}, result: ""},
+		{name: "str0", arg: []char{'s', 't', 'r', '\x00'}, result: "str"},
+		{name: "str00", arg: []char{'s', 't', 'r', '\x00', '\x00'}, result: "str"},
+		{name: "str0str0", arg: []char{'s', 't', 'r', '\x00', 's', 't', 'r', '\x00'}, result: "str"},
+		{name: "0", arg: []char{'\x00'}, result: ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
