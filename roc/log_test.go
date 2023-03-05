@@ -42,29 +42,34 @@ func (tw testWriter) wait() string {
 }
 
 func TestLog_Default(t *testing.T) {
-	setupFuncs := []func(){
-		func() {},
-		func() { SetLoggerFunc(nil) },
-		func() { SetLogger(nil) },
+	tests := []struct {
+		name    string
+		setupFn func()
+	}{
+		{name: "default", setupFn: func() {}},
+		{name: "set_logger_func", setupFn: func() { SetLoggerFunc(nil) }},
+		{name: "set_logger", setupFn: func() { SetLogger(nil) }},
 	}
 
 	SetLogLevel(LogDebug)
 	defer SetLogLevel(defaultLogLevel)
 
-	for n, setupFn := range setupFuncs {
-		tw := makeTestWriter()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tw := makeTestWriter()
 
-		log.SetOutput(&tw)
-		defer log.SetOutput(ioutil.Discard)
+			log.SetOutput(&tw)
+			defer log.SetOutput(ioutil.Discard)
 
-		setupFn()
+			tt.setupFn()
 
-		ctx, _ := OpenContext(ContextConfig{})
-		ctx.Close()
+			ctx, _ := OpenContext(ContextConfig{})
+			ctx.Close()
 
-		if tw.wait() == "" {
-			t.Fatalf("test %v: expected logs, didn't get them before timeout", n)
-		}
+			if tw.wait() == "" {
+				t.Fatalf("expected logs, didn't get them before timeout")
+			}
+		})
 	}
 }
 
