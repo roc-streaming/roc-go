@@ -62,6 +62,23 @@ func TestEndpoint(t *testing.T) {
 			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
 			composeErr: newNativeErr("roc_endpoint_get_uri()", -1),
 		},
+		{
+			uri:        "rtsp://192.168.0.1:65536",
+			protocol:   ProtoRtsp,
+			host:       "192.168.0.1",
+			port:       655356,
+			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
+			composeErr: newNativeErr("roc_endpoint_set_port()", -1),
+		},
+		{
+			uri:        "rtsp://192.168.0.1/??",
+			protocol:   ProtoRtsp,
+			host:       "192.168.0.1",
+			port:       -1,
+			resource:   "??",
+			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
+			composeErr: newNativeErr("roc_endpoint_set_resource()", -1),
+		},
 	}
 
 	for _, tt := range tests {
