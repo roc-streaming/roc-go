@@ -2,17 +2,22 @@ package roc
 
 import (
 	"C"
+	"fmt"
 )
 
 type char = C.char
 
-func go2cStr(str string) []char {
+func go2cStr(str string) ([]char, error) {
 	charArray := make([]char, len(str)+1)
 	for ind, r := range str {
-		charArray[ind] = (char)(r)
+		c := (char)(r)
+		if c == '\x00' {
+			return nil, fmt.Errorf("unexpected zero byte in the string: %q", str)
+		}
+		charArray[ind] = c
 	}
 	charArray[len(str)] = '\x00'
-	return charArray
+	return charArray, nil
 }
 
 func c2goStr(charArray []char) string {

@@ -208,8 +208,10 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) error
 		return errors.New("sender is closed")
 	}
 
-	cIP := go2cStr(ip)
-
+	cIP, err := go2cStr(ip)
+	if err != nil {
+		return fmt.Errorf("invalid ip: %w", err)
+	}
 	errCode := C.roc_sender_set_outgoing_address(
 		s.cPtr,
 		(C.roc_slot)(slot),

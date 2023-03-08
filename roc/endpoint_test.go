@@ -1,6 +1,7 @@
 package roc
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -181,6 +182,29 @@ func TestEndpoint(t *testing.T) {
 			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
 			composeErr: newNativeErr("roc_endpoint_get_uri()", -1),
 		},
+		{
+			uri:        "rtsp://192.168.0.1:12345\x00", // zero byte in uri
+			parseErr:   errors.New("invalid uri: "),
+			composeErr: newNativeErr("roc_endpoint_set_protocol()", -1),
+		},
+		{
+			uri:        "1",
+			protocol:   ProtoRtsp,
+			host:       "192.168.0.1\x00", // zero byte in host
+			port:       12345,
+			resource:   "",
+			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
+			composeErr: errors.New("invalid host: "),
+		},
+		{
+			uri:        "2",
+			protocol:   ProtoRtsp,
+			host:       "192.168.0.1",
+			port:       12345,
+			resource:   "/path\x00", // zero byte in resource
+			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
+			composeErr: errors.New("invalid resource: "),
+		},
 	}
 
 	for _, tt := range tests {
@@ -196,7 +220,7 @@ func TestEndpoint(t *testing.T) {
 				assert.Equal(t, tt.port, endp.Port)
 				assert.Equal(t, tt.resource, endp.Resource)
 			} else {
-				require.Equal(t, tt.parseErr, err)
+				require.Contains(t, err.Error(), tt.parseErr.Error())
 				require.Nil(t, endp)
 			}
 		})
@@ -215,7 +239,7 @@ func TestEndpoint(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tt.uri, uri)
 			} else {
-				require.Equal(t, tt.composeErr, err)
+				require.Contains(t, err.Error(), tt.composeErr.Error())
 				require.Empty(t, uri)
 			}
 		})

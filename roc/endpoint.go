@@ -92,7 +92,10 @@ func ParseEndpoint(uri string) (*Endpoint, error) {
 		}
 	}()
 
-	cURI := go2cStr(uri)
+	cURI, err := go2cStr(uri)
+	if err != nil {
+		return nil, fmt.Errorf("invalid uri: %w", err)
+	}
 	errCode = C.roc_endpoint_set_uri(cEndp, (*C.char)(&cURI[0]))
 	if errCode != 0 {
 		return nil, newNativeErr("roc_endpoint_set_uri()", errCode)
@@ -201,7 +204,10 @@ func (endp *Endpoint) toC(cEndp *C.roc_endpoint) error {
 	}
 
 	if endp.Host != "" {
-		cHost := go2cStr(endp.Host)
+		cHost, err := go2cStr(endp.Host)
+		if err != nil {
+			return fmt.Errorf("invalid host: %w", err)
+		}
 		errCode = C.roc_endpoint_set_host(cEndp, (*C.char)(&cHost[0]))
 		if errCode != 0 {
 			return newNativeErr("roc_endpoint_set_host()", errCode)
@@ -216,7 +222,10 @@ func (endp *Endpoint) toC(cEndp *C.roc_endpoint) error {
 	}
 
 	if endp.Resource != "" {
-		cResource := go2cStr(endp.Resource)
+		cResource, err := go2cStr(endp.Resource)
+		if err != nil {
+			return fmt.Errorf("invalid resource: %w", err)
+		}
 		errCode = C.roc_endpoint_set_resource(cEndp, (*C.char)(&cResource[0]))
 		if errCode != 0 {
 			return newNativeErr("roc_endpoint_set_resource()", errCode)
