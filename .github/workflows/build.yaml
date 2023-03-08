@@ -26,8 +26,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Linux - Go 1.12
-            go: 1.12
+          - name: Linux - Go 1.13
+            go: 1.13
             build: yes
             test: yes
             lint: no
