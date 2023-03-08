@@ -239,8 +239,10 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) erro
 		return errors.New("receiver is closed")
 	}
 
-	cIP := go2cStr(ip)
-
+	cIP, err := go2cStr(ip)
+	if err != nil {
+		return fmt.Errorf("invalid ip: %w", err)
+	}
 	errCode := C.roc_receiver_set_multicast_group(
 		r.cPtr,
 		(C.roc_slot)(slot),
