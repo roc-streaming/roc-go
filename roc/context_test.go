@@ -1,7 +1,6 @@
 package roc
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -55,19 +54,19 @@ func TestContext_Close(t *testing.T) {
 			name:         "has_receivers",
 			hasReceivers: true,
 			hasSenders:   false,
-			wantErr:      errors.New("roc_context_close() failed with code -1"),
+			wantErr:      newNativeErr("roc_context_close()", -1),
 		},
 		{
 			name:         "has_senders",
 			hasReceivers: false,
 			hasSenders:   true,
-			wantErr:      errors.New("roc_context_close() failed with code -1"),
+			wantErr:      newNativeErr("roc_context_close()", -1),
 		},
 		{
 			name:         "has_senders_and_receivers",
 			hasReceivers: true,
 			hasSenders:   true,
-			wantErr:      errors.New("roc_context_close() failed with code -1"),
+			wantErr:      newNativeErr("roc_context_close()", -1),
 		},
 	}
 
@@ -75,17 +74,26 @@ func TestContext_Close(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, err := OpenContext(ContextConfig{})
 			require.NoError(t, err)
+			require.NotNil(t, ctx)
 
 			if tt.hasReceivers {
-				_, err = OpenReceiver(ctx, ReceiverConfig{
-					FrameSampleRate: 44100,
-					FrameChannels:   ChannelSetStereo,
-					FrameEncoding:   FrameEncodingPcmFloat,
+				receiver, err := OpenReceiver(ctx, ReceiverConfig{
+					FrameSampleRate:  43100,
+					FrameChannels:    ChannelSetStereo,
+					FrameEncoding:    FrameEncodingPcmFloat,
 				})
 				require.NoError(t, err)
+				require.NotNil(t, receiver)
+
+				defer func() {
+					err = receiver.Close()
+					if err != nil {
+						t.Fail()
+					}
+				}()
 			}
 			if tt.hasSenders {
-				_, err = OpenSender(ctx, SenderConfig{
+				sender, err := OpenSender(ctx, SenderConfig{
 					FrameSampleRate:  44100,
 					FrameChannels:    ChannelSetStereo,
 					FrameEncoding:    FrameEncodingPcmFloat,
@@ -94,6 +102,14 @@ func TestContext_Close(t *testing.T) {
 					FecEncoding:      FecEncodingRs8m,
 				})
 				require.NoError(t, err)
+				require.NotNil(t, sender)
+				
+				defer func() {
+					err = sender.Close()
+					if err != nil {
+						t.Fail()
+					}
+				}()
 			}
 
 			err = ctx.Close()
