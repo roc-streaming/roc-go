@@ -78,9 +78,9 @@ func TestContext_Close(t *testing.T) {
 
 			if tt.hasReceivers {
 				receiver, err := OpenReceiver(ctx, ReceiverConfig{
-					FrameSampleRate:  43100,
-					FrameChannels:    ChannelSetStereo,
-					FrameEncoding:    FrameEncodingPcmFloat,
+					FrameSampleRate: 43100,
+					FrameChannels:   ChannelSetStereo,
+					FrameEncoding:   FrameEncodingPcmFloat,
 				})
 				require.NoError(t, err)
 				require.NotNil(t, receiver)
@@ -90,6 +90,7 @@ func TestContext_Close(t *testing.T) {
 					if err != nil {
 						t.Fail()
 					}
+					err = ctx.Close()
 				}()
 			}
 			if tt.hasSenders {
@@ -103,12 +104,13 @@ func TestContext_Close(t *testing.T) {
 				})
 				require.NoError(t, err)
 				require.NotNil(t, sender)
-				
+
 				defer func() {
 					err = sender.Close()
 					if err != nil {
 						t.Fail()
 					}
+					err = ctx.Close()
 				}()
 			}
 
