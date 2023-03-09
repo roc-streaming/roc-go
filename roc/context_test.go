@@ -90,7 +90,7 @@ func TestContext_Close(t *testing.T) {
 					if err != nil {
 						t.Fail()
 					}
-					err = ctx.Close()
+					ctx.Close()
 				}()
 			}
 			if tt.hasSenders {
@@ -110,7 +110,7 @@ func TestContext_Close(t *testing.T) {
 					if err != nil {
 						t.Fail()
 					}
-					err = ctx.Close()
+					ctx.Close()
 				}()
 			}
 
