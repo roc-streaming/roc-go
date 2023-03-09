@@ -106,15 +106,15 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		/* FIXME: uncomment after https://github.com/roc-streaming/roc-toolkit/issues/519
-			{
-				uri:        "rtsp://192.168.0.1:0",
-				protocol:   ProtoRtsp,
-				host:       "192.168.0.1",
-				port:       0, // use zero port (for bind)
-				resource:   "",
-				parseErr:   nil,
-				composeErr: nil,
-			},
+		{
+			uri:        "rtsp://192.168.0.1:0",
+			protocol:   ProtoRtsp,
+			host:       "192.168.0.1",
+			port:       0, // use zero port (for bind)
+			resource:   "",
+			parseErr:   nil,
+			composeErr: nil,
+		},
 		*/
 		// errors
 		{

@@ -1,6 +1,7 @@
 package roc
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -32,6 +33,74 @@ func TestContext_Open(t *testing.T) {
 			} else {
 				require.Equal(t, tt.wantErr, err)
 				require.Nil(t, ctx)
+			}
+		})
+	}
+}
+
+func TestContext_Close(t *testing.T) {
+	tests := []struct {
+		name         string
+		hasReceivers bool
+		hasSenders   bool
+		wantErr      error
+	}{
+		{
+			name:         "no_senders_or_receivers",
+			hasReceivers: false,
+			hasSenders:   false,
+			wantErr:      nil,
+		},
+		{
+			name:         "has_receivers",
+			hasReceivers: true,
+			hasSenders:   false,
+			wantErr:      errors.New("roc_context_close() failed with code -1"),
+		},
+		{
+			name:         "has_senders",
+			hasReceivers: false,
+			hasSenders:   true,
+			wantErr:      errors.New("roc_context_close() failed with code -1"),
+		},
+		{
+			name:         "has_senders_and_receivers",
+			hasReceivers: true,
+			hasSenders:   true,
+			wantErr:      errors.New("roc_context_close() failed with code -1"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, err := OpenContext(ContextConfig{})
+			require.NoError(t, err)
+
+			if tt.hasReceivers {
+				_, err = OpenReceiver(ctx, ReceiverConfig{
+					FrameSampleRate: 44100,
+					FrameChannels:   ChannelSetStereo,
+					FrameEncoding:   FrameEncodingPcmFloat,
+				})
+				require.NoError(t, err)
+			}
+			if tt.hasSenders {
+				_, err = OpenSender(ctx, SenderConfig{
+					FrameSampleRate:  44100,
+					FrameChannels:    ChannelSetStereo,
+					FrameEncoding:    FrameEncodingPcmFloat,
+					ClockSource:      ClockInternal,
+					ResamplerProfile: ResamplerProfileDisable,
+					FecEncoding:      FecEncodingRs8m,
+				})
+				require.NoError(t, err)
+			}
+
+			err = ctx.Close()
+			if tt.wantErr != nil {
+				require.Equal(t, tt.wantErr.Error(), err.Error())
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}
