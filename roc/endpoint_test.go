@@ -105,6 +105,7 @@ func TestEndpoint(t *testing.T) {
 			parseErr:   nil,
 			composeErr: nil,
 		},
+		/* FIXME: uncomment after https://github.com/roc-streaming/roc-toolkit/issues/519
 		{
 			uri:        "rtsp://192.168.0.1:0",
 			protocol:   ProtoRtsp,
@@ -114,6 +115,7 @@ func TestEndpoint(t *testing.T) {
 			parseErr:   nil,
 			composeErr: nil,
 		},
+		*/
 		// errors
 		{
 			uri:        "", // empty uri
