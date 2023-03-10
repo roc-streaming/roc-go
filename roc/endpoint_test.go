@@ -105,7 +105,6 @@ func TestEndpoint(t *testing.T) {
 			parseErr:   nil,
 			composeErr: nil,
 		},
-		/* FIXME: uncomment after https://github.com/roc-streaming/roc-toolkit/issues/519
 		{
 			uri:        "rtsp://192.168.0.1:0",
 			protocol:   ProtoRtsp,
@@ -115,7 +114,6 @@ func TestEndpoint(t *testing.T) {
 			parseErr:   nil,
 			composeErr: nil,
 		},
-		*/
 		// errors
 		{
 			uri:        "", // empty uri
@@ -188,7 +186,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: newNativeErr("roc_endpoint_set_protocol()", -1),
 		},
 		{
-			uri:        "1",
+			uri:        "",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1\x00", // zero byte in host
 			port:       12345,
@@ -197,7 +195,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: errors.New("invalid host: "),
 		},
 		{
-			uri:        "2",
+			uri:        "",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
 			port:       12345,
