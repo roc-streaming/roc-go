@@ -21,6 +21,7 @@ func TestEndpoint(t *testing.T) {
 	}{
 		// protocols
 		{
+			name:       "rtsp protocol",
 			uri:        "rtsp://192.168.0.1:12345/path?query1=query1&query2=query2",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
@@ -30,6 +31,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rtp protocol",
 			uri:        "rtp://192.168.0.1:12345",
 			protocol:   ProtoRtp,
 			host:       "192.168.0.1",
@@ -38,6 +40,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rtp+rs8m protocol",
 			uri:        "rtp+rs8m://192.168.0.1:12345",
 			protocol:   ProtoRtpRs8mSource,
 			host:       "192.168.0.1",
@@ -47,6 +50,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rs8m protocol",
 			uri:        "rs8m://192.168.0.1:12345",
 			protocol:   ProtoRs8mRepair,
 			host:       "192.168.0.1",
@@ -55,6 +59,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rtp+ldpc protocol",
 			uri:        "rtp+ldpc://192.168.0.1:12345",
 			protocol:   ProtoRtpLdpcSource,
 			host:       "192.168.0.1",
@@ -63,6 +68,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "ldpc protocol",
 			uri:        "ldpc://192.168.0.1:12345",
 			protocol:   ProtoLdpcRepair,
 			host:       "192.168.0.1",
@@ -71,6 +77,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rtcp protocol",
 			uri:        "rtcp://192.168.0.1:12345",
 			protocol:   ProtoRtcp,
 			host:       "192.168.0.1",
@@ -90,6 +97,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rtsp without resource",
 			uri:        "rtsp://192.168.0.1:12345",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
@@ -99,6 +107,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rtsp without query params",
 			uri:        "rtsp://192.168.0.1:12345/path",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
@@ -219,11 +228,7 @@ func TestEndpoint(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		testName := tt.name
-		if testName == "" {
-			testName = tt.uri
-		}
-		t.Run("parse/"+testName, func(t *testing.T) {
+		t.Run("parse/"+tt.name, func(t *testing.T) {
 			endp, err := ParseEndpoint(tt.uri)
 
 			if tt.parseErr == nil {
@@ -240,7 +245,7 @@ func TestEndpoint(t *testing.T) {
 			}
 		})
 
-		t.Run("compose/"+testName, func(t *testing.T) {
+		t.Run("compose/"+tt.name, func(t *testing.T) {
 			endp := Endpoint{
 				Protocol: tt.protocol,
 				Host:     tt.host,
