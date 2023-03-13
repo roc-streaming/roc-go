@@ -10,6 +10,7 @@ import (
 
 func TestEndpoint(t *testing.T) {
 	tests := []struct {
+		name       string
 		uri        string
 		protocol   Protocol
 		host       string
@@ -20,6 +21,7 @@ func TestEndpoint(t *testing.T) {
 	}{
 		// protocols
 		{
+			name:       "rtsp protocol",
 			uri:        "rtsp://192.168.0.1:12345/path?query1=query1&query2=query2",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
@@ -29,6 +31,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rtp protocol",
 			uri:        "rtp://192.168.0.1:12345",
 			protocol:   ProtoRtp,
 			host:       "192.168.0.1",
@@ -37,6 +40,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rtp+rs8m protocol",
 			uri:        "rtp+rs8m://192.168.0.1:12345",
 			protocol:   ProtoRtpRs8mSource,
 			host:       "192.168.0.1",
@@ -46,6 +50,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rs8m protocol",
 			uri:        "rs8m://192.168.0.1:12345",
 			protocol:   ProtoRs8mRepair,
 			host:       "192.168.0.1",
@@ -54,6 +59,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rtp+ldpc protocol",
 			uri:        "rtp+ldpc://192.168.0.1:12345",
 			protocol:   ProtoRtpLdpcSource,
 			host:       "192.168.0.1",
@@ -62,6 +68,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "ldpc protocol",
 			uri:        "ldpc://192.168.0.1:12345",
 			protocol:   ProtoLdpcRepair,
 			host:       "192.168.0.1",
@@ -70,6 +77,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rtcp protocol",
 			uri:        "rtcp://192.168.0.1:12345",
 			protocol:   ProtoRtcp,
 			host:       "192.168.0.1",
@@ -79,15 +87,17 @@ func TestEndpoint(t *testing.T) {
 		},
 		// components
 		{
+			name:       "use default rtsp port",
 			uri:        "rtsp://192.168.0.1",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
-			port:       -1, // use default rtsp port
+			port:       -1,
 			resource:   "",
 			parseErr:   nil,
 			composeErr: nil,
 		},
 		{
+			name:       "rtsp without resource",
 			uri:        "rtsp://192.168.0.1:12345",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
@@ -97,6 +107,7 @@ func TestEndpoint(t *testing.T) {
 			composeErr: nil,
 		},
 		{
+			name:       "rtsp without query params",
 			uri:        "rtsp://192.168.0.1:12345/path",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
@@ -107,10 +118,11 @@ func TestEndpoint(t *testing.T) {
 		},
 		/* FIXME: uncomment after https://github.com/roc-streaming/roc-toolkit/issues/519
 		{
+			name:       "use zero port (for bind)",
 			uri:        "rtsp://192.168.0.1:0",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
-			port:       0, // use zero port (for bind)
+			port:       0,
 			resource:   "",
 			parseErr:   nil,
 			composeErr: nil,
@@ -118,25 +130,29 @@ func TestEndpoint(t *testing.T) {
 		*/
 		// errors
 		{
-			uri:        "", // empty uri
+			name:       "empty uri",
+			uri:        "",
 			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
 			composeErr: newNativeErr("roc_endpoint_set_protocol()", -1),
 		},
 		{
-			uri:        "rtsp://", // missing host and port
+			name:       "missing host and port",
+			uri:        "rtsp://",
 			protocol:   ProtoRtsp,
 			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
 			composeErr: newNativeErr("roc_endpoint_get_uri()", -1),
 		},
 		{
-			uri:        "rtsp://:12345", // missing host
+			name:       "missing host",
+			uri:        "rtsp://:12345",
 			protocol:   ProtoRtsp,
 			port:       12345,
 			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
 			composeErr: newNativeErr("roc_endpoint_get_uri()", -1),
 		},
 		{
-			uri:        "rtsp://192.168.0.1:65536", // port out of range
+			name:       "port out of range",
+			uri:        "rtsp://192.168.0.1:65536",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
 			port:       655356,
@@ -144,7 +160,8 @@ func TestEndpoint(t *testing.T) {
 			composeErr: newNativeErr("roc_endpoint_set_port()", -1),
 		},
 		{
-			uri:        "rtsp://192.168.0.1:-2", // port out of range
+			name:       "port out of range - negative",
+			uri:        "rtsp://192.168.0.1:-2",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
 			port:       -2,
@@ -152,7 +169,8 @@ func TestEndpoint(t *testing.T) {
 			composeErr: newNativeErr("roc_endpoint_set_port()", -1),
 		},
 		{
-			uri:        "rtsp://192.168.0.1/??", // invalid resource
+			name:       "invalid resource",
+			uri:        "rtsp://192.168.0.1/??",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
 			port:       -1,
@@ -161,12 +179,14 @@ func TestEndpoint(t *testing.T) {
 			composeErr: newNativeErr("roc_endpoint_set_resource()", -1),
 		},
 		{
-			protocol:   Protocol(1), // invalid protocol
+			name:       "invalid protocol",
+			protocol:   Protocol(1),
 			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
 			composeErr: newNativeErr("roc_endpoint_set_protocol()", -1),
 		},
 		{
-			uri:        "rtp://192.168.0.1:12345/path", // resource not allowed for protocol
+			name:       "resource not allowed for protocol",
+			uri:        "rtp://192.168.0.1:12345/path",
 			protocol:   ProtoRtp,
 			host:       "192.168.0.1",
 			port:       12345,
@@ -175,7 +195,8 @@ func TestEndpoint(t *testing.T) {
 			composeErr: newNativeErr("roc_endpoint_get_uri()", -1),
 		},
 		{
-			uri:        "rtp://192.168.0.1", // default port not defined for protocol
+			name:       "default port not defined for protocol",
+			uri:        "rtp://192.168.0.1",
 			protocol:   ProtoRtp,
 			host:       "192.168.0.1",
 			port:       -1,
@@ -183,32 +204,33 @@ func TestEndpoint(t *testing.T) {
 			composeErr: newNativeErr("roc_endpoint_get_uri()", -1),
 		},
 		{
-			uri:        "rtsp://192.168.0.1:12345\x00", // zero byte in uri
+			name:       "zero byte in uri",
+			uri:        "rtsp://192.168.0.1:12345\x00",
 			parseErr:   errors.New("invalid uri: "),
 			composeErr: newNativeErr("roc_endpoint_set_protocol()", -1),
 		},
 		{
-			uri:        "",
+			name:       "zero byte in host",
 			protocol:   ProtoRtsp,
-			host:       "192.168.0.1\x00", // zero byte in host
+			host:       "192.168.0.1\x00",
 			port:       12345,
 			resource:   "",
 			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
 			composeErr: errors.New("invalid host: "),
 		},
 		{
-			uri:        "",
+			name:       "zero byte in resource",
 			protocol:   ProtoRtsp,
 			host:       "192.168.0.1",
 			port:       12345,
-			resource:   "/path\x00", // zero byte in resource
+			resource:   "/path\x00",
 			parseErr:   newNativeErr("roc_endpoint_set_uri()", -1),
 			composeErr: errors.New("invalid resource: "),
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run("parse/"+tt.uri, func(t *testing.T) {
+		t.Run("parse/"+tt.name, func(t *testing.T) {
 			endp, err := ParseEndpoint(tt.uri)
 
 			if tt.parseErr == nil {
@@ -225,7 +247,7 @@ func TestEndpoint(t *testing.T) {
 			}
 		})
 
-		t.Run("compose/"+tt.uri, func(t *testing.T) {
+		t.Run("compose/"+tt.name, func(t *testing.T) {
 			endp := Endpoint{
 				Protocol: tt.protocol,
 				Host:     tt.host,
