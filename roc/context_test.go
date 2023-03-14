@@ -38,6 +38,11 @@ func TestContext_Open(t *testing.T) {
 }
 
 func TestContext_Close(t *testing.T) {
+	var (
+		receiver *Receiver
+		sender   *Sender
+	)
+
 	tests := []struct {
 		name         string
 		hasReceivers bool
@@ -77,27 +82,16 @@ func TestContext_Close(t *testing.T) {
 			require.NotNil(t, ctx)
 
 			if tt.hasReceivers {
-				receiver, err := OpenReceiver(ctx, ReceiverConfig{
+				receiver, err = OpenReceiver(ctx, ReceiverConfig{
 					FrameSampleRate: 43100,
 					FrameChannels:   ChannelSetStereo,
 					FrameEncoding:   FrameEncodingPcmFloat,
 				})
 				require.NoError(t, err)
 				require.NotNil(t, receiver)
-
-				defer func() {
-					err = receiver.Close()
-					if err != nil {
-						t.Fail()
-					}
-
-					err = ctx.Close()
-					require.NoError(t, err)
-
-				}()
 			}
 			if tt.hasSenders {
-				sender, err := OpenSender(ctx, SenderConfig{
+				sender, err = OpenSender(ctx, SenderConfig{
 					FrameSampleRate:  44100,
 					FrameChannels:    ChannelSetStereo,
 					FrameEncoding:    FrameEncodingPcmFloat,
@@ -107,24 +101,26 @@ func TestContext_Close(t *testing.T) {
 				})
 				require.NoError(t, err)
 				require.NotNil(t, sender)
-
-				defer func() {
-					err = sender.Close()
-					if err != nil {
-						t.Fail()
-					}
-
-					if tt.hasReceivers == false {
-						err = ctx.Close()
-						require.NoError(t, err)
-					}
-				}()
 			}
 
 			err = ctx.Close()
 			if tt.wantErr != nil {
 				require.Equal(t, tt.wantErr.Error(), err.Error())
 			} else {
+				require.NoError(t, err)
+			}
+
+			if tt.hasReceivers || tt.hasSenders {
+				if tt.hasReceivers {
+					err = receiver.Close()
+					require.NoError(t, err)
+				}
+				if tt.hasSenders {
+					err = sender.Close()
+					require.NoError(t, err)
+				}
+
+				err = ctx.Close()
 				require.NoError(t, err)
 			}
 		})
