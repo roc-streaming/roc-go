@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestVersion_Get(t *testing.T) {
-	v := GetVersion()
+func TestVersion(t *testing.T) {
+	v := Version()
 	require.NotEmpty(t, v)
-	require.NotEmpty(t, v.Library)
+	require.NotZero(t, v.Library.Major+v.Library.Minor+v.Library.Patch)
 }
