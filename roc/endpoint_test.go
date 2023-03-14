@@ -116,7 +116,6 @@ func TestEndpoint(t *testing.T) {
 			parseErr:   nil,
 			composeErr: nil,
 		},
-		/* FIXME: uncomment after https://github.com/roc-streaming/roc-toolkit/issues/519
 		{
 			name:       "use zero port (for bind)",
 			uri:        "rtsp://192.168.0.1:0",
@@ -127,7 +126,6 @@ func TestEndpoint(t *testing.T) {
 			parseErr:   nil,
 			composeErr: nil,
 		},
-		*/
 		// errors
 		{
 			name:       "empty uri",
