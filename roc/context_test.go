@@ -38,11 +38,6 @@ func TestContext_Open(t *testing.T) {
 }
 
 func TestContext_Close(t *testing.T) {
-	var (
-		receiver *Receiver
-		sender   *Sender
-	)
-
 	tests := []struct {
 		name         string
 		hasReceivers bool
@@ -77,6 +72,11 @@ func TestContext_Close(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var (
+				receiver *Receiver
+				sender   *Sender
+			)
+			
 			ctx, err := OpenContext(ContextConfig{})
 			require.NoError(t, err)
 			require.NotNil(t, ctx)
