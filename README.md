@@ -25,7 +25,7 @@ Key features:
 
 ## Documentation
 
-Documentation for the bindings is availabe on [pkg.go.dev](https://pkg.go.dev/github.com/roc-streaming/roc-go/roc).
+Documentation for the bindings is available on [pkg.go.dev](https://pkg.go.dev/github.com/roc-streaming/roc-go/roc).
 
 Documentation for the underlying C API can be found [here](https://roc-streaming.org/toolkit/docs/api.html).
 
@@ -154,7 +154,7 @@ Rules prior to 1.0.0 release:
 
 Rules starting from 1.0.0 release:
 
-* The first two components (major and minor) of the bindings and the C library versions correspond to each other. The third component (patch) is indepdendent.
+* The first two components (major and minor) of the bindings and the C library versions correspond to each other. The third component (patch) is independent.
 
   **Bindings are compatible with the C library if its major version is the same, and minor version is the same or higher.**
 
