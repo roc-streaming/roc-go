@@ -243,8 +243,6 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) error
 // address, which may be useful if you're using socket activation mechanism.
 //
 // Automatically initializes slot with given index if it's used first time.
-//
-
 func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled int) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
