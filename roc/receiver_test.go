@@ -53,3 +53,27 @@ func TestReceiver_Open(t *testing.T) {
 		})
 	}
 }
+
+func TestReceiverSetReuseaddr(t *testing.T) {
+	ctx, err := OpenContext(ContextConfig{})
+	require.NoError(t, err)
+
+	receiver, err := OpenReceiver(ctx, ReceiverConfig{
+		FrameSampleRate: 44100,
+		FrameChannels:   ChannelSetStereo,
+		FrameEncoding:   FrameEncodingPcmFloat,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, receiver)
+
+	err = receiver.SetReuseaddr(SlotDefault, InterfaceAudioSource, 1)
+	if err != nil {
+		t.Errorf("expected no error, but got %v", err)
+	}
+
+	err = receiver.Close()
+	require.NoError(t, err)
+
+	err = ctx.Close()
+	require.NoError(t, err)
+}

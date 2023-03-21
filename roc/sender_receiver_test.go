@@ -92,6 +92,16 @@ func newTestEnv(t *testing.T) *testEnv {
 	return &e
 }
 
+func TestSenderSetReuseaddr(t *testing.T) {
+	e := newTestEnv(t)
+	defer e.close(t)
+
+	err := e.Sender.SetReuseaddr(SlotDefault, InterfaceAudioRepair, 1)
+	if err != nil {
+		t.Errorf("expected no error, but got %v", err)
+	}
+}
+
 func (e *testEnv) close(t *testing.T) {
 	err := e.Receiver.Close()
 	if err != nil {
