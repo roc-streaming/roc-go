@@ -243,7 +243,7 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) error
 // address, which may be useful if you're using socket activation mechanism.
 //
 // Automatically initializes slot with given index if it's used first time.
-func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled int) error {
+func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -251,15 +251,13 @@ func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled int) error {
 		return errors.New("sender is closed")
 	}
 
-	if enabled != 0 && enabled != 1 {
-		return errors.New("enabled is invalid")
-	}
+	cEnabled := go2cBool(enabled)
 
 	errCode := C.roc_sender_set_reuseaddr(
 		s.cPtr,
 		(C.roc_slot)(slot),
 		(C.roc_interface)(iface),
-		(C.int)(enabled),
+		(C.int)(cEnabled),
 	)
 
 	if errCode != 0 {

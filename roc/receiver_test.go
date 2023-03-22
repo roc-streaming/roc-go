@@ -15,9 +15,11 @@ func TestReceiver_Open(t *testing.T) {
 		{
 			name: "ok",
 			config: ReceiverConfig{
-				FrameSampleRate: 44100,
-				FrameChannels:   ChannelSetStereo,
-				FrameEncoding:   FrameEncodingPcmFloat,
+				FrameSampleRate:  44100,
+				FrameChannels:    ChannelSetStereo,
+				FrameEncoding:    FrameEncodingPcmFloat,
+				ClockSource:      ClockInternal,
+				ResamplerProfile: ResamplerProfileDisable,
 			},
 			wantErr: nil,
 		},
@@ -59,17 +61,17 @@ func TestReceiverSetReuseaddr(t *testing.T) {
 	require.NoError(t, err)
 
 	receiver, err := OpenReceiver(ctx, ReceiverConfig{
-		FrameSampleRate: 44100,
-		FrameChannels:   ChannelSetStereo,
-		FrameEncoding:   FrameEncodingPcmFloat,
+		FrameSampleRate:  44100,
+		FrameChannels:    ChannelSetStereo,
+		FrameEncoding:    FrameEncodingPcmFloat,
+		ClockSource:      ClockInternal,
+		ResamplerProfile: ResamplerProfileDisable,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, receiver)
 
-	err = receiver.SetReuseaddr(SlotDefault, InterfaceAudioSource, 1)
-	if err != nil {
-		t.Errorf("expected no error, but got %v", err)
-	}
+	err = receiver.SetReuseaddr(SlotDefault, InterfaceAudioSource, true)
+	require.NoError(t, err)
 
 	err = receiver.Close()
 	require.NoError(t, err)

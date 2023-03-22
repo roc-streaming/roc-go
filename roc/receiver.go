@@ -275,7 +275,7 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) erro
 //
 // Automatically initializes slot with given index if it's used first time.
 
-func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled int) error {
+func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -283,15 +283,13 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled int) error {
 		return errors.New("receiver is closed")
 	}
 
-	if enabled != 0 && enabled != 1 {
-		return errors.New("enabled is invalid")
-	}
+	cEnabled := go2cBool(enabled)
 
 	errCode := C.roc_receiver_set_reuseaddr(
 		r.cPtr,
 		(C.roc_slot)(slot),
 		(C.roc_interface)(iface),
-		(C.int)(enabled),
+		(C.int)(cEnabled),
 	)
 
 	if errCode != 0 {
