@@ -274,7 +274,6 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) erro
 // address, which may be useful if you're using socket activation mechanism.
 //
 // Automatically initializes slot with given index if it's used first time.
-
 func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
