@@ -65,7 +65,7 @@ func TestSender_SetReuseaddr(t *testing.T) {
 		wantErr            error
 	}{
 		{
-			name:               "Ok",
+			name:               "ok",
 			slot:               SlotDefault,
 			iface:              InterfaceAudioSource,
 			senderClosedBefore: false,
@@ -73,7 +73,7 @@ func TestSender_SetReuseaddr(t *testing.T) {
 			wantErr:            nil,
 		},
 		{
-			name:               "Closed Sender",
+			name:               "closed sender",
 			slot:               SlotDefault,
 			iface:              InterfaceAudioSource,
 			senderClosedBefore: true,
@@ -81,7 +81,7 @@ func TestSender_SetReuseaddr(t *testing.T) {
 			wantErr:            errors.New("sender is closed"),
 		},
 		{
-			name:               "Bad Iface",
+			name:               "bad iface",
 			slot:               SlotDefault,
 			iface:              -1,
 			senderClosedBefore: false,

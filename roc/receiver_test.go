@@ -65,7 +65,7 @@ func TestReceiver_SetReuseaddr(t *testing.T) {
 		wantErr              error
 	}{
 		{
-			name:                 "Ok",
+			name:                 "ok",
 			slot:                 SlotDefault,
 			iface:                InterfaceAudioSource,
 			receiverClosedBefore: false,
@@ -73,7 +73,7 @@ func TestReceiver_SetReuseaddr(t *testing.T) {
 			wantErr:              nil,
 		},
 		{
-			name:                 "Closed Receiver",
+			name:                 "olosed receiver",
 			slot:                 SlotDefault,
 			iface:                InterfaceAudioSource,
 			receiverClosedBefore: true,
@@ -81,7 +81,7 @@ func TestReceiver_SetReuseaddr(t *testing.T) {
 			wantErr:              errors.New("receiver is closed"),
 		},
 		{
-			name:                 "Bad Iface",
+			name:                 "bad iface",
 			slot:                 SlotDefault,
 			iface:                -1,
 			receiverClosedBefore: false,
