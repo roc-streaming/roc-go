@@ -255,6 +255,48 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) erro
 	return nil
 }
 
+// Set receiver interface address reuse option.
+//
+// Optional.
+//
+// When set to true, SO_REUSEADDR is enabled for interface socket, regardless of socket
+// type, unless binding to ephemeral port (port explicitly set to zero).
+//
+// When set to false, SO_REUSEADDR is enabled only for multicast sockets, unless binding
+// to ephemeral port (port explicitly set to zero).
+//
+// By default set to false.
+//
+// For TCP-based protocols, SO_REUSEADDR allows immediate reuse of recently closed socket
+// in TIME_WAIT state, which may be useful you want to be able to restart server quickly.
+//
+// For UDP-based protocols, SO_REUSEADDR allows multiple processes to bind to the same
+// address, which may be useful if you're using socket activation mechanism.
+//
+// Automatically initializes slot with given index if it's used first time.
+func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	if r.cPtr == nil {
+		return errors.New("receiver is closed")
+	}
+
+	cEnabled := go2cBool(enabled)
+
+	errCode := C.roc_receiver_set_reuseaddr(
+		r.cPtr,
+		(C.roc_slot)(slot),
+		(C.roc_interface)(iface),
+		(C.int)(cEnabled),
+	)
+
+	if errCode != 0 {
+		return newNativeErr("roc_receiver_set_reuseaddr()", errCode)
+	}
+	return nil
+}
+
 // Bind the receiver interface to a local endpoint.
 //
 // Checks that the endpoint is valid and supported by the interface, allocates
