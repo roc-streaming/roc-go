@@ -73,7 +73,7 @@ func TestReceiver_SetReuseaddr(t *testing.T) {
 			wantErr:              nil,
 		},
 		{
-			name:                 "olosed receiver",
+			name:                 "closed receiver",
 			slot:                 SlotDefault,
 			iface:                InterfaceAudioSource,
 			receiverClosedBefore: true,
