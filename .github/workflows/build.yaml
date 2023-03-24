@@ -198,7 +198,6 @@ jobs:
 
       - name: Push changes
         if: ${{ env.IS_VERSION_UPDATED == 'true' }}
-        uses: actions/checkout@v3
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
