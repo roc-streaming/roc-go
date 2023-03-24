@@ -198,14 +198,14 @@ jobs:
           echo "${{ env.IS_VERSION_UPDATED }}"
 
       - name: Commit files
-        if: ${{ env.IS_VERSION_UPDATED == "true" }}
+        if: ${{ env.IS_VERSION_UPDATED == 'true' }}
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git commit -am "update version bindings"
 
       - name: Push changes
-        if: ${{ env.IS_VERSION_UPDATED == "true" }}
+        if: ${{ env.IS_VERSION_UPDATED == 'true' }}
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
