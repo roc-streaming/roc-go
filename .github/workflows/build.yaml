@@ -167,7 +167,7 @@ jobs:
           go test -race
   
   update_version:
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    # if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: ubuntu
 
     runs-on: ubuntu-latest
