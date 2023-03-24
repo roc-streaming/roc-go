@@ -177,7 +177,6 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.ref }}
-          persist-credentials: false
 
       - name: Check version and edit file
         shell: bash
@@ -189,25 +188,19 @@ jobs:
           version_bindings="$(grep "$pattern" "$file")"
 
           if [[ "$version_git" == "$version_bindings" ]]; then
-            echo "no version update" >> $GITHUB_STEP_SUMMARY
+            echo "no version update"
             exit
           fi
 
           sed -i "s/$version_bindings/$version_git/" $file
-          echo "update from \"$version_bindings\" to \"$version_git\"" >> $GITHUB_STEP_SUMMARY
+          echo "update from \"$version_bindings\" to \"$version_git\""
           echo "IS_VERSION_UPDATED=true" >> $GITHUB_ENV
-          echo "${{ env.IS_VERSION_UPDATED }}"
-
-      - name: Commit files
-        if: ${{ env.IS_VERSION_UPDATED == 'true' }}
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git commit -a -m "update version bindings"
 
       - name: Push changes
         if: ${{ env.IS_VERSION_UPDATED == 'true' }}
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+        uses: actions/checkout@v3
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -a -m "update version bindings"
+          git push
