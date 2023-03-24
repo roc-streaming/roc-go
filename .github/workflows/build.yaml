@@ -176,12 +176,13 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          ref: ${{ github.ref }}
 
       - name: Check version and edit file
         shell: bash
         run: |
           pattern="const bindingsVersion"
-          file="version.go"
+          file="./roc/version.go"
 
           version_git="$pattern = \"$(git describe --tags --abbrev=0 | sed s/v//g)\""
           version_bindings="$(grep "$pattern" "$file")"
