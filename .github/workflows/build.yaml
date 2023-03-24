@@ -188,24 +188,24 @@ jobs:
           version_bindings="$(grep "$pattern" "$file")"
 
           if [[ "$version_git" == "$version_bindings" ]]; then
-            echo "no version update"
+            echo "no version update" >> $GITHUB_STEP_SUMMARY
             exit
           fi
 
           sed -i "s/$version_bindings/$version_git/" $file
-          echo "update from \"$version_bindings\" to \"$version_git\""
-          echo "IS_VERSION_UPDATED='true'" >> $GITHUB_ENV
-          echo $IS_VERSION_UPDATED
+          echo "update from \"$version_bindings\" to \"$version_git\"" >> $GITHUB_STEP_SUMMARY
+          echo "IS_VERSION_UPDATED=true" >> $GITHUB_ENV
+          echo "${{ env.IS_VERSION_UPDATED }}"
 
       - name: Commit files
-        if: ${{ env.IS_VERSION_UPDATED == 'true' }}
+        if: ${{ env.IS_VERSION_UPDATED == "true" }}
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git commit -am "update version bindings"
 
       - name: Push changes
-        if: ${{ env.IS_VERSION_UPDATED == 'true' }}
+        if: ${{ env.IS_VERSION_UPDATED == "true" }}
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
