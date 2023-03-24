@@ -166,7 +166,7 @@ jobs:
           cd roc
           go test -race
   
-  update_version:
+  check_version:
     # if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: ubuntu
 
@@ -178,7 +178,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}
 
-      - name: Check version and edit file
+      - name: Check version
         shell: bash
         run: |
           pattern="const bindingsVersion"
@@ -187,19 +187,7 @@ jobs:
           version_git="$pattern = \"$(git describe --tags --abbrev=0 | sed s/v//g)\""
           version_bindings="$(grep "$pattern" "$file")"
 
-          if [[ "$version_git" == "$version_bindings" ]]; then
-            echo "no version update"
-            exit
+          if [[ "$version_git" != "$version_bindings" ]]; then
+            echo "please update harcoded version to current git version \"$version_git\""
+            exit 1
           fi
-
-          sed -i "s/$version_bindings/$version_git/" $file
-          echo "update from \"$version_bindings\" to \"$version_git\""
-          echo "IS_VERSION_UPDATED=true" >> $GITHUB_ENV
-
-      - name: Push changes
-        if: ${{ env.IS_VERSION_UPDATED == 'true' }}
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git commit -a -m "update version bindings"
-          git push
