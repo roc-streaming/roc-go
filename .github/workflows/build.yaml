@@ -174,12 +174,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Check version and edit file
         shell: bash
         run: |
-          set -e
-
           pattern="const bindingsVersion"
           file="version.go"
 
@@ -193,7 +193,7 @@ jobs:
 
           sed -i "s/$version_bindings/$version_git/" $file
           echo "update from \"$version_bindings\" to \"$version_git\""
-          echo "IS_VERSION_UPDATED='true" >> $GITHUB_ENV
+          echo "IS_VERSION_UPDATED='true'" >> $GITHUB_ENV
 
       - name: Commit files
         if: ${{ env.IS_VERSION_UPDATED == 'true' }}
