@@ -6,16 +6,17 @@ package roc
 import "C"
 
 import (
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
 )
 
 var (
-	versions    *Versions
+	versions    Versions
 	versionOnce sync.Once
 )
+
+const bindingsVersion = "0.2.0"
 
 // Version components.
 type Versions struct {
@@ -35,8 +36,6 @@ type SemanticVersion struct {
 // It may be different from the compile-time version when using shared library.
 func Version() Versions {
 	versionOnce.Do(func() {
-		versions = &Versions{}
-
 		var cVersion C.struct_roc_version
 		C.roc_version_get(&cVersion)
 		versions.Library = SemanticVersion{
@@ -45,17 +44,14 @@ func Version() Versions {
 			Patch: uint64(cVersion.patch),
 		}
 
-		if info, ok := debug.ReadBuildInfo(); ok {
-			v := strings.TrimPrefix(info.Main.Version, "v")
-			vs := strings.SplitN(v, ".", 3)
-			if len(vs) != 3 {
-				return
-			}
-			versions.Binding.Major, _ = strconv.ParseUint(vs[0], 10, 64)
-			versions.Binding.Minor, _ = strconv.ParseUint(vs[1], 10, 64)
-			versions.Binding.Patch, _ = strconv.ParseUint(vs[2], 10, 64)
+		bvs := strings.SplitN(bindingsVersion, ".", 3)
+		if len(bvs) != 3 {
+			return
 		}
+		versions.Binding.Major, _ = strconv.ParseUint(bvs[0], 10, 64)
+		versions.Binding.Minor, _ = strconv.ParseUint(bvs[1], 10, 64)
+		versions.Binding.Patch, _ = strconv.ParseUint(bvs[2], 10, 64)
 	})
 
-	return *versions
+	return versions
 }
