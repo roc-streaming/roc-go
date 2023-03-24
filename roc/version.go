@@ -16,7 +16,7 @@ var (
 	versionOnce sync.Once
 )
 
-const bindingsVersion = "0.2.1"
+const bindingsVersion = "0.2.0"
 
 // Version components.
 type Versions struct {
