@@ -195,6 +195,7 @@ jobs:
           sed -i "s/$version_bindings/$version_git/" $file
           echo "update from \"$version_bindings\" to \"$version_git\""
           echo "IS_VERSION_UPDATED='true'" >> $GITHUB_ENV
+          echo $IS_VERSION_UPDATED
 
       - name: Commit files
         if: ${{ env.IS_VERSION_UPDATED == 'true' }}
