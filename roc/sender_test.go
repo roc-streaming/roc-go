@@ -207,3 +207,77 @@ func TestSender_Connect(t *testing.T) {
 		})
 	}
 }
+
+func TestSender_WriteFloats(t *testing.T) {
+	baseFrameCnt := 2
+	baseFrame := make([]float32, baseFrameCnt)
+	for i := 0; i < baseFrameCnt; i++ {
+		baseFrame[i] = float32(i + 1)
+	}
+
+	cases := []struct {
+		name                 string
+		frame                []float32
+		senderClosedBefore bool
+		wantErr              error
+	}{
+		{
+			name:                 "ok",
+			frame:                baseFrame,
+			senderClosedBefore: false,
+			wantErr:              nil,
+		},
+		{
+			name:                 "closed sender",
+			frame:                baseFrame,
+			senderClosedBefore: true,
+			wantErr:              errors.New("sender is closed"),
+		},
+		{
+			name:                 "nil frame",
+			senderClosedBefore: false,
+			wantErr:              errors.New("frame is nil"),
+		},
+		{
+			name:                 "bad frame",
+			frame:                []float32{1.0},
+			senderClosedBefore: false,
+			wantErr:              newNativeErr("roc_sender_write()", -1),
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, err := OpenContext(ContextConfig{})
+			require.NoError(t, err)
+
+			sender, err := OpenSender(ctx, SenderConfig{
+				FrameSampleRate: 44100,
+				FrameChannels:   ChannelSetStereo,
+				FrameEncoding:   FrameEncodingPcmFloat,
+			})
+			require.NoError(t, err)
+			require.NotNil(t, sender)
+
+			if tt.senderClosedBefore {
+				err = sender.Close()
+				require.NoError(t, err)
+			}
+
+			err = sender.WriteFloats(tt.frame)
+			if tt.wantErr != nil {
+				require.Equal(t, tt.wantErr.Error(), err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			if !tt.senderClosedBefore {
+				err = sender.Close()
+				require.NoError(t, err)
+			}
+
+			err = ctx.Close()
+			require.NoError(t, err)
+		})
+	}
+}
