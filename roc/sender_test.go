@@ -136,7 +136,7 @@ func TestSender_Connect(t *testing.T) {
 		slot               Slot
 		iface              Interface
 		senderClosedBefore bool
-		endpoint             *Endpoint
+		endpoint           *Endpoint
 		wantErr            error
 	}{
 		{
@@ -144,7 +144,7 @@ func TestSender_Connect(t *testing.T) {
 			slot:               SlotDefault,
 			iface:              InterfaceAudioSource,
 			senderClosedBefore: false,
-			endpoint:             baseEndpoint,
+			endpoint:           baseEndpoint,
 			wantErr:            nil,
 		},
 		{
@@ -152,23 +152,23 @@ func TestSender_Connect(t *testing.T) {
 			slot:               SlotDefault,
 			iface:              InterfaceAudioSource,
 			senderClosedBefore: true,
-			endpoint:             baseEndpoint,
+			endpoint:           baseEndpoint,
 			wantErr:            errors.New("sender is closed"),
 		},
 		{
-			name:                 "nil endpoint",
-			slot:                 SlotDefault,
-			iface:                InterfaceAudioSource,
+			name:               "nil endpoint",
+			slot:               SlotDefault,
+			iface:              InterfaceAudioSource,
 			senderClosedBefore: false,
-			wantErr:              errors.New("endpoint is nil"),
+			wantErr:            errors.New("endpoint is nil"),
 		},
 		{
-			name:                 "bad endpoint",
-			slot:                 SlotDefault,
-			iface:                InterfaceAudioSource,
+			name:               "bad endpoint",
+			slot:               SlotDefault,
+			iface:              InterfaceAudioSource,
 			senderClosedBefore: false,
-			endpoint:             &Endpoint{Host: "127.0.0.1", Port: 0, Protocol: ProtoRs8mRepair},
-			wantErr:              newNativeErr("roc_sender_connect()", -1),
+			endpoint:           &Endpoint{Host: "127.0.0.1", Port: 0, Protocol: ProtoRs8mRepair},
+			wantErr:            newNativeErr("roc_sender_connect()", -1),
 		},
 	}
 
@@ -216,33 +216,33 @@ func TestSender_WriteFloats(t *testing.T) {
 	}
 
 	cases := []struct {
-		name                 string
-		frame                []float32
+		name               string
+		frame              []float32
 		senderClosedBefore bool
-		wantErr              error
+		wantErr            error
 	}{
 		{
-			name:                 "ok",
-			frame:                baseFrame,
+			name:               "ok",
+			frame:              baseFrame,
 			senderClosedBefore: false,
-			wantErr:              nil,
+			wantErr:            nil,
 		},
 		{
-			name:                 "closed sender",
-			frame:                baseFrame,
+			name:               "closed sender",
+			frame:              baseFrame,
 			senderClosedBefore: true,
-			wantErr:              errors.New("sender is closed"),
+			wantErr:            errors.New("sender is closed"),
 		},
 		{
-			name:                 "nil frame",
+			name:               "nil frame",
 			senderClosedBefore: false,
-			wantErr:              errors.New("frame is nil"),
+			wantErr:            errors.New("frame is nil"),
 		},
 		{
-			name:                 "bad frame",
-			frame:                []float32{1.0},
+			name:               "bad frame",
+			frame:              []float32{1.0},
 			senderClosedBefore: false,
-			wantErr:              newNativeErr("roc_sender_write()", -1),
+			wantErr:            newNativeErr("roc_sender_write()", -1),
 		},
 	}
 
