@@ -20,8 +20,8 @@ const bindingsVersion = "0.2.0"
 
 // Version components.
 type Versions struct {
-	Library SemanticVersion // Native library version, libroc version.
-	Binding SemanticVersion // Go binding version.
+	Library  SemanticVersion // Native library version, libroc version.
+	Bindings SemanticVersion // Go bindings version.
 }
 
 // Semantic version components.
@@ -48,9 +48,9 @@ func Version() Versions {
 		if len(bvs) != 3 {
 			return
 		}
-		versions.Binding.Major, _ = strconv.ParseUint(bvs[0], 10, 64)
-		versions.Binding.Minor, _ = strconv.ParseUint(bvs[1], 10, 64)
-		versions.Binding.Patch, _ = strconv.ParseUint(bvs[2], 10, 64)
+		versions.Bindings.Major, _ = strconv.ParseUint(bvs[0], 10, 64)
+		versions.Bindings.Minor, _ = strconv.ParseUint(bvs[1], 10, 64)
+		versions.Bindings.Patch, _ = strconv.ParseUint(bvs[2], 10, 64)
 	})
 
 	return versions
