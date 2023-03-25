@@ -125,3 +125,85 @@ func TestSender_SetReuseaddr(t *testing.T) {
 		})
 	}
 }
+
+func TestSender_Connect(t *testing.T) {
+	baseEndpoint, err := ParseEndpoint("rtp+rs8m://127.0.0.1:0")
+	require.NoError(t, err)
+	require.NotNil(t, baseEndpoint)
+
+	cases := []struct {
+		name               string
+		slot               Slot
+		iface              Interface
+		senderClosedBefore bool
+		endpoint             *Endpoint
+		wantErr            error
+	}{
+		{
+			name:               "ok",
+			slot:               SlotDefault,
+			iface:              InterfaceAudioSource,
+			senderClosedBefore: false,
+			endpoint:             baseEndpoint,
+			wantErr:            nil,
+		},
+		{
+			name:               "closed sender",
+			slot:               SlotDefault,
+			iface:              InterfaceAudioSource,
+			senderClosedBefore: true,
+			endpoint:             baseEndpoint,
+			wantErr:            errors.New("sender is closed"),
+		},
+		{
+			name:                 "nil endpoint",
+			slot:                 SlotDefault,
+			iface:                InterfaceAudioSource,
+			senderClosedBefore: false,
+			wantErr:              errors.New("endpoint is nil"),
+		},
+		{
+			name:                 "bad endpoint",
+			slot:                 SlotDefault,
+			iface:                InterfaceAudioSource,
+			senderClosedBefore: false,
+			endpoint:             &Endpoint{Host: "127.0.0.1", Port: 0, Protocol: ProtoRs8mRepair},
+			wantErr:              newNativeErr("roc_sender_connect()", -1),
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, err := OpenContext(ContextConfig{})
+			require.NoError(t, err)
+
+			sender, err := OpenSender(ctx, SenderConfig{
+				FrameSampleRate: 44100,
+				FrameChannels:   ChannelSetStereo,
+				FrameEncoding:   FrameEncodingPcmFloat,
+			})
+			require.NoError(t, err)
+			require.NotNil(t, sender)
+
+			if tt.senderClosedBefore {
+				err = sender.Close()
+				require.NoError(t, err)
+			}
+
+			err = sender.Connect(tt.slot, tt.iface, tt.endpoint)
+			if tt.wantErr != nil {
+				require.Equal(t, tt.wantErr.Error(), err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			if !tt.senderClosedBefore {
+				err = sender.Close()
+				require.NoError(t, err)
+			}
+
+			err = ctx.Close()
+			require.NoError(t, err)
+		})
+	}
+}
