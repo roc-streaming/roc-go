@@ -170,6 +170,14 @@ func TestSender_Connect(t *testing.T) {
 			endpoint:           &Endpoint{Host: "127.0.0.1", Port: 0, Protocol: ProtoRs8mRepair},
 			wantErr:            newNativeErr("roc_sender_connect()", -1),
 		},
+		{
+			name:               "bad protocol",
+			slot:               SlotDefault,
+			iface:              InterfaceAudioSource,
+			senderClosedBefore: false,
+			endpoint:           &Endpoint{Host: "127.0.0.1", Port: 0, Protocol: 1},
+			wantErr:            newNativeErr("roc_endpoint_set_protocol()", -1),
+		},
 	}
 
 	for _, tt := range cases {
@@ -237,6 +245,12 @@ func TestSender_WriteFloats(t *testing.T) {
 			name:               "nil frame",
 			senderClosedBefore: false,
 			wantErr:            errors.New("frame is nil"),
+		},
+		{
+			name:               "empty frame",
+			frame:              []float32{},
+			senderClosedBefore: false,
+			wantErr:            nil,
 		},
 		{
 			name:               "bad frame",

@@ -171,6 +171,14 @@ func TestReceiver_Bind(t *testing.T) {
 			wantErr:              newNativeErr("roc_receiver_bind()", -1),
 		},
 		{
+			name:                 "bad protocol",
+			slot:                 SlotDefault,
+			iface:                InterfaceAudioSource,
+			receiverClosedBefore: false,
+			endpoint:             &Endpoint{Host: "127.0.0.1", Port: 0, Protocol: 1},
+			wantErr:              newNativeErr("roc_endpoint_set_protocol()", -1),
+		},
+		{
 			name:                 "bad iface",
 			slot:                 SlotDefault,
 			iface:                -1,
@@ -245,6 +253,12 @@ func TestReceiver_ReadFloats(t *testing.T) {
 			name:                 "nil frame",
 			receiverClosedBefore: false,
 			wantErr:              errors.New("frame is nil"),
+		},
+		{
+			name:                 "empty frame",
+			frame:                []float32{},
+			receiverClosedBefore: false,
+			wantErr:              nil,
 		},
 		{
 			name:                 "bad frame",
