@@ -57,36 +57,25 @@ func TestReceiver_Open(t *testing.T) {
 
 func TestReceiver_SetReuseaddr(t *testing.T) {
 	cases := []struct {
-		name                 string
-		slot                 Slot
-		iface                Interface
-		receiverClosedBefore bool
-		enabled              bool
-		wantErr              error
+		name    string
+		slot    Slot
+		iface   Interface
+		enabled bool
+		wantErr error
 	}{
 		{
-			name:                 "ok",
-			slot:                 SlotDefault,
-			iface:                InterfaceAudioSource,
-			receiverClosedBefore: false,
-			enabled:              true,
-			wantErr:              nil,
+			name:    "ok",
+			slot:    SlotDefault,
+			iface:   InterfaceAudioSource,
+			enabled: true,
+			wantErr: nil,
 		},
 		{
-			name:                 "closed receiver",
-			slot:                 SlotDefault,
-			iface:                InterfaceAudioSource,
-			receiverClosedBefore: true,
-			enabled:              true,
-			wantErr:              errors.New("receiver is closed"),
-		},
-		{
-			name:                 "bad iface",
-			slot:                 SlotDefault,
-			iface:                -1,
-			receiverClosedBefore: false,
-			enabled:              true,
-			wantErr:              newNativeErr("roc_receiver_set_reuseaddr()", -1),
+			name:    "bad iface",
+			slot:    SlotDefault,
+			iface:   -1,
+			enabled: true,
+			wantErr: newNativeErr("roc_receiver_set_reuseaddr()", -1),
 		},
 	}
 
@@ -95,18 +84,9 @@ func TestReceiver_SetReuseaddr(t *testing.T) {
 			ctx, err := OpenContext(ContextConfig{})
 			require.NoError(t, err)
 
-			receiver, err := OpenReceiver(ctx, ReceiverConfig{
-				FrameSampleRate: 44100,
-				FrameChannels:   ChannelSetStereo,
-				FrameEncoding:   FrameEncodingPcmFloat,
-			})
+			receiver, err := OpenReceiver(ctx, makeReceiverConfig())
 			require.NoError(t, err)
 			require.NotNil(t, receiver)
-
-			if tt.receiverClosedBefore {
-				err = receiver.Close()
-				require.NoError(t, err)
-			}
 
 			err = receiver.SetReuseaddr(tt.slot, tt.iface, tt.enabled)
 			if tt.wantErr != nil {
@@ -115,13 +95,192 @@ func TestReceiver_SetReuseaddr(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			if !tt.receiverClosedBefore {
-				err = receiver.Close()
-				require.NoError(t, err)
-			}
+			err = receiver.Close()
+			require.NoError(t, err)
 
 			err = ctx.Close()
 			require.NoError(t, err)
 		})
+	}
+}
+
+func TestReceiver_Bind(t *testing.T) {
+	baseEndpoint, err := ParseEndpoint("rtp+rs8m://127.0.0.1:0")
+	require.NoError(t, err)
+	require.NotNil(t, baseEndpoint)
+
+	cases := []struct {
+		name     string
+		slot     Slot
+		iface    Interface
+		endpoint *Endpoint
+		wantErr  error
+	}{
+		{
+			name:     "ok",
+			slot:     SlotDefault,
+			iface:    InterfaceAudioSource,
+			endpoint: baseEndpoint,
+			wantErr:  nil,
+		},
+		{
+			name:    "nil endpoint",
+			slot:    SlotDefault,
+			iface:   InterfaceAudioSource,
+			wantErr: errors.New("endpoint is nil"),
+		},
+		{
+			name:     "bad endpoint",
+			slot:     SlotDefault,
+			iface:    InterfaceAudioSource,
+			endpoint: &Endpoint{Host: "127.0.0.1", Port: 0, Protocol: ProtoRs8mRepair},
+			wantErr:  newNativeErr("roc_receiver_bind()", -1),
+		},
+		{
+			name:     "bad protocol",
+			slot:     SlotDefault,
+			iface:    InterfaceAudioSource,
+			endpoint: &Endpoint{Host: "127.0.0.1", Port: 0, Protocol: 1},
+			wantErr:  newNativeErr("roc_endpoint_set_protocol()", -1),
+		},
+		{
+			name:     "bad iface",
+			slot:     SlotDefault,
+			iface:    -1,
+			endpoint: baseEndpoint,
+			wantErr:  newNativeErr("roc_receiver_bind()", -1),
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, err := OpenContext(ContextConfig{})
+			require.NoError(t, err)
+
+			receiver, err := OpenReceiver(ctx, makeReceiverConfig())
+			require.NoError(t, err)
+			require.NotNil(t, receiver)
+
+			err = receiver.Bind(tt.slot, tt.iface, tt.endpoint)
+			if tt.wantErr != nil {
+				require.Equal(t, tt.wantErr.Error(), err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			err = receiver.Close()
+			require.NoError(t, err)
+
+			err = ctx.Close()
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestReceiver_ReadFloats(t *testing.T) {
+	baseFrameCnt := 2
+	baseFrame := make([]float32, baseFrameCnt)
+	for i := 0; i < baseFrameCnt; i++ {
+		baseFrame[i] = float32(i + 1)
+	}
+
+	cases := []struct {
+		name    string
+		frame   []float32
+		wantErr error
+	}{
+		{
+			name:    "ok",
+			frame:   baseFrame,
+			wantErr: nil,
+		},
+		{
+			name:    "nil frame",
+			wantErr: errors.New("frame is nil"),
+		},
+		{
+			name:    "empty frame",
+			frame:   []float32{},
+			wantErr: nil,
+		},
+		{
+			name:    "bad frame",
+			frame:   []float32{1.0},
+			wantErr: newNativeErr("roc_receiver_read()", -1),
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, err := OpenContext(ContextConfig{})
+			require.NoError(t, err)
+
+			receiver, err := OpenReceiver(ctx, makeReceiverConfig())
+			require.NoError(t, err)
+			require.NotNil(t, receiver)
+
+			err = receiver.ReadFloats(tt.frame)
+			if tt.wantErr != nil {
+				require.Equal(t, tt.wantErr.Error(), err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			err = receiver.Close()
+			require.NoError(t, err)
+
+			err = ctx.Close()
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestReceiver_Close(t *testing.T) {
+	cases := []struct {
+		name      string
+		operation func(receiver *Receiver) error
+	}{
+		{
+			name: "SetReuseaddr after close",
+			operation: func(receiver *Receiver) error {
+				return receiver.SetReuseaddr(SlotDefault, InterfaceAudioSource, true)
+			},
+		},
+		{
+			name: "SetMulticastGroup after close",
+			operation: func(receiver *Receiver) error {
+				return receiver.SetMulticastGroup(SlotDefault, InterfaceAudioSource, "127.0.0.1")
+			},
+		},
+		{
+			name: "Bind after close",
+			operation: func(receiver *Receiver) error {
+				return receiver.Bind(SlotDefault, InterfaceAudioSource, nil)
+			},
+		},
+		{
+			name: "ReadFloats after close",
+			operation: func(receiver *Receiver) error {
+				recFloats := make([]float32, 2)
+				return receiver.ReadFloats(recFloats)
+			},
+		},
+	}
+	for _, tt := range cases {
+		ctx, err := OpenContext(ContextConfig{})
+		require.NoError(t, err)
+		require.NotNil(t, ctx)
+
+		receiver, err := OpenReceiver(ctx, makeReceiverConfig())
+		require.NoError(t, err)
+		require.NotNil(t, receiver)
+
+		err = receiver.Close()
+		require.NoError(t, err)
+
+		require.Equal(t, errors.New("receiver is closed"), tt.operation(receiver))
+
+		err = ctx.Close()
+		require.NoError(t, err)
 	}
 }
