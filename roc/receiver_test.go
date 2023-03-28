@@ -241,6 +241,12 @@ func TestReceiver_Close(t *testing.T) {
 		operation func(receiver *Receiver) error
 	}{
 		{
+			name: "SetReuseaddr after close",
+			operation: func(receiver *Receiver) error {
+				return receiver.SetReuseaddr(SlotDefault, InterfaceAudioSource, true)
+			},
+		},
+		{
 			name: "SetMulticastGroup after close",
 			operation: func(receiver *Receiver) error {
 				return receiver.SetMulticastGroup(SlotDefault, InterfaceAudioSource, "127.0.0.1")

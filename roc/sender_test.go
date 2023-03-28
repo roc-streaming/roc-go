@@ -84,11 +84,7 @@ func TestSender_SetReuseaddr(t *testing.T) {
 			ctx, err := OpenContext(ContextConfig{})
 			require.NoError(t, err)
 
-			sender, err := OpenSender(ctx, SenderConfig{
-				FrameSampleRate: 44100,
-				FrameChannels:   ChannelSetStereo,
-				FrameEncoding:   FrameEncodingPcmFloat,
-			})
+			sender, err := OpenSender(ctx, makeSenderConfig())
 			require.NoError(t, err)
 			require.NotNil(t, sender)
 
@@ -154,11 +150,7 @@ func TestSender_Connect(t *testing.T) {
 			ctx, err := OpenContext(ContextConfig{})
 			require.NoError(t, err)
 
-			sender, err := OpenSender(ctx, SenderConfig{
-				FrameSampleRate: 44100,
-				FrameChannels:   ChannelSetStereo,
-				FrameEncoding:   FrameEncodingPcmFloat,
-			})
+			sender, err := OpenSender(ctx, makeSenderConfig())
 			require.NoError(t, err)
 			require.NotNil(t, sender)
 
@@ -216,11 +208,7 @@ func TestSender_WriteFloats(t *testing.T) {
 			ctx, err := OpenContext(ContextConfig{})
 			require.NoError(t, err)
 
-			sender, err := OpenSender(ctx, SenderConfig{
-				FrameSampleRate: 44100,
-				FrameChannels:   ChannelSetStereo,
-				FrameEncoding:   FrameEncodingPcmFloat,
-			})
+			sender, err := OpenSender(ctx, makeSenderConfig())
 			require.NoError(t, err)
 			require.NotNil(t, sender)
 
@@ -245,6 +233,12 @@ func TestSender_Close(t *testing.T) {
 		name      string
 		operation func(sender *Sender) error
 	}{
+		{
+			name: "SetReuseaddr after close",
+			operation: func(sender *Sender) error {
+				return sender.SetReuseaddr(SlotDefault, InterfaceAudioSource, true)
+			},
+		},
 		{
 			name: "SetOutgoingAddress after close",
 			operation: func(sender *Sender) error {
