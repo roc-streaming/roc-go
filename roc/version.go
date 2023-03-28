@@ -50,22 +50,22 @@ func Version() Versions {
 }
 
 func parseVersion(s string) SemanticVersion {
-	bvs := strings.SplitN(s, ".", 3)
-	if len(bvs) != 3 {
+	vs := strings.SplitN(s, ".", 3)
+	if len(vs) != 3 {
 		panic("semantic version doesn't have 3 parts")
 	}
 
 	v := SemanticVersion{}
 	var err error
-	v.Major, err = strconv.ParseUint(bvs[0], 10, 64)
+	v.Major, err = strconv.ParseUint(vs[0], 10, 64)
 	if err != nil {
 		panic(err)
 	}
-	v.Minor, err = strconv.ParseUint(bvs[1], 10, 64)
+	v.Minor, err = strconv.ParseUint(vs[1], 10, 64)
 	if err != nil {
 		panic(err)
 	}
-	v.Patch, err = strconv.ParseUint(bvs[2], 10, 64)
+	v.Patch, err = strconv.ParseUint(vs[2], 10, 64)
 	if err != nil {
 		panic(err)
 	}
