@@ -55,6 +55,26 @@ func TestSender_Open(t *testing.T) {
 	}
 }
 
+func TestSender_OpenWithNilContext(t *testing.T) {
+	sender, err := OpenSender(nil, makeSenderConfig())
+
+	require.Nil(t, sender)
+	require.Equal(t, errors.New("context is nil"), err)
+}
+
+func TestSender_OpenWithClosedContext(t *testing.T) {
+	ctx, err := OpenContext(ContextConfig{})
+	require.NoError(t, err)
+	require.NotNil(t, ctx)
+
+	err = ctx.Close()
+	require.NoError(t, err)
+
+	sender, err := OpenSender(ctx, makeSenderConfig())
+	require.Equal(t, errors.New("context is closed"), err)
+	require.Nil(t, sender)
+}
+
 func TestSender_SetReuseaddr(t *testing.T) {
 	cases := []struct {
 		name    string

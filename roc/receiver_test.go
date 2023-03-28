@@ -55,6 +55,26 @@ func TestReceiver_Open(t *testing.T) {
 	}
 }
 
+func TestReceiver_OpenWithNilContext(t *testing.T) {
+	receiver, err := OpenReceiver(nil, makeReceiverConfig())
+
+	require.Nil(t, receiver)
+	require.Equal(t, errors.New("context is nil"), err)
+}
+
+func TestReceiver_OpenWithClosedContext(t *testing.T) {
+	ctx, err := OpenContext(ContextConfig{})
+	require.NoError(t, err)
+	require.NotNil(t, ctx)
+
+	err = ctx.Close()
+	require.NoError(t, err)
+
+	receiver, err := OpenReceiver(ctx, makeReceiverConfig())
+	require.Equal(t, errors.New("context is closed"), err)
+	require.Nil(t, receiver)
+}
+
 func TestReceiver_SetReuseaddr(t *testing.T) {
 	cases := []struct {
 		name    string
