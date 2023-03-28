@@ -181,11 +181,8 @@ jobs:
       - name: Check version
         shell: bash
         run: |
-          pattern="const bindingsVersion"
-          file="./roc/version.go"
-
-          version_git="$pattern = \"$(git describe --tags --abbrev=0 | sed s/v//g)\""
-          version_bindings="$(grep "$pattern" "$file")"
+          version_git="$(git describe --tags --abbrev=0 | sed s/v//g)"
+          version_bindings="$(sed -rn 's,.*bindingsVersion\s*=\s*"(\S+)".*,\1,p' ./roc/version.go)"
 
           if [[ "$version_git" != "$version_bindings" ]]; then
             echo "please update harcoded version to current git version \"$version_git\"" >> "$GITHUB_OUTPUT"

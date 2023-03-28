@@ -1,8 +1,6 @@
 package roc
 
 import (
-	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,20 +8,79 @@ import (
 
 func TestVersion(t *testing.T) {
 	v := Version()
-	require.NotZero(t, v.Library.Major+v.Library.Minor+v.Library.Patch)
+	require.NotZero(t, v.Native.Major+v.Native.Minor+v.Native.Patch)
 	require.NotZero(t, v.Bindings.Major+v.Bindings.Minor+v.Bindings.Patch)
-	require.Equal(t, v.Library.Major, v.Bindings.Major)
-	require.GreaterOrEqual(t, v.Bindings.Minor, v.Library.Minor)
+	require.Equal(t, v.Native.Major, v.Bindings.Major)
+	require.GreaterOrEqual(t, v.Bindings.Minor, v.Native.Minor)
 }
 
-func Test_bindingsVersion(t *testing.T) {
-	bvs := strings.SplitN(bindingsVersion, ".", 3)
-	require.Len(t, bvs, 3)
-	var err error
-	_, err = strconv.ParseUint(bvs[0], 10, 64)
-	require.NoError(t, err)
-	_, err = strconv.ParseUint(bvs[1], 10, 64)
-	require.NoError(t, err)
-	_, err = strconv.ParseUint(bvs[2], 10, 64)
-	require.NoError(t, err)
+func Test_parseVersion(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		want      SemanticVersion
+		wantPanic bool
+	}{
+		{
+			name: "valid",
+			args: args{
+				s: "3.2.1",
+			},
+			want: SemanticVersion{
+				Major: 3,
+				Minor: 2,
+				Patch: 1,
+			},
+		},
+		{
+			name: "doesn't have 3 parts",
+			args: args{
+				s: "3.2",
+			},
+			wantPanic: true,
+		},
+		{
+			name: "major invalid",
+			args: args{
+				s: "a.2.1",
+			},
+			wantPanic: true,
+		},
+		{
+			name: "minor invalid",
+			args: args{
+				s: "3.a.1.0",
+			},
+			wantPanic: true,
+		},
+		{
+			name: "patch invalid",
+			args: args{
+				s: "3.2.a",
+			},
+			wantPanic: true,
+		},
+		{
+			name: "hard-coded bindings version",
+			args: args{
+				s: bindingsVersion,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				require.Panics(t, func() { parseVersion(tt.args.s) })
+				return
+			}
+			var v SemanticVersion
+			require.NotPanics(t, func() { v = parseVersion(tt.args.s) })
+			if tt.want != (SemanticVersion{}) {
+				require.Equal(t, tt.want, v)
+			}
+		})
+	}
 }

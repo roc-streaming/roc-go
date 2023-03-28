@@ -20,7 +20,7 @@ const bindingsVersion = "0.2.0"
 
 // Version components.
 type Versions struct {
-	Library  SemanticVersion // Native library version, libroc version.
+	Native   SemanticVersion // Native library version, libroc version.
 	Bindings SemanticVersion // Go bindings version.
 }
 
@@ -38,20 +38,37 @@ func Version() Versions {
 	versionOnce.Do(func() {
 		var cVersion C.struct_roc_version
 		C.roc_version_get(&cVersion)
-		versions.Library = SemanticVersion{
+		versions.Native = SemanticVersion{
 			Major: uint64(cVersion.major),
 			Minor: uint64(cVersion.minor),
 			Patch: uint64(cVersion.patch),
 		}
-
-		bvs := strings.SplitN(bindingsVersion, ".", 3)
-		if len(bvs) != 3 {
-			return
-		}
-		versions.Bindings.Major, _ = strconv.ParseUint(bvs[0], 10, 64)
-		versions.Bindings.Minor, _ = strconv.ParseUint(bvs[1], 10, 64)
-		versions.Bindings.Patch, _ = strconv.ParseUint(bvs[2], 10, 64)
+		versions.Bindings = parseVersion(bindingsVersion)
 	})
 
 	return versions
+}
+
+func parseVersion(s string) SemanticVersion {
+	bvs := strings.SplitN(s, ".", 3)
+	if len(bvs) != 3 {
+		panic("semantic version doesn't have 3 parts")
+	}
+
+	v := SemanticVersion{}
+	var err error
+	v.Major, err = strconv.ParseUint(bvs[0], 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	v.Minor, err = strconv.ParseUint(bvs[1], 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	v.Patch, err = strconv.ParseUint(bvs[2], 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
 }
