@@ -9,32 +9,57 @@ import (
 
 func TestReceiver_Open(t *testing.T) {
 	tests := []struct {
-		name    string
-		config  ReceiverConfig
-		wantErr error
+		name        string
+		contextFunc func() *Context
+		config      ReceiverConfig
+		wantErr     error
 	}{
 		{
 			name: "ok",
-			config: ReceiverConfig{
-				FrameSampleRate: 44100,
-				FrameChannels:   ChannelSetStereo,
-				FrameEncoding:   FrameEncodingPcmFloat,
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
+				return ctx
 			},
+			config:  makeReceiverConfig(),
 			wantErr: nil,
 		},
 		{
-			name:    "invalid config",
+			name: "invalid config",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
+				return ctx
+			},
 			config:  ReceiverConfig{},
 			wantErr: newNativeErr("roc_receiver_open()", -1),
+		},
+		{
+			name: "nil context",
+			contextFunc: func() *Context {
+				return nil
+			},
+			config:  makeReceiverConfig(),
+			wantErr: errors.New("context is nil"),
+		},
+		{
+			name: "closed context",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
+
+				err = ctx.Close()
+				require.NoError(t, err)
+				return ctx
+			},
+			config:  makeReceiverConfig(),
+			wantErr: errors.New("context is closed"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx, err := OpenContext(ContextConfig{})
-
-			require.NoError(t, err)
-			require.NotNil(t, ctx)
+			ctx := tt.contextFunc()
 
 			receiver, err := OpenReceiver(ctx, tt.config)
 
@@ -49,8 +74,10 @@ func TestReceiver_Open(t *testing.T) {
 				require.Nil(t, receiver)
 			}
 
-			err = ctx.Close()
-			require.NoError(t, err)
+			if ctx != nil {
+				err = ctx.Close()
+				require.NoError(t, err)
+			}
 		})
 	}
 }

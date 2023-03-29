@@ -9,32 +9,57 @@ import (
 
 func TestSender_Open(t *testing.T) {
 	tests := []struct {
-		name    string
-		config  SenderConfig
-		wantErr error
+		name        string
+		contextFunc func() *Context
+		config      SenderConfig
+		wantErr     error
 	}{
 		{
 			name: "ok",
-			config: SenderConfig{
-				FrameSampleRate: 44100,
-				FrameChannels:   ChannelSetStereo,
-				FrameEncoding:   FrameEncodingPcmFloat,
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
+				return ctx
 			},
+			config:  makeSenderConfig(),
 			wantErr: nil,
 		},
 		{
-			name:    "invalid config",
+			name: "invalid config",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
+				return ctx
+			},
 			config:  SenderConfig{},
 			wantErr: newNativeErr("roc_sender_open()", -1),
+		},
+		{
+			name: "nil context",
+			contextFunc: func() *Context {
+				return nil
+			},
+			config:  makeSenderConfig(),
+			wantErr: errors.New("context is nil"),
+		},
+		{
+			name: "closed context",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
+
+				err = ctx.Close()
+				require.NoError(t, err)
+				return ctx
+			},
+			config:  makeSenderConfig(),
+			wantErr: errors.New("context is closed"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx, err := OpenContext(ContextConfig{})
-
-			require.NoError(t, err)
-			require.NotNil(t, ctx)
+			ctx := tt.contextFunc()
 
 			sender, err := OpenSender(ctx, tt.config)
 
@@ -49,8 +74,10 @@ func TestSender_Open(t *testing.T) {
 				require.Nil(t, sender)
 			}
 
-			err = ctx.Close()
-			require.NoError(t, err)
+			if ctx != nil {
+				err = ctx.Close()
+				require.NoError(t, err)
+			}
 		})
 	}
 }
