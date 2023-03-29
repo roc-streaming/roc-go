@@ -13,7 +13,12 @@ func TestContext_Open(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name:    "ok",
+			name:    "default config",
+			config:  ContextConfig{},
+			wantErr: nil,
+		},
+		{
+			name:    "custom config",
 			config:  ContextConfig{MaxPacketSize: 50, MaxFrameSize: 70},
 			wantErr: nil,
 		},
@@ -45,25 +50,25 @@ func TestContext_Close(t *testing.T) {
 		wantErr      error
 	}{
 		{
-			name:         "no_senders_or_receivers",
+			name:         "no senders or receivers",
 			hasReceivers: false,
 			hasSenders:   false,
 			wantErr:      nil,
 		},
 		{
-			name:         "has_receivers",
+			name:         "has receivers",
 			hasReceivers: true,
 			hasSenders:   false,
 			wantErr:      newNativeErr("roc_context_close()", -1),
 		},
 		{
-			name:         "has_senders",
+			name:         "has senders",
 			hasReceivers: false,
 			hasSenders:   true,
 			wantErr:      newNativeErr("roc_context_close()", -1),
 		},
 		{
-			name:         "has_senders_and_receivers",
+			name:         "has senders and receivers",
 			hasReceivers: true,
 			hasSenders:   true,
 			wantErr:      newNativeErr("roc_context_close()", -1),
