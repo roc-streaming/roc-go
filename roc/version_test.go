@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestVersion(t *testing.T) {
+func TestVersion_Get(t *testing.T) {
 	v := Version()
 	require.NotZero(t, v.Native.Major+v.Native.Minor+v.Native.Patch)
 	require.NotZero(t, v.Bindings.Major+v.Bindings.Minor+v.Bindings.Patch)
@@ -14,7 +14,7 @@ func TestVersion(t *testing.T) {
 	require.GreaterOrEqual(t, v.Bindings.Minor, v.Native.Minor)
 }
 
-func Test_parseVersion(t *testing.T) {
+func TestVersion_Parse(t *testing.T) {
 	type args struct {
 		s string
 	}
@@ -52,7 +52,7 @@ func Test_parseVersion(t *testing.T) {
 		{
 			name: "minor invalid",
 			args: args{
-				s: "3.a.1.0",
+				s: "3.a.1",
 			},
 			wantPanic: true,
 		},
@@ -74,12 +74,8 @@ func Test_parseVersion(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantPanic {
 				require.Panics(t, func() { parseVersion(tt.args.s) })
-				return
-			}
-			var v SemanticVersion
-			require.NotPanics(t, func() { v = parseVersion(tt.args.s) })
-			if tt.want != (SemanticVersion{}) {
-				require.Equal(t, tt.want, v)
+			} else if tt.want != (SemanticVersion{}) {
+				require.Equal(t, tt.want, parseVersion(tt.args.s))
 			}
 		})
 	}
