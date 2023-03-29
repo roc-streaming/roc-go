@@ -17,20 +17,18 @@ func TestReceiver_Open(t *testing.T) {
 		{
 			name: "ok",
 			contextFunc: func() *Context {
-				ctx, _ := OpenContext(ContextConfig{})
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
 				return ctx
 			},
-			config: ReceiverConfig{
-				FrameSampleRate: 44100,
-				FrameChannels:   ChannelSetStereo,
-				FrameEncoding:   FrameEncodingPcmFloat,
-			},
+			config:  makeReceiverConfig(),
 			wantErr: nil,
 		},
 		{
 			name: "invalid config",
 			contextFunc: func() *Context {
-				ctx, _ := OpenContext(ContextConfig{})
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
 				return ctx
 			},
 			config:  ReceiverConfig{},
@@ -41,17 +39,20 @@ func TestReceiver_Open(t *testing.T) {
 			contextFunc: func() *Context {
 				return nil
 			},
-			config:  ReceiverConfig{},
+			config:  makeReceiverConfig(),
 			wantErr: errors.New("context is nil"),
 		},
 		{
 			name: "closed context",
 			contextFunc: func() *Context {
-				ctx, _ := OpenContext(ContextConfig{})
-				_ = ctx.Close()
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
+
+				err = ctx.Close()
+				require.NoError(t, err)
 				return ctx
 			},
-			config:  ReceiverConfig{},
+			config:  makeReceiverConfig(),
 			wantErr: errors.New("context is closed"),
 		},
 	}

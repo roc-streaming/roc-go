@@ -17,20 +17,18 @@ func TestSender_Open(t *testing.T) {
 		{
 			name: "ok",
 			contextFunc: func() *Context {
-				ctx, _ := OpenContext(ContextConfig{})
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
 				return ctx
 			},
-			config: SenderConfig{
-				FrameSampleRate: 44100,
-				FrameChannels:   ChannelSetStereo,
-				FrameEncoding:   FrameEncodingPcmFloat,
-			},
+			config:  makeSenderConfig(),
 			wantErr: nil,
 		},
 		{
 			name: "invalid config",
 			contextFunc: func() *Context {
-				ctx, _ := OpenContext(ContextConfig{})
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
 				return ctx
 			},
 			config:  SenderConfig{},
@@ -41,17 +39,20 @@ func TestSender_Open(t *testing.T) {
 			contextFunc: func() *Context {
 				return nil
 			},
-			config:  SenderConfig{},
+			config:  makeSenderConfig(),
 			wantErr: errors.New("context is nil"),
 		},
 		{
 			name: "closed context",
 			contextFunc: func() *Context {
-				ctx, _ := OpenContext(ContextConfig{})
-				_ = ctx.Close()
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
+
+				err = ctx.Close()
+				require.NoError(t, err)
 				return ctx
 			},
-			config:  SenderConfig{},
+			config:  makeSenderConfig(),
 			wantErr: errors.New("context is closed"),
 		},
 	}
