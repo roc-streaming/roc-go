@@ -9,12 +9,17 @@ import (
 
 func TestSender_Open(t *testing.T) {
 	tests := []struct {
-		name    string
-		config  SenderConfig
-		wantErr error
+		name        string
+		contextFunc func() *Context
+		config      SenderConfig
+		wantErr     error
 	}{
 		{
 			name: "ok",
+			contextFunc: func() *Context {
+				ctx, _ := OpenContext(ContextConfig{})
+				return ctx
+			},
 			config: SenderConfig{
 				FrameSampleRate: 44100,
 				FrameChannels:   ChannelSetStereo,
@@ -23,18 +28,37 @@ func TestSender_Open(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name:    "invalid config",
+			name: "invalid config",
+			contextFunc: func() *Context {
+				ctx, _ := OpenContext(ContextConfig{})
+				return ctx
+			},
 			config:  SenderConfig{},
 			wantErr: newNativeErr("roc_sender_open()", -1),
+		},
+		{
+			name: "nil context",
+			contextFunc: func() *Context {
+				return nil
+			},
+			config:  SenderConfig{},
+			wantErr: errors.New("context is nil"),
+		},
+		{
+			name: "closed context",
+			contextFunc: func() *Context {
+				ctx, _ := OpenContext(ContextConfig{})
+				_ = ctx.Close()
+				return ctx
+			},
+			config:  SenderConfig{},
+			wantErr: errors.New("context is closed"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx, err := OpenContext(ContextConfig{})
-
-			require.NoError(t, err)
-			require.NotNil(t, ctx)
+			ctx := tt.contextFunc()
 
 			sender, err := OpenSender(ctx, tt.config)
 
@@ -49,30 +73,12 @@ func TestSender_Open(t *testing.T) {
 				require.Nil(t, sender)
 			}
 
-			err = ctx.Close()
-			require.NoError(t, err)
+			if ctx != nil {
+				err = ctx.Close()
+				require.NoError(t, err)
+			}
 		})
 	}
-}
-
-func TestSender_OpenWithNilContext(t *testing.T) {
-	sender, err := OpenSender(nil, makeSenderConfig())
-
-	require.Nil(t, sender)
-	require.Equal(t, errors.New("context is nil"), err)
-}
-
-func TestSender_OpenWithClosedContext(t *testing.T) {
-	ctx, err := OpenContext(ContextConfig{})
-	require.NoError(t, err)
-	require.NotNil(t, ctx)
-
-	err = ctx.Close()
-	require.NoError(t, err)
-
-	sender, err := OpenSender(ctx, makeSenderConfig())
-	require.Equal(t, errors.New("context is closed"), err)
-	require.Nil(t, sender)
 }
 
 func TestSender_SetReuseaddr(t *testing.T) {
