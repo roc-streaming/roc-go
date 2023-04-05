@@ -148,21 +148,18 @@ for {
 
 Go bindings and the C library both use [semantic versioning](https://semver.org/).
 
-Rules prior to 1.0.0 release:
+Bindings are **compatible** with the C library when:
 
-* According to semantic versioning, there is no compatibility promise until 1.0.0 is released. Small breaking changes are possible. For convenience, breaking changes are introduced only in minor version updates, but not in patch version updates.
+- **major** version of bindings **is same** as major version of C library
+- **minor** version of bindings **is same or higher** as minor version of C library
 
-Rules starting from 1.0.0 release:
+Patch versions of bindings and C library are independent.
 
-* The first two components (major and minor) of the bindings and the C library versions correspond to each other. The third component (patch) is independent.
-
-  **Bindings are compatible with the C library if its major version is the same, and minor version is the same or higher.**
-
-  For example, version 1.2.3 of the bindings would be compatible with 1.2.x and 1.3.x, but not with 1.1.x (minor version is lower) or 2.x.x (major version is different).
+For example, version 1.2.3 of the bindings would be compatible with 1.2.x and 1.3.x, but not with 1.1.x (minor version is lower) or 2.x.x (major version is different).
 
 ## Installation
 
-You will need to have Roc Toolkit library and headers installed system-wide. Refer to official build [instructions](https://roc-streaming.org/toolkit/docs/building.html) on how to install libroc from source.
+You will need to have Roc Toolkit library and headers installed system-wide. Refer to official build [instructions](https://roc-streaming.org/toolkit/docs/building.html) on how to install it.
 
 After installing libroc, you can install bindings using regular `go get`:
 
