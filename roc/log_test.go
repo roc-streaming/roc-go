@@ -3,6 +3,8 @@ package roc
 import (
 	"io/ioutil"
 	"log"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -84,6 +86,70 @@ func TestLog_Func(t *testing.T) {
 	defer SetLoggerFunc(nil)
 
 	ctx, _ := OpenContext(ContextConfig{})
+	ctx.Close()
+
+	if tw.wait() == "" {
+		t.Fatal("expected logs, didn't get them before timeout")
+	}
+}
+
+func TestLog_Message(t *testing.T) {
+	SetLogLevel(LogTrace)
+	defer SetLogLevel(defaultLogLevel)
+
+	tw := makeTestWriter()
+	defer close(tw.ch)
+
+	SetLoggerFunc(func(msg LogMessage) {
+		if msg.Level == LogTrace {
+			msgLevel := strconv.Itoa(int(msg.Level))
+			msgPid := strconv.Itoa(int(msg.Pid))
+			msgTid := strconv.Itoa(int(msg.Tid))
+			msgTime := strconv.Itoa(int(msg.Time))
+			byteMsg := msgLevel + ":" +
+				msg.Module + ":" +
+				msgPid + ":" +
+				msgTid + ":" +
+				msgTime + ":" +
+				msg.Text
+			_, _ = tw.Write([]byte(byteMsg))
+		}
+	})
+	defer SetLoggerFunc(nil)
+
+	ctx, _ := OpenContext(ContextConfig{})
+
+	select {
+	case entry := <-tw.ch:
+		msg := strings.Split(entry, ":")
+
+		msgLevel, _ := strconv.Atoi(msg[0])
+		msgModule := msg[1]
+		msgPid, _ := strconv.Atoi((msg[2]))
+		msgTid, _ := strconv.Atoi((msg[3]))
+		msgTime, _ := strconv.Atoi((msg[4]))
+		msgText := msg[5]
+
+		if LogLevel(msgLevel) != LogTrace {
+			t.Errorf("Expected log level to be trace, but got %d", msgLevel)
+		}
+		if msgModule == "" {
+			t.Errorf("Expected log message to have a non-empty module field")
+		}
+
+		if msgTime == 0 {
+			t.Errorf("Expected log message to have a non-zero timestamp")
+		}
+		if msgPid == 0 {
+			t.Errorf("Expected log message to have a non-zero process ID")
+		}
+		if msgTid == 0 {
+			t.Errorf("Expected log message to have a non-zero thread ID")
+		}
+		if msgText == "" {
+			t.Errorf("Expected log message to have a non-empty text field")
+		}
+	}
 	ctx.Close()
 
 	if tw.wait() == "" {
