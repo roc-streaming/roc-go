@@ -84,25 +84,28 @@ func rocGoLogHandler(cMessage *C.roc_log_message) {
 	loggerMu.Lock()
 	defer loggerMu.Unlock()
 
-	if loggerFunc != nil {
-		message := LogMessage{
-			Level: LogLevel(cMessage.level),
-			Time:  uint64(cMessage.time),
-			Pid:   uint64(cMessage.pid),
-			Tid:   uint64(cMessage.tid),
-		}
-		if cMessage.module != nil {
-			message.Module = C.GoString(cMessage.module)
-		}
-		if cMessage.file != nil {
-			message.File = C.GoString(cMessage.file)
-			message.Line = int(cMessage.line)
-		}
-		if cMessage.text != nil {
-			message.Text = C.GoString(cMessage.text)
-		}
-		loggerFunc(message)
+	if loggerFunc == nil {
+		return
 	}
+
+	message := LogMessage{
+		Level: LogLevel(cMessage.level),
+		Time:  uint64(cMessage.time),
+		Pid:   uint64(cMessage.pid),
+		Tid:   uint64(cMessage.tid),
+	}
+	if cMessage.module != nil {
+		message.Module = C.GoString(cMessage.module)
+	}
+	if cMessage.file != nil {
+		message.File = C.GoString(cMessage.file)
+		message.Line = int(cMessage.line)
+	}
+	if cMessage.text != nil {
+		message.Text = C.GoString(cMessage.text)
+	}
+
+	loggerFunc(message)
 }
 
 type defaultLogger struct{}
@@ -111,7 +114,7 @@ func (defaultLogger) Print(v ...interface{}) {
 	log.Print(v...)
 }
 
-func makeLoggerFunc(logger Logger) LoggerFunc {
+func logger2func(logger Logger) LoggerFunc {
 	return func(message LogMessage) {
 		level := ""
 		switch message.Level {
@@ -154,13 +157,14 @@ func SetLogLevel(level LogLevel) {
 // This function is thread-safe.
 func SetLoggerFunc(logFn LoggerFunc) {
 	if logFn == nil {
-		logFn = makeLoggerFunc(defaultLogger{})
+		logFn = logger2func(defaultLogger{})
 	}
 
 	loggerMu.Lock()
 	defer loggerMu.Unlock()
 
 	loggerFunc = logFn
+
 	C.roc_log_set_handler(C.roc_log_handler(C.rocGoLogHandlerProxy), nil)
 }
 
@@ -175,5 +179,10 @@ func SetLogger(logger Logger) {
 		logger = defaultLogger{}
 	}
 
-	SetLoggerFunc(makeLoggerFunc(logger))
+	loggerMu.Lock()
+	defer loggerMu.Unlock()
+
+	loggerFunc = logger2func(logger)
+
+	C.roc_log_set_handler(C.roc_log_handler(C.rocGoLogHandlerProxy), nil)
 }
