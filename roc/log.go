@@ -23,13 +23,13 @@ const (
 	// LogError enables only error messages.
 	LogError LogLevel = 1
 
-	// LogError enables informational messages and above.
+	// LogInfo enables informational messages and above.
 	LogInfo LogLevel = 2
 
 	// LogDebug enables debugging messages and above.
 	LogDebug LogLevel = 3
 
-	// LogDebug enables extra verbose logging, which may hurt performance
+	// LogTrace enables extra verbose logging, which may hurt performance
 	// and should not be used in production.
 	LogTrace LogLevel = 4
 )
