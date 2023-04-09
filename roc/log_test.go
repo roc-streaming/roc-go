@@ -103,40 +103,50 @@ func TestLog_Message(t *testing.T) {
 	SetLoggerFunc(func(msg LogMessage) {
 		if msg.Level == LogTrace {
 			msgLevel := strconv.Itoa(int(msg.Level))
+			msgLine := strconv.Itoa(msg.Line)
 			msgPid := strconv.Itoa(int(msg.Pid))
 			msgTid := strconv.Itoa(int(msg.Tid))
 			msgTime := strconv.Itoa(int(msg.Time))
-			byteMsg := msgLevel + ":" +
-				msg.Module + ":" +
-				msgPid + ":" +
-				msgTid + ":" +
-				msgTime + ":" +
-				msg.Text
+			byteMsg := msgLevel + ":" + 
+					   msg.File + ":" + 
+					   msg.Module + ":" + 
+					   msgLine + ":" + 
+					   msgPid + ":" + 
+					   msgTid + ":" + 
+					   msgTime + ":" + 
+					   msg.Text
 			_, _ = tw.Write([]byte(byteMsg))
 		}
 	})
 	defer SetLoggerFunc(nil)
 
 	ctx, _ := OpenContext(ContextConfig{})
-
+	
 	select {
 	case entry := <-tw.ch:
 		msg := strings.Split(entry, ":")
 
 		msgLevel, _ := strconv.Atoi(msg[0])
-		msgModule := msg[1]
-		msgPid, _ := strconv.Atoi((msg[2]))
-		msgTid, _ := strconv.Atoi((msg[3]))
-		msgTime, _ := strconv.Atoi((msg[4]))
-		msgText := msg[5]
-
+		msgFile := msg[1]
+		msgModule := msg[2]
+		msgLine, _ := strconv.Atoi(msg[3])
+		msgPid, _ := strconv.Atoi((msg[4]))
+		msgTid, _ := strconv.Atoi((msg[5]))
+		msgTime, _ := strconv.Atoi((msg[6]))
+		msgText := msg[7]
+		
 		if LogLevel(msgLevel) != LogTrace {
 			t.Errorf("Expected log level to be trace, but got %d", msgLevel)
 		}
 		if msgModule == "" {
 			t.Errorf("Expected log message to have a non-empty module field")
 		}
-
+		if msgFile == "" {
+			t.Errorf("Expected log message to have a non-empty file field")
+		}
+		if msgLine == 0 {
+			t.Errorf("Expected log message to have a non-zero line number")
+		}
 		if msgTime == 0 {
 			t.Errorf("Expected log message to have a non-zero timestamp")
 		}
