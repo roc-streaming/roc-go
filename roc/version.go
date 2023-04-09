@@ -6,6 +6,7 @@ package roc
 import "C"
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -71,4 +72,35 @@ func parseVersion(s string) SemanticVersion {
 	}
 
 	return v
+}
+
+func stringifyVersion(sv SemanticVersion) string {
+	return fmt.Sprintf("%d.%d.%d", sv.Major, sv.Minor, sv.Patch)
+}
+
+var runVersionCheckOnce sync.Once
+
+func versionCheck() {
+	v := Version()
+	nativeVersion := v.Native
+	bindingsVersion := v.Bindings
+
+	if nativeVersion.Major != bindingsVersion.Major {
+		panic(fmt.Sprintf(`
+Bindings are compatible with native C library only if Major versions are same
+Bindings version: %s
+C library version: %s`,
+			stringifyVersion(bindingsVersion), stringifyVersion(nativeVersion),
+		))
+	}
+
+	if nativeVersion.Minor > bindingsVersion.Minor {
+		panic(fmt.Sprintf(`
+Bindings are compatible with native C library only if its Minor version is same or higher
+Bindings version: %s
+C library version: %s`,
+			stringifyVersion(bindingsVersion), stringifyVersion(nativeVersion),
+		))
+	}
+	return
 }
