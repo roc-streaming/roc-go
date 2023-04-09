@@ -81,7 +81,7 @@ func TestVersion_Parse(t *testing.T) {
 	}
 }
 
-func TestCheck_Version_Compatability(t *testing.T) {
+func TestCheck_Version_Compatibility(t *testing.T) {
 	tests := []struct {
 		name            string
 		nativeVersion   SemanticVersion
