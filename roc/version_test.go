@@ -80,3 +80,45 @@ func TestVersion_Parse(t *testing.T) {
 		})
 	}
 }
+
+func TestCheck_Version_Compatability(t *testing.T) {
+	tests := []struct {
+		name            string
+		nativeVersion   SemanticVersion
+		bindingsVersion SemanticVersion
+		wantErr         bool
+	}{
+		{
+			name:            "Compatible versions",
+			nativeVersion:   parseVersion("1.1.1"),
+			bindingsVersion: parseVersion("1.2.2"),
+		},
+		{
+			name:            "Incompatible: different major versions",
+			nativeVersion:   parseVersion("1.1.1"),
+			bindingsVersion: parseVersion("0.1.1"),
+			wantErr:         true,
+		},
+		{
+			name:            "Incompatible: bindings minor version less than native",
+			nativeVersion:   parseVersion("1.1.1"),
+			bindingsVersion: parseVersion("1.0.1"),
+			wantErr:         true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := checkVersionCompatibility(tt.nativeVersion, tt.bindingsVersion)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
+			}
+		})
+	}
+}
+
+func TestVersion_Check(t *testing.T) {
+	require.NotPanics(t, func() { versionCheck() })
+}

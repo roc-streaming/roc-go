@@ -139,6 +139,8 @@ func init() {
 //
 // This function is thread-safe.
 func SetLogLevel(level LogLevel) {
+	versionCheck()
+
 	C.roc_log_set_level(C.roc_log_level(level))
 }
 
@@ -153,6 +155,8 @@ func SetLogLevel(level LogLevel) {
 //
 // This function is thread-safe.
 func SetLoggerFunc(logFn LoggerFunc) {
+	versionCheck()
+
 	if logFn == nil {
 		logFn = makeLoggerFunc(defaultLogger{})
 	}
@@ -171,6 +175,8 @@ func SetLoggerFunc(logFn LoggerFunc) {
 //
 // This function is thread-safe.
 func SetLogger(logger Logger) {
+	versionCheck()
+
 	if logger == nil {
 		logger = defaultLogger{}
 	}

@@ -6,6 +6,7 @@ package roc
 import "C"
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -78,31 +79,35 @@ func stringifyVersion(sv SemanticVersion) string {
 	return fmt.Sprintf("%d.%d.%d", sv.Major, sv.Minor, sv.Patch)
 }
 
+func checkVersionCompatibility(nativeVersion, bindingsVersion SemanticVersion) error {
+	if nativeVersion.Major != bindingsVersion.Major {
+		return errors.New(fmt.Sprintf(`
+Bindings are compatible with native C library only if Major versions are same
+Bindings version: %s
+C library version: %s`,
+			stringifyVersion(bindingsVersion), stringifyVersion(nativeVersion),
+		))
+	}
+
+	if nativeVersion.Minor > bindingsVersion.Minor {
+		return errors.New(fmt.Sprintf(`
+Bindings are compatible with native C library only if its Minor version is same or higher
+Bindings version: %s
+C library version: %s`,
+			stringifyVersion(bindingsVersion), stringifyVersion(nativeVersion),
+		))
+	}
+	return nil
+}
+
 var runVersionCheckOnce sync.Once
 
 func versionCheck() {
 	runVersionCheckOnce.Do(func() {
 		v := Version()
-		nativeVersion := v.Native
-		bindingsVersion := v.Bindings
-
-		if nativeVersion.Major != bindingsVersion.Major {
-			panic(fmt.Sprintf(`
-Bindings are compatible with native C library only if Major versions are same
-Bindings version: %s
-C library version: %s`,
-				stringifyVersion(bindingsVersion), stringifyVersion(nativeVersion),
-			))
+		err := checkVersionCompatibility(v.Native, v.Bindings)
+		if err != nil {
+			panic(err.Error())
 		}
-
-		if nativeVersion.Minor > bindingsVersion.Minor {
-			panic(fmt.Sprintf(`
-Bindings are compatible with native C library only if its Minor version is same or higher
-Bindings version: %s
-C library version: %s`,
-				stringifyVersion(bindingsVersion), stringifyVersion(nativeVersion),
-			))
-		}
-		return
 	})
 }
