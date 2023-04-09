@@ -81,26 +81,28 @@ func stringifyVersion(sv SemanticVersion) string {
 var runVersionCheckOnce sync.Once
 
 func versionCheck() {
-	v := Version()
-	nativeVersion := v.Native
-	bindingsVersion := v.Bindings
+	runVersionCheckOnce.Do(func() {
+		v := Version()
+		nativeVersion := v.Native
+		bindingsVersion := v.Bindings
 
-	if nativeVersion.Major != bindingsVersion.Major {
-		panic(fmt.Sprintf(`
+		if nativeVersion.Major != bindingsVersion.Major {
+			panic(fmt.Sprintf(`
 Bindings are compatible with native C library only if Major versions are same
 Bindings version: %s
 C library version: %s`,
-			stringifyVersion(bindingsVersion), stringifyVersion(nativeVersion),
-		))
-	}
+				stringifyVersion(bindingsVersion), stringifyVersion(nativeVersion),
+			))
+		}
 
-	if nativeVersion.Minor > bindingsVersion.Minor {
-		panic(fmt.Sprintf(`
+		if nativeVersion.Minor > bindingsVersion.Minor {
+			panic(fmt.Sprintf(`
 Bindings are compatible with native C library only if its Minor version is same or higher
 Bindings version: %s
 C library version: %s`,
-			stringifyVersion(bindingsVersion), stringifyVersion(nativeVersion),
-		))
-	}
-	return
+				stringifyVersion(bindingsVersion), stringifyVersion(nativeVersion),
+			))
+		}
+		return
+	})
 }

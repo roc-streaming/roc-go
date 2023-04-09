@@ -137,8 +137,6 @@ type Sender struct {
 // Open a new sender.
 // Allocates and initializes a new sender, and attaches it to the context.
 func OpenSender(context *Context, config SenderConfig) (*Sender, error) {
-	runVersionCheckOnce.Do(func() { versionCheck() })
-
 	if context == nil {
 		return nil, errors.New("context is nil")
 	}
