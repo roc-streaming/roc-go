@@ -5,6 +5,8 @@ import (
 	"log"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 const defaultLogLevel LogLevel = LogError
@@ -89,6 +91,40 @@ func TestLog_Func(t *testing.T) {
 	if tw.wait() == "" {
 		t.Fatal("expected logs, didn't get them before timeout")
 	}
+}
+
+func TestLog_Message(t *testing.T) {
+	SetLogLevel(LogTrace)
+	defer SetLogLevel(defaultLogLevel)
+
+	ch := make(chan LogMessage, 1)
+	defer close(ch)
+
+	SetLoggerFunc(func(msg LogMessage) {
+		if msg.Level == LogTrace {
+			select {
+			case ch <- msg:
+			default:
+			}
+		}
+	})
+	defer SetLoggerFunc(nil)
+
+	ctx, _ := OpenContext(ContextConfig{})
+	select {
+	case msg := <-ch:
+		require.Equal(t, LogTrace, msg.Level, "Expected log level to be trace")
+		require.NotEmpty(t, msg.Module)
+		require.NotEmpty(t, msg.File)
+		require.NotEmpty(t, msg.Line)
+		require.NotEmpty(t, msg.Time)
+		require.NotEmpty(t, msg.Pid)
+		require.NotEmpty(t, msg.Tid)
+		require.NotEmpty(t, msg.Text)
+	case <-time.After(time.Minute):
+		t.Fatal("expected logs, didn't get them before timeout")
+	}
+	ctx.Close()
 }
 
 func TestLog_Interface(t *testing.T) {
