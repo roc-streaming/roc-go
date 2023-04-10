@@ -107,7 +107,7 @@ func TestLog_Message(t *testing.T) {
 			msgBytes := new(bytes.Buffer)
 			err := json.NewEncoder(msgBytes).Encode(msg)
 			require.NoError(t, err)
-			_, _ = tw.Write([]byte(msgBytes.Bytes()))
+			_, _ = tw.Write(msgBytes.Bytes())
 		}
 	})
 	defer SetLoggerFunc(nil)
