@@ -1,8 +1,6 @@
 package roc
 
 import (
-	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"log"
 	"testing"
@@ -99,28 +97,23 @@ func TestLog_Message(t *testing.T) {
 	SetLogLevel(LogTrace)
 	defer SetLogLevel(defaultLogLevel)
 
-	tw := makeTestWriter()
-	defer close(tw.ch)
+	ch := make(chan LogMessage, 1)
+	defer close(ch)
 
 	SetLoggerFunc(func(msg LogMessage) {
 		if msg.Level == LogTrace {
-			msgBytes := new(bytes.Buffer)
-			err := json.NewEncoder(msgBytes).Encode(msg)
-			require.NoError(t, err)
-			_, _ = tw.Write(msgBytes.Bytes())
+			select {
+			case ch <- msg:
+			default:
+			}
 		}
 	})
 	defer SetLoggerFunc(nil)
 
 	ctx, _ := OpenContext(ContextConfig{})
-
 	select {
-	case entry := <-tw.ch:
-		var msg LogMessage
-		err := json.Unmarshal([]byte(entry), &msg)
-		require.NoError(t, err)
-
-		require.Equal(t, LogTrace, LogLevel(msg.Level), "Expected log level to be trace")
+	case msg := <-ch:
+		require.Equal(t, LogTrace, msg.Level, "Expected log level to be trace")
 		require.NotEmpty(t, msg.Module)
 		require.NotEmpty(t, msg.File)
 		require.NotEmpty(t, msg.Line)
@@ -128,12 +121,10 @@ func TestLog_Message(t *testing.T) {
 		require.NotEmpty(t, msg.Pid)
 		require.NotEmpty(t, msg.Tid)
 		require.NotEmpty(t, msg.Text)
-	}
-	ctx.Close()
-
-	if tw.wait() == "" {
+	case <-time.After(time.Minute):
 		t.Fatal("expected logs, didn't get them before timeout")
 	}
+	ctx.Close()
 }
 
 func TestLog_Interface(t *testing.T) {
