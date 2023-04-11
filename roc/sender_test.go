@@ -2,6 +2,7 @@ package roc
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -82,6 +83,66 @@ func TestSender_Open(t *testing.T) {
 	}
 }
 
+func TestSender_SetOutgoingAddress(t *testing.T) {
+	cases := []struct {
+		name    string
+		slot    Slot
+		iface   Interface
+		ip      string
+		wantErr error
+	}{
+		{
+			name:    "ok",
+			slot:    SlotDefault,
+			iface:   InterfaceAudioSource,
+			ip:      "127.0.0.1",
+			wantErr: nil,
+		},
+		{
+			name:    "bad iface",
+			slot:    SlotDefault,
+			iface:   -1,
+			ip:      "127.0.0.1",
+			wantErr: newNativeErr("roc_sender_set_outgoing_address()", -1),
+		},
+		{
+			name:  "invalid ip",
+			slot:  SlotDefault,
+			iface: InterfaceAudioSource,
+			ip:    "127.0.0.1\x00",
+			wantErr: fmt.Errorf("invalid ip: %w",
+				fmt.Errorf("unexpected zero byte in the string: \"127.0.0.1\\x00\"")),
+		},
+		{
+			name:    "out of range ip",
+			slot:    SlotDefault,
+			iface:   InterfaceAudioSource,
+			ip:      "256.256.256.256",
+			wantErr: newNativeErr("roc_sender_set_outgoing_address()", -1),
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, err := OpenContext(ContextConfig{})
+			require.NoError(t, err)
+
+			sender, err := OpenSender(ctx, makeSenderConfig())
+			require.NoError(t, err)
+			require.NotNil(t, sender)
+
+			err = sender.SetOutgoingAddress(tt.slot, tt.iface, tt.ip)
+			require.Equal(t, tt.wantErr, err)
+
+			err = sender.Close()
+			require.NoError(t, err)
+
+			err = ctx.Close()
+			require.NoError(t, err)
+		})
+	}
+}
+
 func TestSender_SetReuseaddr(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -116,11 +177,7 @@ func TestSender_SetReuseaddr(t *testing.T) {
 			require.NotNil(t, sender)
 
 			err = sender.SetReuseaddr(tt.slot, tt.iface, tt.enabled)
-			if tt.wantErr != nil {
-				require.Equal(t, tt.wantErr.Error(), err.Error())
-			} else {
-				require.NoError(t, err)
-			}
+			require.Equal(t, tt.wantErr, err)
 
 			err = sender.Close()
 			require.NoError(t, err)
@@ -182,11 +239,7 @@ func TestSender_Connect(t *testing.T) {
 			require.NotNil(t, sender)
 
 			err = sender.Connect(tt.slot, tt.iface, tt.endpoint)
-			if tt.wantErr != nil {
-				require.Equal(t, tt.wantErr.Error(), err.Error())
-			} else {
-				require.NoError(t, err)
-			}
+			require.Equal(t, tt.wantErr, err)
 
 			err = sender.Close()
 			require.NoError(t, err)
