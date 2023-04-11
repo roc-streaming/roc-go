@@ -113,6 +113,13 @@ func TestSender_SetOutgoingAddress(t *testing.T) {
 			wantErr: fmt.Errorf("invalid ip: %w",
 				fmt.Errorf("unexpected zero byte in the string: \"127.0.0.1\\x00\"")),
 		},
+		{
+			name:    "out of range ip",
+			slot:    SlotDefault,
+			iface:   InterfaceAudioSource,
+			ip:      "256.256.256.256",
+			wantErr: newNativeErr("roc_sender_set_outgoing_address()", -1),
+		},
 	}
 
 	for _, tt := range cases {
