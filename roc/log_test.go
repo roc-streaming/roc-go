@@ -75,6 +75,24 @@ func TestLog_Default(t *testing.T) {
 	}
 }
 
+func TestLog_Interface(t *testing.T) {
+	SetLogLevel(LogDebug)
+	defer SetLogLevel(defaultLogLevel)
+
+	tw := makeTestWriter()
+	logger := log.New(&tw, "", log.Lshortfile)
+
+	SetLogger(logger)
+	defer SetLogger(nil)
+
+	ctx, _ := OpenContext(ContextConfig{})
+	ctx.Close()
+
+	if tw.wait() == "" {
+		t.Fatal("expected logs, didn't get them before timeout")
+	}
+}
+
 func TestLog_Func(t *testing.T) {
 	SetLogLevel(LogTrace)
 	defer SetLogLevel(defaultLogLevel)
@@ -107,22 +125,4 @@ func TestLog_Func(t *testing.T) {
 		t.Fatal("expected logs, didn't get them before timeout")
 	}
 	ctx.Close()
-}
-
-func TestLog_Interface(t *testing.T) {
-	SetLogLevel(LogDebug)
-	defer SetLogLevel(defaultLogLevel)
-
-	tw := makeTestWriter()
-	logger := log.New(&tw, "", log.Lshortfile)
-
-	SetLogger(logger)
-	defer SetLogger(nil)
-
-	ctx, _ := OpenContext(ContextConfig{})
-	ctx.Close()
-
-	if tw.wait() == "" {
-		t.Fatal("expected logs, didn't get them before timeout")
-	}
 }
