@@ -106,11 +106,12 @@ func TestSender_SetOutgoingAddress(t *testing.T) {
 			wantErr: newNativeErr("roc_sender_set_outgoing_address()", -1),
 		},
 		{
-			name:    "invalid ip",
-			slot:    SlotDefault,
-			iface:   InterfaceAudioSource,
-			ip:      "127.0.0.1\x00",
-			wantErr: fmt.Errorf("invalid ip: unexpected zero byte in the string: \"127.0.0.1\\x00\""),
+			name:  "invalid ip",
+			slot:  SlotDefault,
+			iface: InterfaceAudioSource,
+			ip:    "127.0.0.1\x00",
+			wantErr: fmt.Errorf("invalid ip: %w",
+				fmt.Errorf("unexpected zero byte in the string: \"127.0.0.1\\x00\"")),
 		},
 	}
 
@@ -124,11 +125,7 @@ func TestSender_SetOutgoingAddress(t *testing.T) {
 			require.NotNil(t, sender)
 
 			err = sender.SetOutgoingAddress(tt.slot, tt.iface, tt.ip)
-			if tt.wantErr != nil {
-				require.Equal(t, tt.wantErr.Error(), err.Error())
-			} else {
-				require.NoError(t, err)
-			}
+			require.Equal(t, tt.wantErr, err)
 
 			err = sender.Close()
 			require.NoError(t, err)
@@ -173,11 +170,7 @@ func TestSender_SetReuseaddr(t *testing.T) {
 			require.NotNil(t, sender)
 
 			err = sender.SetReuseaddr(tt.slot, tt.iface, tt.enabled)
-			if tt.wantErr != nil {
-				require.Equal(t, tt.wantErr.Error(), err.Error())
-			} else {
-				require.NoError(t, err)
-			}
+			require.Equal(t, tt.wantErr, err)
 
 			err = sender.Close()
 			require.NoError(t, err)
@@ -239,11 +232,7 @@ func TestSender_Connect(t *testing.T) {
 			require.NotNil(t, sender)
 
 			err = sender.Connect(tt.slot, tt.iface, tt.endpoint)
-			if tt.wantErr != nil {
-				require.Equal(t, tt.wantErr.Error(), err.Error())
-			} else {
-				require.NoError(t, err)
-			}
+			require.Equal(t, tt.wantErr, err)
 
 			err = sender.Close()
 			require.NoError(t, err)
