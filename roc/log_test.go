@@ -76,24 +76,6 @@ func TestLog_Default(t *testing.T) {
 }
 
 func TestLog_Func(t *testing.T) {
-	SetLogLevel(LogDebug)
-	defer SetLogLevel(defaultLogLevel)
-
-	tw := makeTestWriter()
-	SetLoggerFunc(func(msg LogMessage) {
-		_, _ = tw.Write([]byte(msg.Module + ":" + msg.Text))
-	})
-	defer SetLoggerFunc(nil)
-
-	ctx, _ := OpenContext(ContextConfig{})
-	ctx.Close()
-
-	if tw.wait() == "" {
-		t.Fatal("expected logs, didn't get them before timeout")
-	}
-}
-
-func TestLog_Message(t *testing.T) {
 	SetLogLevel(LogTrace)
 	defer SetLogLevel(defaultLogLevel)
 
