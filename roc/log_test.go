@@ -74,7 +74,8 @@ func TestLog_Default(t *testing.T) {
 
 			tt.setupFn()
 
-			ctx, _ := OpenContext(ContextConfig{})
+			ctx, err := OpenContext(ContextConfig{})
+			require.NoError(t, err)
 			ctx.Close()
 
 			if tw.waitAny() == "" {
@@ -94,7 +95,8 @@ func TestLog_Interface(t *testing.T) {
 	SetLogger(logger)
 	defer SetLogger(nil)
 
-	ctx, _ := OpenContext(ContextConfig{})
+	ctx, err := OpenContext(ContextConfig{})
+	require.NoError(t, err)
 	ctx.Close()
 
 	if tw.waitAny() == "" {
@@ -119,7 +121,10 @@ func TestLog_Func(t *testing.T) {
 	})
 	defer SetLoggerFunc(nil)
 
-	ctx, _ := OpenContext(ContextConfig{})
+	ctx, err := OpenContext(ContextConfig{})
+	require.NoError(t, err)
+	ctx.Close()
+
 	select {
 	case msg := <-ch:
 		require.Equal(t, LogTrace, msg.Level, "Expected log level to be trace")
@@ -133,7 +138,6 @@ func TestLog_Func(t *testing.T) {
 	case <-time.After(time.Minute):
 		t.Fatal("expected logs, didn't get them before timeout")
 	}
-	ctx.Close()
 }
 
 func TestLog_Levels(t *testing.T) {
