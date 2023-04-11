@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -127,14 +128,14 @@ func TestLog_Func(t *testing.T) {
 
 	select {
 	case msg := <-ch:
-		require.Equal(t, LogTrace, msg.Level, "Expected log level to be trace")
-		require.NotEmpty(t, msg.Module)
-		require.NotEmpty(t, msg.File)
-		require.NotEmpty(t, msg.Line)
-		require.NotEmpty(t, msg.Time)
-		require.NotEmpty(t, msg.Pid)
-		require.NotEmpty(t, msg.Tid)
-		require.NotEmpty(t, msg.Text)
+		assert.Equal(t, LogTrace, msg.Level, "Expected log level to be trace")
+		assert.NotEmpty(t, msg.Module)
+		assert.NotEmpty(t, msg.File)
+		assert.NotEmpty(t, msg.Line)
+		assert.NotEmpty(t, msg.Time)
+		assert.NotEmpty(t, msg.Pid)
+		assert.NotEmpty(t, msg.Tid)
+		assert.NotEmpty(t, msg.Text)
 	case <-time.After(time.Minute):
 		t.Fatal("expected logs, didn't get them before timeout")
 	}
