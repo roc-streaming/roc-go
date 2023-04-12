@@ -3,8 +3,12 @@ package roc
 import (
 	"io/ioutil"
 	"log"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const defaultLogLevel LogLevel = LogError
@@ -15,9 +19,7 @@ type testWriter struct {
 
 func makeTestWriter() testWriter {
 	return testWriter{
-		// capacity 1 is needed to ensure that at least one
-		// message can be written without blocking
-		ch: make(chan string, 1),
+		ch: make(chan string, 1000),
 	}
 }
 
@@ -30,15 +32,25 @@ func (tw testWriter) Write(buf []byte) (int, error) {
 	return len(buf), nil
 }
 
-func (tw testWriter) wait() string {
+func (tw testWriter) waitMatching(predicate func(msg string) bool) string {
 	const waitTimeout = time.Minute
 
-	select {
-	case s := <-tw.ch:
-		return s
-	case <-time.After(waitTimeout):
-		return ""
+	for {
+		select {
+		case s := <-tw.ch:
+			if predicate(s) {
+				return s
+			}
+		case <-time.After(waitTimeout):
+			return ""
+		}
 	}
+}
+
+func (tw testWriter) waitAny() string {
+	return tw.waitMatching(func(msg string) bool {
+		return true
+	})
 }
 
 func TestLog_Default(t *testing.T) {
@@ -63,31 +75,14 @@ func TestLog_Default(t *testing.T) {
 
 			tt.setupFn()
 
-			ctx, _ := OpenContext(ContextConfig{})
+			ctx, err := OpenContext(ContextConfig{})
+			require.NoError(t, err)
 			ctx.Close()
 
-			if tw.wait() == "" {
+			if tw.waitAny() == "" {
 				t.Fatalf("expected logs, didn't get them before timeout")
 			}
 		})
-	}
-}
-
-func TestLog_Func(t *testing.T) {
-	SetLogLevel(LogDebug)
-	defer SetLogLevel(defaultLogLevel)
-
-	tw := makeTestWriter()
-	SetLoggerFunc(func(msg LogMessage) {
-		_, _ = tw.Write([]byte(msg.Module + ":" + msg.Text))
-	})
-	defer SetLoggerFunc(nil)
-
-	ctx, _ := OpenContext(ContextConfig{})
-	ctx.Close()
-
-	if tw.wait() == "" {
-		t.Fatal("expected logs, didn't get them before timeout")
 	}
 }
 
@@ -101,10 +96,88 @@ func TestLog_Interface(t *testing.T) {
 	SetLogger(logger)
 	defer SetLogger(nil)
 
-	ctx, _ := OpenContext(ContextConfig{})
+	ctx, err := OpenContext(ContextConfig{})
+	require.NoError(t, err)
 	ctx.Close()
 
-	if tw.wait() == "" {
+	if tw.waitAny() == "" {
 		t.Fatal("expected logs, didn't get them before timeout")
+	}
+}
+
+func TestLog_Func(t *testing.T) {
+	SetLogLevel(LogTrace)
+	defer SetLogLevel(defaultLogLevel)
+
+	ch := make(chan LogMessage, 1)
+	defer close(ch)
+
+	SetLoggerFunc(func(msg LogMessage) {
+		if msg.Level == LogTrace {
+			select {
+			case ch <- msg:
+			default:
+			}
+		}
+	})
+	defer SetLoggerFunc(nil)
+
+	ctx, err := OpenContext(ContextConfig{})
+	require.NoError(t, err)
+	ctx.Close()
+
+	select {
+	case msg := <-ch:
+		assert.Equal(t, LogTrace, msg.Level, "Expected log level to be trace")
+		assert.NotEmpty(t, msg.Module)
+		assert.NotEmpty(t, msg.File)
+		assert.NotEmpty(t, msg.Line)
+		assert.NotEmpty(t, msg.Time)
+		assert.NotEmpty(t, msg.Pid)
+		assert.NotEmpty(t, msg.Tid)
+		assert.NotEmpty(t, msg.Text)
+	case <-time.After(time.Minute):
+		t.Fatal("expected logs, didn't get them before timeout")
+	}
+}
+
+func TestLog_Levels(t *testing.T) {
+	tests := []struct {
+		level LogLevel
+		str   string
+	}{
+		{LogError, "[err]"},
+		{LogInfo, "[inf]"},
+		{LogDebug, "[dbg]"},
+		{LogTrace, "[trc]"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.str, func(t *testing.T) {
+			tw := makeTestWriter()
+			logger := log.New(&tw, "", log.Lshortfile)
+
+			SetLogger(logger)
+			defer SetLogger(nil)
+
+			SetLogLevel(tt.level)
+			defer SetLogLevel(defaultLogLevel)
+
+			ctx, err := OpenContext(ContextConfig{})
+			require.NoError(t, err)
+
+			_, err = OpenReceiver(ctx, ReceiverConfig{})
+			require.Error(t, err)
+
+			ctx.Close()
+
+			msg := tw.waitMatching(func(msg string) bool {
+				return strings.Contains(msg, tt.str)
+			})
+
+			if msg == "" {
+				t.Fatal("expected logs, didn't get them before timeout")
+			}
+		})
 	}
 }
