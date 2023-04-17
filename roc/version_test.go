@@ -1,6 +1,7 @@
 package roc
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -81,44 +82,198 @@ func TestVersion_Parse(t *testing.T) {
 	}
 }
 
-func TestCheck_Version_Compatibility(t *testing.T) {
+func TestVersion_Validite(t *testing.T) {
 	tests := []struct {
-		name            string
-		nativeVersion   SemanticVersion
-		bindingsVersion SemanticVersion
-		wantErr         bool
+		name    string
+		version Versions
+		wantErr error
 	}{
 		{
-			name:            "Compatible versions",
-			nativeVersion:   parseVersion("1.1.1"),
-			bindingsVersion: parseVersion("1.2.2"),
+			name: "compatible: equal versions",
+			version: Versions{
+				Native: SemanticVersion{
+					Major: 1,
+					Minor: 1,
+					Patch: 1,
+				},
+				Bindings: SemanticVersion{
+					Major: 1,
+					Minor: 1,
+					Patch: 1,
+				},
+			},
+			wantErr: nil,
 		},
 		{
-			name:            "Incompatible: different major versions",
-			nativeVersion:   parseVersion("1.1.1"),
-			bindingsVersion: parseVersion("0.1.1"),
-			wantErr:         true,
+			name: "incompatible: binding's major version less than native",
+			version: Versions{
+				Native: SemanticVersion{
+					Major: 1,
+					Minor: 1,
+					Patch: 1,
+				},
+				Bindings: SemanticVersion{
+					Major: 0,
+					Minor: 1,
+					Patch: 1,
+				},
+			},
+			wantErr: errors.New(
+				"Detected incompatibility between roc bindings ( 0.1.1 ) and native library ( 1.1.1 ):" +
+					" Major versions are different",
+			),
 		},
 		{
-			name:            "Incompatible: bindings minor version less than native",
-			nativeVersion:   parseVersion("1.1.1"),
-			bindingsVersion: parseVersion("1.0.1"),
-			wantErr:         true,
+			name: "incompatible: binding's major greater than native",
+			version: Versions{
+				Native: SemanticVersion{
+					Major: 1,
+					Minor: 1,
+					Patch: 1,
+				},
+				Bindings: SemanticVersion{
+					Major: 2,
+					Minor: 1,
+					Patch: 1,
+				},
+			},
+			wantErr: errors.New(
+				"Detected incompatibility between roc bindings ( 0.1.1 ) and native library ( 1.1.1 ):" +
+					" Major versions are different",
+			),
+		},
+		{
+			name: "compatible: binding's minor version greater than native",
+			version: Versions{
+				Native: SemanticVersion{
+					Major: 1,
+					Minor: 1,
+					Patch: 1,
+				},
+				Bindings: SemanticVersion{
+					Major: 1,
+					Minor: 2,
+					Patch: 1,
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "incompatible: binding's minor version less than native",
+			version: Versions{
+				Native: SemanticVersion{
+					Major: 1,
+					Minor: 1,
+					Patch: 1,
+				},
+				Bindings: SemanticVersion{
+					Major: 1,
+					Minor: 0,
+					Patch: 1,
+				},
+			},
+			wantErr: errors.New(
+				"Detected incompatibility between roc bindings ( 1.0.1 ) and native library ( 1.1.1 ):" +
+					" Minor version of bindings is less than native library",
+			),
+		},
+		{
+			name: "compatible: binding's patch less than native",
+			version: Versions{
+				Native: SemanticVersion{
+					Major: 1,
+					Minor: 1,
+					Patch: 1,
+				},
+				Bindings: SemanticVersion{
+					Major: 1,
+					Minor: 1,
+					Patch: 0,
+				},
+			},
+			wantErr: nil,
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := checkVersionCompatibility(tt.nativeVersion, tt.bindingsVersion)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.Nil(t, err)
-			}
-		})
+		err := tt.version.Validate()
+		if tt.wantErr != nil {
+			require.Error(t, err, tt.wantErr)
+		} else {
+			require.Nil(t, err)
+		}
 	}
 }
 
 func TestVersion_Check(t *testing.T) {
 	require.NotPanics(t, func() { versionCheck() })
+}
+
+var versionCheckCalled = false
+
+func TestVersion_Entrypoints(t *testing.T) {
+	versionCheckFn = func() {
+		versionCheckCalled = true
+	}
+
+	tests := []struct {
+		name       string
+		entrypoint func()
+	}{
+		{
+			name: "OpenContext",
+			entrypoint: func() {
+				ctx, _ := OpenContext(ContextConfig{})
+				defer ctx.Close()
+			}, // throws err
+		},
+		{
+			name: "OpenSender",
+			entrypoint: func() {
+				ctx, _ := OpenContext(ContextConfig{})
+				sender, _ := OpenSender(ctx, SenderConfig{
+					FrameSampleRate: 44100,
+					FrameChannels:   ChannelSetStereo,
+					FrameEncoding:   FrameEncodingPcmFloat,
+				})
+				defer ctx.Close()
+				defer sender.Close()
+			},
+		},
+		{
+			name: "OpenReceiver",
+			entrypoint: func() {
+				ctx, _ := OpenContext(ContextConfig{})
+				recv, _ := OpenReceiver(ctx, ReceiverConfig{
+					FrameSampleRate: 44100,
+					FrameChannels:   ChannelSetStereo,
+					FrameEncoding:   FrameEncodingPcmFloat,
+				})
+				defer ctx.Close()
+				defer recv.Close()
+			},
+		},
+		{
+			name:       "ParseEndpoint",
+			entrypoint: func() { _, _ = ParseEndpoint("rtp://192.168.0.1:1234") },
+		},
+		{
+			name:       "SetLogLevel",
+			entrypoint: func() { SetLogLevel(LogDebug) },
+		},
+		{
+			name:       "SetLogger",
+			entrypoint: func() { SetLogger(nil) },
+		},
+		{
+			name:       "SetLoggerFunc",
+			entrypoint: func() { SetLoggerFunc(nil) },
+		},
+	}
+
+	for _, tt := range tests {
+		tt.entrypoint()
+		require.Equal(t, versionCheckCalled, true)
+		versionCheckCalled = false
+	}
 }

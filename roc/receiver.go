@@ -168,7 +168,7 @@ type Receiver struct {
 // Open a new receiver.
 // Allocates and initializes a new receiver, and attaches it to the context.
 func OpenReceiver(context *Context, config ReceiverConfig) (*Receiver, error) {
-	versionCheck()
+	versionCheckFn()
 
 	if context == nil {
 		return nil, errors.New("context is nil")

@@ -74,6 +74,8 @@ type Endpoint struct {
 
 // ParseEndpoint decomposes URI string into Endpoint instance.
 func ParseEndpoint(uri string) (*Endpoint, error) {
+	versionCheckFn()
+
 	var errCode C.int
 
 	var cEndp *C.roc_endpoint

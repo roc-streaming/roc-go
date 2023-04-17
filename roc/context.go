@@ -38,7 +38,7 @@ type Context struct {
 // Allocates and initializes a new context. May start some background threads.
 // User is responsible to call Context.Close to free context resources.
 func OpenContext(config ContextConfig) (*Context, error) {
-	versionCheck()
+	versionCheckFn()
 
 	cConfig := C.struct_roc_context_config{
 		max_packet_size: C.uint(config.MaxPacketSize),
