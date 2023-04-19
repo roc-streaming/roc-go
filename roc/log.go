@@ -8,9 +8,15 @@ void rocGoLogHandlerProxy(const roc_log_message* message, void* argument);
 import "C"
 
 import (
+	"bytes"
 	"fmt"
 	"log"
+	"os"
+	"runtime"
+	"runtime/debug"
+	"strconv"
 	"sync/atomic"
+	"time"
 )
 
 // LogLevel defines the logging verbosity.
@@ -60,6 +66,11 @@ type LogMessage struct {
 
 	// Message text.
 	Text string
+}
+
+type logFormat struct {
+	op     string
+	params map[string]interface{}
 }
 
 // LogFunc is a handler for log messages.
@@ -172,6 +183,36 @@ func loggerRoutine() {
 		if fn != nil {
 			fn(message)
 		}
+	}
+}
+
+func getGID() uint64 {
+	b := make([]byte, 64)
+	b = b[:runtime.Stack(b, false)]
+	b = bytes.TrimPrefix(b, []byte("goroutine "))
+	b = b[:bytes.IndexByte(b, ' ')]
+	n, _ := strconv.ParseUint(string(b), 10, 64)
+	return n
+}
+
+func logWrite(level LogLevel, text string) {
+	if level >= LogDebug {
+		module, ok := debug.ReadBuildInfo()
+		_, file, line, callerOk := runtime.Caller(0)
+
+		if ok && callerOk {
+			loggerCh <- LogMessage{
+				Level:  level,
+				Time:   uint64(time.Now().UnixNano()),
+				Pid:    uint64(os.Getpid()),
+				Tid:    uint64(getGID()),
+				Module: module.Main.Path,
+				File:   file,
+				Line:   line,
+				Text:   text,
+			}
+		}
+
 	}
 }
 

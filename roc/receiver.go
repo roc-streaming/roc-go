@@ -168,6 +168,12 @@ type Receiver struct {
 // Open a new receiver.
 // Allocates and initializes a new receiver, and attaches it to the context.
 func OpenReceiver(context *Context, config ReceiverConfig) (*Receiver, error) {
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_open_begin()",
+		params: map[string]interface{}{
+			"context": context,
+			"config":  config,
+		}}))
+
 	if context == nil {
 		return nil, errors.New("context is nil")
 	}
@@ -207,6 +213,12 @@ func OpenReceiver(context *Context, config ReceiverConfig) (*Receiver, error) {
 		cPtr: cRecv,
 	}
 
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_open_end()",
+		params: map[string]interface{}{
+			"context": context,
+			"config":  config,
+		}}))
+
 	return recv, nil
 }
 
@@ -232,6 +244,13 @@ func OpenReceiver(context *Context, config ReceiverConfig) (*Receiver, error) {
 //
 // Automatically initializes slot with given index if it's used first time.
 func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) error {
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_set_multicast_group_begin()",
+		params: map[string]interface{}{
+			"slot":  slot,
+			"iface": iface,
+			"ip":    ip,
+		}}))
+
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -251,6 +270,13 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) erro
 	if errCode != 0 {
 		return newNativeErr("roc_receiver_set_multicast_group()", errCode)
 	}
+
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_set_multicast_group_end()",
+		params: map[string]interface{}{
+			"slot":  slot,
+			"iface": iface,
+			"ip":    ip,
+		}}))
 
 	return nil
 }
@@ -275,6 +301,13 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) erro
 //
 // Automatically initializes slot with given index if it's used first time.
 func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_set_reuseaddr_begin()",
+		params: map[string]interface{}{
+			"slot":    slot,
+			"iface":   iface,
+			"enabled": enabled,
+		}}))
+
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -294,6 +327,13 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error 
 	if errCode != 0 {
 		return newNativeErr("roc_receiver_set_reuseaddr()", errCode)
 	}
+
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_set_reuseaddr_end()",
+		params: map[string]interface{}{
+			"slot":    slot,
+			"iface":   iface,
+			"enabled": enabled,
+		}}))
 	return nil
 }
 
@@ -311,6 +351,13 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error 
 // chosen ephemeral port. If the function succeeds, the actual port to which the
 // receiver was bound is written back to endpoint.
 func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) error {
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_endpoint_allocate_begin()",
+		params: map[string]interface{}{
+			"slot":     slot,
+			"iface":    iface,
+			"endpoint": endpoint,
+		}}))
+
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -357,6 +404,13 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) error {
 		return err
 	}
 
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_endpoint_allocate_end()",
+		params: map[string]interface{}{
+			"slot":     slot,
+			"iface":    iface,
+			"endpoint": endpoint,
+		}}))
+
 	return nil
 }
 
@@ -402,6 +456,8 @@ func (r *Receiver) ReadFloats(frame []float32) error {
 // should ensure that nobody uses the receiver during and after this call. If this
 // function fails, the receiver is kept opened and attached to the context.
 func (r *Receiver) Close() error {
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_close_begin()"}))
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -413,6 +469,8 @@ func (r *Receiver) Close() error {
 
 		r.cPtr = nil
 	}
+
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_close_end()"}))
 
 	return nil
 }

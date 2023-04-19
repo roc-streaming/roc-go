@@ -137,6 +137,12 @@ type Sender struct {
 // Open a new sender.
 // Allocates and initializes a new sender, and attaches it to the context.
 func OpenSender(context *Context, config SenderConfig) (*Sender, error) {
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_sender_open_begin()",
+		params: map[string]interface{}{
+			"context": context,
+			"config":  config,
+		}}))
+
 	if context == nil {
 		return nil, errors.New("context is nil")
 	}
@@ -178,6 +184,12 @@ func OpenSender(context *Context, config SenderConfig) (*Sender, error) {
 		cPtr: cSender,
 	}
 
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_sender_open_end()",
+		params: map[string]interface{}{
+			"context": context,
+			"config":  config,
+		}}))
+
 	return sender, nil
 }
 
@@ -201,6 +213,13 @@ func OpenSender(context *Context, config SenderConfig) (*Sender, error) {
 //
 // Automatically initializes slot with given index if it's used first time.
 func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) error {
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_sender_set_outgoing_address_begin()",
+		params: map[string]interface{}{
+			"slot":  slot,
+			"iface": iface,
+			"ip":    ip,
+		}}))
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -220,6 +239,13 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) error
 	if errCode != 0 {
 		return newNativeErr("roc_sender_set_outgoing_address()", errCode)
 	}
+
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_sender_set_outgoing_address_end()",
+		params: map[string]interface{}{
+			"slot":  slot,
+			"iface": iface,
+			"ip":    ip,
+		}}))
 
 	return nil
 }
@@ -244,6 +270,13 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) error
 //
 // Automatically initializes slot with given index if it's used first time.
 func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_sender_set_reuseaddr_begin()",
+		params: map[string]interface{}{
+			"slot":    slot,
+			"iface":   iface,
+			"enabled": enabled,
+		}}))
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -264,6 +297,13 @@ func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
 		return newNativeErr("roc_sender_set_reuseaddr()", errCode)
 	}
 
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_sender_set_reuseaddr_end()",
+		params: map[string]interface{}{
+			"slot":    slot,
+			"iface":   iface,
+			"enabled": enabled,
+		}}))
+
 	return nil
 }
 
@@ -277,6 +317,13 @@ func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
 //
 // Automatically initializes slot with given index if it's used first time.
 func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) error {
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_endpoint_allocate_begin()",
+		params: map[string]interface{}{
+			"slot":     slot,
+			"iface":    iface,
+			"endpoint": endpoint,
+		}}))
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -318,6 +365,13 @@ func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) error {
 	if errCode != 0 {
 		return newNativeErr("roc_sender_connect()", errCode)
 	}
+
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_endpoint_allocate_end()",
+		params: map[string]interface{}{
+			"slot":     slot,
+			"iface":    iface,
+			"endpoint": endpoint,
+		}}))
 
 	return nil
 }
@@ -365,6 +419,8 @@ func (s *Sender) WriteFloats(frame []float32) error {
 // should ensure that nobody uses the sender during and after this call. If this
 // function fails, the sender is kept opened and attached to the context.
 func (s *Sender) Close() error {
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_sender_close_begin()"}))
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -376,6 +432,8 @@ func (s *Sender) Close() error {
 
 		s.cPtr = nil
 	}
+
+	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_sender_close_end()"}))
 
 	return nil
 }
