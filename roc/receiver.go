@@ -47,6 +47,8 @@ import (
 //
 // - The receiver is destroyed using Receiver.Close().
 //
+// The user is responsible for closing any opened receiver before exiting the program.
+//
 // # Slots, interfaces, and endpoints
 //
 // Receiver has one or multiple slots, which may be independently bound or connected.
@@ -70,8 +72,10 @@ import (
 // Supported interface configurations:
 //
 //   - Bind InterfaceConsolidated to a local endpoint (e.g. be an RTSP server).
+//
 //   - Connect InterfaceConsolidated to a remote endpoint (e.g. be an RTSP
 //     client).
+//
 //   - Bind InterfaceAudioSource, InterfaceAudioRepair (optionally,
 //     for FEC), and InterfaceAudioControl (optionally, for control messages)
 //     to local endpoints (e.g. be an RTP/FECFRAME/RTCP receiver).
