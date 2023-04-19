@@ -110,7 +110,6 @@ func TestLog_Func(t *testing.T) {
 	defer SetLogLevel(defaultLogLevel)
 
 	ch := make(chan LogMessage, 1)
-	defer close(ch)
 
 	SetLoggerFunc(func(msg LogMessage) {
 		if msg.Level == LogTrace {
