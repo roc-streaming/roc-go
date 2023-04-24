@@ -14,17 +14,14 @@ import (
 )
 
 var (
-	versions    Versions
-	versionOnce sync.Once
+	versionInfo      VersionInfo
+	versionOnce      sync.Once
+	versionCheckOnce int32
 )
 
-const bindingsVersion = "0.2.0"
+var versionCheckFn = versionCheck
 
-// Version components.
-type Versions struct {
-	Native   SemanticVersion // Native library version, libroc version.
-	Bindings SemanticVersion // Go bindings version.
-}
+const bindingsVersion = "0.2.0"
 
 // Semantic version components.
 type SemanticVersion struct {
@@ -38,22 +35,51 @@ func (sv SemanticVersion) String() string {
 	return fmt.Sprintf("%d.%d.%d", sv.Major, sv.Minor, sv.Patch)
 }
 
+// Version components.
+type VersionInfo struct {
+	Native   SemanticVersion // Native library version, libroc version.
+	Bindings SemanticVersion // Go bindings version.
+}
+
 // Retrieve version numbers.
 // This function can be used to retrieve actual run-time version of the library.
 // It may be different from the compile-time version when using shared library.
-func Version() Versions {
+func Version() VersionInfo {
 	versionOnce.Do(func() {
 		var cVersion C.struct_roc_version
 		C.roc_version_get(&cVersion)
-		versions.Native = SemanticVersion{
+		versionInfo.Native = SemanticVersion{
 			Major: uint64(cVersion.major),
 			Minor: uint64(cVersion.minor),
 			Patch: uint64(cVersion.patch),
 		}
-		versions.Bindings = parseVersion(bindingsVersion)
+		versionInfo.Bindings = parseVersion(bindingsVersion)
 	})
 
-	return versions
+	return versionInfo
+}
+
+// Runs check for version compatibility
+// If versions are incompatible then error describing problem is returned
+// Else returns nil
+func (versionInfo VersionInfo) Validate() error {
+	bindingsVersion := versionInfo.Bindings
+	nativeVersion := versionInfo.Native
+
+	errMsg := fmt.Sprintf(
+		"Detected incompatibility between roc bindings ( %s ) and native library ( %s ): ",
+		bindingsVersion, nativeVersion,
+	)
+
+	if nativeVersion.Major != bindingsVersion.Major {
+		return fmt.Errorf(errMsg + "Major versions are different")
+	}
+
+	if nativeVersion.Minor > bindingsVersion.Minor {
+		return fmt.Errorf(errMsg + "Minor version of binding is less than native library")
+	}
+
+	return nil
 }
 
 func parseVersion(s string) SemanticVersion {
@@ -81,41 +107,14 @@ func parseVersion(s string) SemanticVersion {
 }
 
 // Validate version compatibility of roc bindings and native library.
-// This function must be called at all library entry point atleast once.
+// This function must be called at all library entry point at least once.
 // Entry points refer to exported non-method functions of this package
-// This includes OpenContext, OpenSender, OpenReceiver, ParseEndpoint,
-// SetLogger, SetLoggerFunc and SetLogLevel
-func (version Versions) Validate() error {
-	bindingsVersion := version.Bindings
-	nativeVersion := version.Native
-
-	errMsg := fmt.Sprintf(
-		"Detected incompatibility between roc bindings ( %s ) and native library ( %s ): ",
-		bindingsVersion.String(), nativeVersion.String(),
-	)
-
-	if nativeVersion.Major != bindingsVersion.Major {
-		return fmt.Errorf(errMsg + "Major versions are different")
-	}
-
-	if nativeVersion.Minor > bindingsVersion.Minor {
-		return fmt.Errorf(errMsg + "Minor version of binding is less than native library")
-	}
-
-	return nil
-}
-
-var versionCheckOnce int32
-
-// Runs check for version compatibility
 func versionCheck() {
-	if atomic.CompareAndSwapInt32(&versionCheckOnce, 1, 0) {
-		version := Version()
-		err := version.Validate()
+	if atomic.CompareAndSwapInt32(&versionCheckOnce, 0, 1) {
+		versionInfo := Version()
+		err := versionInfo.Validate()
 		if err != nil {
 			panic(err.Error())
 		}
 	}
 }
-
-var versionCheckFn = func() { versionCheck() }
