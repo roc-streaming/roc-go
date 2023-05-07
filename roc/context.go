@@ -19,9 +19,12 @@ import (
 // # Life cycle
 //
 // A context is created using OpenContext() and destroyed using Context.Close().
+//
 // Objects can be attached and detached to an opened context at any moment from any
 // thread. However, the user should ensure that the context is not closed until there
 // are no objects attached to the context.
+//
+// The user is responsible for closing any opened context before exiting the program.
 //
 // # Thread safety
 //
