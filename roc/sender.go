@@ -47,6 +47,8 @@ import (
 //
 // - The sender is destroyed using Sender.Close().
 //
+// The user is responsible for closing any opened sender before exiting the program.
+//
 // # Slots, interfaces, and endpoints
 //
 // Sender has one or multiple slots, which may be independently bound or connected.
@@ -71,7 +73,9 @@ import (
 //
 //   - Connect InterfaceConsolidated to a remote endpoint (e.g. be an RTSP
 //     client).
+//
 //   - Bind InterfaceConsolidated to a local endpoint (e.g. be an RTSP server).
+//
 //   - Connect InterfaceAudioSource, InterfaceAudioRepair (optionally,
 //     for FEC), and InterfaceAudioControl (optionally, for control messages)
 //     to remote endpoints (e.g. be an RTP/FECFRAME/RTCP sender).

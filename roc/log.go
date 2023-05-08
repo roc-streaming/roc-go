@@ -10,7 +10,7 @@ import "C"
 import (
 	"fmt"
 	"log"
-	"sync"
+	"sync/atomic"
 )
 
 // LogLevel defines the logging verbosity.
@@ -23,13 +23,13 @@ const (
 	// LogError enables only error messages.
 	LogError LogLevel = 1
 
-	// LogError enables informational messages and above.
+	// LogInfo enables informational messages and above.
 	LogInfo LogLevel = 2
 
 	// LogDebug enables debugging messages and above.
 	LogDebug LogLevel = 3
 
-	// LogDebug enables extra verbose logging, which may hurt performance
+	// LogTrace enables extra verbose logging, which may hurt performance
 	// and should not be used in production.
 	LogTrace LogLevel = 4
 )
@@ -74,64 +74,6 @@ type Logger interface {
 	Print(v ...interface{})
 }
 
-var (
-	loggerFunc LoggerFunc
-	loggerMu   sync.Mutex
-)
-
-//export rocGoLogHandler
-func rocGoLogHandler(cMessage *C.roc_log_message) {
-	loggerMu.Lock()
-	defer loggerMu.Unlock()
-
-	if loggerFunc != nil {
-		message := LogMessage{
-			Level: LogLevel(cMessage.level),
-			Time:  uint64(cMessage.time),
-			Pid:   uint64(cMessage.pid),
-			Tid:   uint64(cMessage.tid),
-		}
-		if cMessage.module != nil {
-			message.Module = C.GoString(cMessage.module)
-		}
-		if cMessage.file != nil {
-			message.File = C.GoString(cMessage.file)
-			message.Line = int(cMessage.line)
-		}
-		if cMessage.text != nil {
-			message.Text = C.GoString(cMessage.text)
-		}
-		loggerFunc(message)
-	}
-}
-
-type defaultLogger struct{}
-
-func (defaultLogger) Print(v ...interface{}) {
-	log.Print(v...)
-}
-
-func makeLoggerFunc(logger Logger) LoggerFunc {
-	return func(message LogMessage) {
-		level := ""
-		switch message.Level {
-		case LogError:
-			level = "err"
-		case LogInfo:
-			level = "inf"
-		case LogDebug:
-			level = "dbg"
-		case LogTrace:
-			level = "trc"
-		}
-		logger.Print(fmt.Sprintf("[%s] %s: %s", level, message.Module, message.Text))
-	}
-}
-
-func init() {
-	SetLoggerFunc(nil)
-}
-
 // SetLogLevel changes the logging level.
 //
 // Messages with higher verbosity than the given level will be dropped.
@@ -158,14 +100,10 @@ func SetLoggerFunc(logFn LoggerFunc) {
 	versionCheckFn()
 
 	if logFn == nil {
-		logFn = makeLoggerFunc(defaultLogger{})
+		logFn = logger2func(standardLogger{})
 	}
 
-	loggerMu.Lock()
-	defer loggerMu.Unlock()
-
-	loggerFunc = logFn
-	C.roc_log_set_handler(C.roc_log_handler(C.rocGoLogHandlerProxy), nil)
+	loggerFunc.Store(logFn)
 }
 
 // SetLogger is like SetLoggerFunc, but uses Logger interface instead of LoggerFunc.
@@ -178,8 +116,77 @@ func SetLogger(logger Logger) {
 	versionCheckFn()
 
 	if logger == nil {
-		logger = defaultLogger{}
+		logger = standardLogger{}
 	}
 
-	SetLoggerFunc(makeLoggerFunc(logger))
+	loggerFunc.Store(logger2func(logger))
+}
+
+func logger2func(logger Logger) LoggerFunc {
+	return func(message LogMessage) {
+		level := ""
+		switch message.Level {
+		case LogError:
+			level = "err"
+		case LogInfo:
+			level = "inf"
+		case LogDebug:
+			level = "dbg"
+		case LogTrace:
+			level = "trc"
+		}
+		logger.Print(fmt.Sprintf("[%s] %s: %s", level, message.Module, message.Text))
+	}
+}
+
+type standardLogger struct{}
+
+func (standardLogger) Print(v ...interface{}) {
+	log.Print(v...)
+}
+
+var (
+	loggerFunc atomic.Value
+	loggerCh   = make(chan LogMessage, 1024)
+)
+
+//export rocGoLogHandler
+func rocGoLogHandler(cMessage *C.roc_log_message) {
+	message := LogMessage{
+		Level: LogLevel(cMessage.level),
+		Time:  uint64(cMessage.time),
+		Pid:   uint64(cMessage.pid),
+		Tid:   uint64(cMessage.tid),
+	}
+	if cMessage.module != nil {
+		message.Module = C.GoString(cMessage.module)
+	}
+	if cMessage.file != nil {
+		message.File = C.GoString(cMessage.file)
+		message.Line = int(cMessage.line)
+	}
+	if cMessage.text != nil {
+		message.Text = C.GoString(cMessage.text)
+	}
+
+	loggerCh <- message
+}
+
+func loggerRoutine() {
+	for message := range loggerCh {
+		fn := loggerFunc.Load().(LoggerFunc)
+		if fn != nil {
+			fn(message)
+		}
+	}
+}
+
+func init() {
+	SetLogLevel(LogError)
+	SetLoggerFunc(nil)
+
+	// rocGoLogHandlerProxy calls rocGoLogHandler
+	C.roc_log_set_handler(C.roc_log_handler(C.rocGoLogHandlerProxy), nil)
+
+	go loggerRoutine()
 }
