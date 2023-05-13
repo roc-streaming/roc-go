@@ -146,6 +146,7 @@ func OpenSender(context *Context, config SenderConfig) (*Sender, error) {
 			"context": context,
 			"config":  config,
 		}}))
+	versionCheckFn()
 
 	if context == nil {
 		return nil, errors.New("context is nil")

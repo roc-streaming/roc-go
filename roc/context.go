@@ -47,6 +47,7 @@ func OpenContext(config ContextConfig) (*Context, error) {
 			"config":  config,
 			"version": Version(),
 		}}))
+	versionCheckFn()
 
 	cConfig := C.struct_roc_context_config{
 		max_packet_size: C.uint(config.MaxPacketSize),
