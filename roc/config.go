@@ -317,12 +317,12 @@ const (
 	// Sender or receiver is clocked by external user-defined clock.
 	// Write and read operations are non-blocking. The user is responsible
 	// to call them in time, according to the external clock.
-	ClockExternal = 0
+	ClockExternal ClockSource = 0
 
 	// Sender or receiver is clocked by an internal clock.
 	// Write and read operations are blocking. They automatically wait until it's time
 	// to process the next bunch of samples according to the configured sample rate.
-	ClockInternal = 1
+	ClockInternal ClockSource = 1
 )
 
 // Context configuration.
