@@ -6,22 +6,21 @@ This library provides Go (golang) bindings for [Roc Toolkit](https://github.com/
 
 ## About Roc
 
-Compatible senders and receivers include:
-
-* [command-line tools](https://roc-streaming.org/toolkit/docs/tools/command_line_tools.html)
-* [sound server modules](https://roc-streaming.org/toolkit/docs/tools/sound_server_modules.html) (PulseAudio, PipeWire)
-* [C library](https://roc-streaming.org/toolkit/docs/api.html)
-* [Java bindings](https://github.com/roc-streaming/roc-java/) and [Android app](https://github.com/roc-streaming/roc-droid) that uses them
-
-Key features:
+Key features of Roc Toolkit:
 
 * real-time streaming with guaranteed latency;
-* restoring lost packets using Forward Erasure Correction codes;
-* converting between the sender and receiver clock domains;
+* robust work on unreliable networks like Wi-Fi, due to use of Forward Erasure Correction codes;
 * CD-quality audio;
 * multiple profiles for different CPU and latency requirements;
-* portability;
-* relying on open, standard protocols.
+* relying on open, standard protocols, like RTP and FECFRAME;
+* interoperability with both Roc and third-party software.
+
+Compatible Roc Toolkit senders and receivers include:
+
+* [cross-platform command-line tools](https://roc-streaming.org/toolkit/docs/tools/command_line_tools.html)
+* [modules for sound servers](https://roc-streaming.org/toolkit/docs/tools/sound_server_modules.html) (PulseAudio, PipeWire)
+* [C library](https://roc-streaming.org/toolkit/docs/api.html) and [bindings for other languages](https://roc-streaming.org/toolkit/docs/api/bindings.html)
+* [end-user apps](https://roc-streaming.org/toolkit/docs/tools/applications.html)
 
 ## Documentation
 
