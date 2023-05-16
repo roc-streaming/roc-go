@@ -135,7 +135,7 @@ func TestVersion_Entrypoints(t *testing.T) {
 	}
 }
 
-func TestVersion_Validite(t *testing.T) {
+func TestVersion_Validate(t *testing.T) {
 	tests := []struct {
 		name     string
 		versions VersionInfo
