@@ -81,7 +81,7 @@ type Logger interface {
 //
 // This function is thread-safe.
 func SetLogLevel(level LogLevel) {
-	versionCheckFn()
+	checkVersionFn()
 
 	C.roc_log_set_level(C.roc_log_level(level))
 }
@@ -97,7 +97,7 @@ func SetLogLevel(level LogLevel) {
 //
 // This function is thread-safe.
 func SetLoggerFunc(logFn LoggerFunc) {
-	versionCheckFn()
+	checkVersionFn()
 
 	if logFn == nil {
 		logFn = logger2func(standardLogger{})
@@ -113,7 +113,7 @@ func SetLoggerFunc(logFn LoggerFunc) {
 //
 // This function is thread-safe.
 func SetLogger(logger Logger) {
-	versionCheckFn()
+	checkVersionFn()
 
 	if logger == nil {
 		logger = standardLogger{}

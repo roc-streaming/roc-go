@@ -184,9 +184,9 @@ jobs:
         shell: bash
         run: |
           version_git="$(git describe --tags --abbrev=0 | sed s/v//g)"
-          version_bindings="$(sed -rn 's,.*bindingsVersion\s*=\s*"(\S+)".*,\1,p' ./roc/version.go)"
+          version_src="$(sed -rn 's,.*bindingsVersion\s*=\s*"(\S+)".*,\1,p' ./roc/version.go)"
 
-          if [[ "$version_git" != "$version_bindings" ]]; then
+          if [[ "$version_git" != "$version_src" ]]; then
             echo "please update hardcoded version to current git version \"$version_git\"" \
                 >> "$GITHUB_OUTPUT"
             exit 1

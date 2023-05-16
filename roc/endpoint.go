@@ -74,7 +74,7 @@ type Endpoint struct {
 
 // ParseEndpoint decomposes URI string into Endpoint instance.
 func ParseEndpoint(uri string) (*Endpoint, error) {
-	versionCheckFn()
+	checkVersionFn()
 
 	var errCode C.int
 

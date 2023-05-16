@@ -14,15 +14,22 @@ import (
 	"sync/atomic"
 )
 
-const bindingsVersion = "0.2.0"
+// Hard-coded version of bindings.
+// Should be updated manually each time a new release is tagged.
+// This variable is modified only in tests.
+var bindingsVersion = "0.2.0"
+
+// Validate version compatibility of Go bindings and native library.
+// Must be invoked at all library entry points at least once.
+// Entry points refer to exported non-method functions of this package.
+// This variable is modified only in tests.
+var checkVersionFn = checkVersion
 
 var (
 	versionInfo      VersionInfo
 	versionInfoOnce  sync.Once
 	versionCheckOnce int32
 )
-
-var versionCheckFn = versionCheck
 
 // Semantic version components.
 type SemanticVersion struct {
@@ -47,14 +54,7 @@ type VersionInfo struct {
 // It may be different from the compile-time version when using shared library.
 func Version() VersionInfo {
 	versionInfoOnce.Do(func() {
-		var cVersion C.struct_roc_version
-		C.roc_version_get(&cVersion)
-		versionInfo.Native = SemanticVersion{
-			Major: uint64(cVersion.major),
-			Minor: uint64(cVersion.minor),
-			Patch: uint64(cVersion.patch),
-		}
-		versionInfo.Bindings = parseVersion(bindingsVersion)
+		versionInfo = fetchVersion()
 	})
 
 	return versionInfo
@@ -66,19 +66,16 @@ func Version() VersionInfo {
 // When Go bindings are used first time, they automatically run this check and
 // panic if it fails. You can run it manually before using bindings.
 func (vi VersionInfo) Validate() error {
-	bindingsVersion := vi.Bindings
-	nativeVersion := vi.Native
-
 	errMsg := fmt.Sprintf(
 		"detected incompatibility between roc bindings (%s) and native library (%s): ",
-		bindingsVersion, nativeVersion,
+		vi.Bindings, vi.Native,
 	)
 
-	if nativeVersion.Major != bindingsVersion.Major {
+	if vi.Native.Major != vi.Bindings.Major {
 		return errors.New(errMsg + "major versions are different")
 	}
 
-	if nativeVersion.Minor > bindingsVersion.Minor {
+	if vi.Native.Minor > vi.Bindings.Minor {
 		return errors.New(errMsg +
 			"minor version of bindings is less than minor version of native library")
 	}
@@ -86,16 +83,27 @@ func (vi VersionInfo) Validate() error {
 	return nil
 }
 
-// Validate version compatibility of roc bindings and native library.
-// This function must be called at all library entry point at least once.
-// Entry points refer to exported non-method functions of this package.
-func versionCheck() {
+func checkVersion() {
 	if atomic.CompareAndSwapInt32(&versionCheckOnce, 0, 1) {
-		versionInfo := Version()
-		err := versionInfo.Validate()
-		if err != nil {
+		vi := fetchVersion()
+
+		if err := vi.Validate(); err != nil {
 			panic(err.Error())
 		}
+	}
+}
+
+func fetchVersion() VersionInfo {
+	var cVersion C.struct_roc_version
+	C.roc_version_get(&cVersion)
+
+	return VersionInfo{
+		Bindings: parseVersion(bindingsVersion),
+		Native: SemanticVersion{
+			Major: uint64(cVersion.major),
+			Minor: uint64(cVersion.minor),
+			Patch: uint64(cVersion.patch),
+		},
 	}
 }
 
