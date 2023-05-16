@@ -131,7 +131,7 @@ func TestLog_Func(t *testing.T) {
 		assert.NotEmpty(t, msg.Module)
 		assert.NotEmpty(t, msg.File)
 		assert.NotEmpty(t, msg.Line)
-		assert.NotEmpty(t, msg.Time)
+		assert.False(t,msg.Time.IsZero())
 		assert.NotEmpty(t, msg.Pid)
 		assert.NotEmpty(t, msg.Tid)
 		assert.NotEmpty(t, msg.Text)

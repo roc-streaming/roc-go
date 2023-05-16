@@ -359,11 +359,7 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) error {
 		return newNativeErr("roc_receiver_bind()", errCode)
 	}
 
-	if err := endpoint.fromC(cEndp); err != nil {
-		return err
-	}
-
-	return nil
+	return endpoint.fromC(cEndp)
 }
 
 // Read samples from the receiver.

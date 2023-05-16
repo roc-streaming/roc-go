@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"sync/atomic"
+	"time"
 )
 
 // LogLevel defines the logging verbosity.
@@ -49,8 +50,8 @@ type LogMessage struct {
 	// Line number in the source code file.
 	Line int
 
-	// Message timestamp, nanoseconds since Unix epoch.
-	Time uint64
+	// Message timestamp, unix time at which message was logged
+	Time time.Time
 
 	// Platform-specific process ID.
 	Pid uint64
@@ -154,7 +155,7 @@ var (
 func rocGoLogHandler(cMessage *C.roc_log_message) {
 	message := LogMessage{
 		Level: LogLevel(cMessage.level),
-		Time:  uint64(cMessage.time),
+		Time:  time.Unix(int64(cMessage.time), 0),
 		Pid:   uint64(cMessage.pid),
 		Tid:   uint64(cMessage.tid),
 	}
