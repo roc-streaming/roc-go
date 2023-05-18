@@ -24,3 +24,6 @@ issues:
     - text: '_ is missing'
       linters:
         - exhaustruct
+    - text: 'if-return'
+      linters:
+        - revive
