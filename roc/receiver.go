@@ -171,12 +171,12 @@ type Receiver struct {
 
 // Open a new receiver.
 // Allocates and initializes a new receiver, and attaches it to the context.
-func OpenReceiver(context *Context, config ReceiverConfig) (*Receiver, error) {
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_open_begin()",
-		params: map[string]interface{}{
-			"context": context,
-			"config":  config,
-		}}))
+func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, err error) {
+	logWrite(LogDebug, "entering roc_receiver_open(): config=%+v context=%p", config, context)
+	defer logWrite(LogDebug,
+		"leaving roc_receiver_open(): context=%p receiver=%p err=%v", context, receiver, err,
+	)
+
 	versionCheckFn()
 
 	if context == nil {
@@ -218,12 +218,6 @@ func OpenReceiver(context *Context, config ReceiverConfig) (*Receiver, error) {
 		cPtr: cRecv,
 	}
 
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_open_end()",
-		params: map[string]interface{}{
-			"context": context,
-			"config":  config,
-		}}))
-
 	return recv, nil
 }
 
@@ -248,13 +242,11 @@ func OpenReceiver(context *Context, config ReceiverConfig) (*Receiver, error) {
 // calling Receiver.Connect() for the interface.
 //
 // Automatically initializes slot with given index if it's used first time.
-func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) error {
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_set_multicast_group_begin()",
-		params: map[string]interface{}{
-			"slot":  slot,
-			"iface": iface,
-			"ip":    ip,
-		}}))
+func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err error) {
+	logWrite(LogDebug,
+		"entering roc_receiver_set_multicast_group(): slot=%v iface=%v ip=%v", slot, iface, ip,
+	)
+	defer logWrite(LogDebug, "leaving roc_receiver_set_multicast_group(): receiver=%p err=%v", r, err)
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -275,13 +267,6 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) erro
 	if errCode != 0 {
 		return newNativeErr("roc_receiver_set_multicast_group()", errCode)
 	}
-
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_set_multicast_group_end()",
-		params: map[string]interface{}{
-			"slot":  slot,
-			"iface": iface,
-			"ip":    ip,
-		}}))
 
 	return nil
 }
@@ -305,13 +290,11 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) erro
 // address, which may be useful if you're using socket activation mechanism.
 //
 // Automatically initializes slot with given index if it's used first time.
-func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_set_reuseaddr_begin()",
-		params: map[string]interface{}{
-			"slot":    slot,
-			"iface":   iface,
-			"enabled": enabled,
-		}}))
+func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err error) {
+	logWrite(LogDebug,
+		"entering roc_receiver_set_reuseaddr(): slot=%v iface=%v enabled=%v", slot, iface, enabled,
+	)
+	defer logWrite(LogDebug, "leaving roc_receiver_set_reuseaddr(): receiver=%p err=%v", r, err)
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -333,12 +316,6 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error 
 		return newNativeErr("roc_receiver_set_reuseaddr()", errCode)
 	}
 
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_set_reuseaddr_end()",
-		params: map[string]interface{}{
-			"slot":    slot,
-			"iface":   iface,
-			"enabled": enabled,
-		}}))
 	return nil
 }
 
@@ -355,13 +332,11 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error 
 // If endpoint has explicitly set zero port, the receiver is bound to a randomly
 // chosen ephemeral port. If the function succeeds, the actual port to which the
 // receiver was bound is written back to endpoint.
-func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) error {
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_endpoint_allocate_begin()",
-		params: map[string]interface{}{
-			"slot":     slot,
-			"iface":    iface,
-			"endpoint": endpoint,
-		}}))
+func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err error) {
+	logWrite(LogDebug,
+		"entering roc_endpoint_allocate(): slot=%+v iface=%+v endpoint=%+v", slot, iface, endpoint,
+	)
+	defer logWrite(LogDebug, "leaving roc_endpoint_allocate(): receiver=%p err=%v", r, err)
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -409,13 +384,6 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) error {
 		return err
 	}
 
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_endpoint_allocate_end()",
-		params: map[string]interface{}{
-			"slot":     slot,
-			"iface":    iface,
-			"endpoint": endpoint,
-		}}))
-
 	return nil
 }
 
@@ -460,8 +428,9 @@ func (r *Receiver) ReadFloats(frame []float32) error {
 // Deinitializes and deallocates the receiver, and detaches it from the context. The user
 // should ensure that nobody uses the receiver during and after this call. If this
 // function fails, the receiver is kept opened and attached to the context.
-func (r *Receiver) Close() error {
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_close_begin()"}))
+func (r *Receiver) Close() (err error) {
+	logWrite(LogDebug, "entering roc_receiver_close(): receiver=%p", r)
+	defer logWrite(LogDebug, "leaving roc_receiver_close(): receiver=%p err=%v", r, err)
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -474,8 +443,6 @@ func (r *Receiver) Close() error {
 
 		r.cPtr = nil
 	}
-
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_receiver_close_end()"}))
 
 	return nil
 }

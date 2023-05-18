@@ -90,8 +90,12 @@ func (vi VersionInfo) Validate() error {
 // This function must be called at all library entry point at least once.
 // Entry points refer to exported non-method functions of this package.
 func versionCheck() {
+	var versionInfo VersionInfo
+	logWrite(LogDebug, "entering versionCheck()")
+	defer logWrite(LogDebug, "leaving versionCheck(): version=%+v", versionInfo)
+
 	if atomic.CompareAndSwapInt32(&versionCheckOnce, 0, 1) {
-		versionInfo := Version()
+		versionInfo = Version()
 		err := versionInfo.Validate()
 		if err != nil {
 			panic(err.Error())

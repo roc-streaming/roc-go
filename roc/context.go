@@ -6,7 +6,6 @@ package roc
 import "C"
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -41,12 +40,10 @@ type Context struct {
 // Open a new context.
 // Allocates and initializes a new context. May start some background threads.
 // User is responsible to call Context.Close to free context resources.
-func OpenContext(config ContextConfig) (*Context, error) {
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_context_open_begin()",
-		params: map[string]interface{}{
-			"config":  config,
-			"version": Version(),
-		}}))
+func OpenContext(config ContextConfig) (ctx *Context, err error) {
+	logWrite(LogDebug, "entering roc_context_open(): config=%+v", config)
+	defer logWrite(LogDebug, "leaving roc_context_open(): context=%p err=%v", ctx, err)
+
 	versionCheckFn()
 
 	cConfig := C.struct_roc_context_config{
@@ -63,14 +60,9 @@ func OpenContext(config ContextConfig) (*Context, error) {
 		panic("roc_context_open() returned nil")
 	}
 
-	ctx := &Context{
+	ctx = &Context{
 		cPtr: cCtx,
 	}
-
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_context_open_end()",
-		params: map[string]interface{}{
-			"config": config,
-		}}))
 
 	return ctx, nil
 }
@@ -79,8 +71,9 @@ func OpenContext(config ContextConfig) (*Context, error) {
 // Stops any started background threads, deinitializes and deallocates the context.
 // The user should ensure that nobody uses the context during and after this call.
 // If this function fails, the context is kept opened.
-func (c *Context) Close() error {
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_context_close_begin()"}))
+func (c *Context) Close() (err error) {
+	logWrite(LogDebug, "entering roc_context_close(): context=%p", c)
+	defer logWrite(LogDebug, "leaving roc_context_close(): context=%p err=%v", c, err)
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -94,6 +87,5 @@ func (c *Context) Close() error {
 		c.cPtr = nil
 	}
 
-	logWrite(LogDebug, fmt.Sprintf("%v", logFormat{op: "roc_context_close_end()"}))
 	return nil
 }

@@ -13,7 +13,6 @@ import (
 	"log"
 	"os"
 	"runtime"
-	"runtime/debug"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -66,11 +65,6 @@ type LogMessage struct {
 
 	// Message text.
 	Text string
-}
-
-type logFormat struct {
-	op     string
-	params map[string]interface{}
 }
 
 // LogFunc is a handler for log messages.
@@ -201,22 +195,17 @@ func getGID() uint64 {
 	return n
 }
 
-func logWrite(level LogLevel, text string) {
+func logWrite(level LogLevel, text ...interface{}) {
 	if level >= LogDebug {
-		module, ok := debug.ReadBuildInfo()
-		_, file, line, callerOk := runtime.Caller(0)
-
-		if ok && callerOk {
-			loggerCh <- LogMessage{
-				Level:  level,
-				Time:   uint64(time.Now().UnixNano()),
-				Pid:    uint64(os.Getpid()),
-				Tid:    uint64(getGID()),
-				Module: module.Main.Path,
-				File:   file,
-				Line:   line,
-				Text:   text,
-			}
+		loggerCh <- LogMessage{
+			Level:  level,
+			Time:   uint64(time.Now().UnixNano()),
+			Pid:    uint64(os.Getpid()),
+			Tid:    uint64(getGID()),
+			Module: "roc_go",
+			File:   "log.go",
+			Line:   210,
+			Text:   fmt.Sprintf("%+v", text),
 		}
 
 	}
