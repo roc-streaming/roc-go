@@ -199,7 +199,7 @@ func logWrite(level LogLevel, text ...interface{}) {
 	if level >= LogDebug {
 		loggerCh <- LogMessage{
 			Level:  level,
-			Time:   uint64(time.Now().UnixNano()),
+			Time:   time.Now(),
 			Pid:    uint64(os.Getpid()),
 			Tid:    uint64(getGID()),
 			Module: "roc_go",
