@@ -106,7 +106,7 @@ jobs:
         if: ${{ matrix.lint == 'yes' }}
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.51.2
+          version: v1.52.2
           working-directory: roc
 
       - name: Prepare coverage report
@@ -165,11 +165,13 @@ jobs:
         run: |
           cd roc
           go test -race
-  
-  check_version:
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-    needs: ubuntu
+
+  release:
     runs-on: ubuntu-latest
+
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    needs: [ubuntu, macos]
+
     name: Check version
     steps:
       - name: Checkout
@@ -182,9 +184,10 @@ jobs:
         shell: bash
         run: |
           version_git="$(git describe --tags --abbrev=0 | sed s/v//g)"
-          version_bindings="$(sed -rn 's,.*bindingsVersion\s*=\s*"(\S+)".*,\1,p' ./roc/version.go)"
+          version_src="$(sed -rn 's,.*bindingsVersion\s*=\s*"(\S+)".*,\1,p' ./roc/version.go)"
 
-          if [[ "$version_git" != "$version_bindings" ]]; then
-            echo "please update harcoded version to current git version \"$version_git\"" >> "$GITHUB_OUTPUT"
+          if [[ "$version_git" != "$version_src" ]]; then
+            echo "please update hardcoded version to current git version \"$version_git\"" \
+                >> "$GITHUB_OUTPUT"
             exit 1
           fi

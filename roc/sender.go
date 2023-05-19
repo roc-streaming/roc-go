@@ -146,7 +146,7 @@ func OpenSender(context *Context, config SenderConfig) (sender *Sender, err erro
 		"leaving roc_sender_open(): context=%p sender=%p err=%v", context, sender, err,
 	)
 
-	versionCheckFn()
+	checkVersionFn()
 
 	if context == nil {
 		return nil, errors.New("context is nil")

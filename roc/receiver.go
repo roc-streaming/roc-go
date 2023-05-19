@@ -177,7 +177,7 @@ func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, 
 		"leaving roc_receiver_open(): context=%p receiver=%p err=%v", context, receiver, err,
 	)
 
-	versionCheckFn()
+	checkVersionFn()
 
 	if context == nil {
 		return nil, errors.New("context is nil")

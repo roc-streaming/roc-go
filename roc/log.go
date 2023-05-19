@@ -54,8 +54,8 @@ type LogMessage struct {
 	// Line number in the source code file.
 	Line int
 
-	// Message timestamp, nanoseconds since Unix epoch.
-	Time uint64
+	// Message timestamp, unix time at which message was logged
+	Time time.Time
 
 	// Platform-specific process ID.
 	Pid uint64
@@ -86,7 +86,7 @@ type Logger interface {
 //
 // This function is thread-safe.
 func SetLogLevel(level LogLevel) {
-	versionCheckFn()
+	checkVersionFn()
 
 	C.roc_log_set_level(C.roc_log_level(level))
 }
@@ -102,7 +102,7 @@ func SetLogLevel(level LogLevel) {
 //
 // This function is thread-safe.
 func SetLoggerFunc(logFn LoggerFunc) {
-	versionCheckFn()
+	checkVersionFn()
 
 	if logFn == nil {
 		logFn = logger2func(standardLogger{})
@@ -118,7 +118,7 @@ func SetLoggerFunc(logFn LoggerFunc) {
 //
 // This function is thread-safe.
 func SetLogger(logger Logger) {
-	versionCheckFn()
+	checkVersionFn()
 
 	if logger == nil {
 		logger = standardLogger{}
@@ -159,7 +159,7 @@ var (
 func rocGoLogHandler(cMessage *C.roc_log_message) {
 	message := LogMessage{
 		Level: LogLevel(cMessage.level),
-		Time:  uint64(cMessage.time),
+		Time:  time.Unix(int64(cMessage.time), 0),
 		Pid:   uint64(cMessage.pid),
 		Tid:   uint64(cMessage.tid),
 	}

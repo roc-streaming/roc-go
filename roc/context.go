@@ -44,7 +44,7 @@ func OpenContext(config ContextConfig) (ctx *Context, err error) {
 	logWrite(LogDebug, "entering roc_context_open(): config=%+v", config)
 	defer logWrite(LogDebug, "leaving roc_context_open(): context=%p err=%v", ctx, err)
 
-	versionCheckFn()
+	checkVersionFn()
 
 	cConfig := C.struct_roc_context_config{
 		max_packet_size: C.uint(config.MaxPacketSize),
