@@ -27,3 +27,6 @@ issues:
     - text: 'if-return'
       linters:
         - revive
+    - text: 'long'
+      linters:
+        - dupword
