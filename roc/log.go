@@ -3,6 +3,7 @@ package roc
 /*
 #include <roc/log.h>
 
+unsigned long long rocGoThreadID();
 void rocGoLogHandlerProxy(const roc_log_message* message, void* argument);
 */
 import "C"
