@@ -172,9 +172,9 @@ type Receiver struct {
 // Open a new receiver.
 // Allocates and initializes a new receiver, and attaches it to the context.
 func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, err error) {
-	logWrite(LogDebug, "entering roc_receiver_open(): config=%+v context=%p", config, context)
+	logWrite(LogDebug, "entering OpenReceiver(): config=%+v context=%p", config, context)
 	defer logWrite(LogDebug,
-		"leaving roc_receiver_open(): context=%p receiver=%p err=%v", context, receiver, err,
+		"leaving OpenReceiver(): context=%p receiver=%p err=%v", context, receiver, err,
 	)
 
 	checkVersionFn()
@@ -244,9 +244,9 @@ func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, 
 // Automatically initializes slot with given index if it's used first time.
 func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err error) {
 	logWrite(LogDebug,
-		"entering roc_receiver_set_multicast_group(): slot=%v iface=%v ip=%v", slot, iface, ip,
+		"entering Receiver.SetMulticastGroup(): slot=%v iface=%v ip=%v", slot, iface, ip,
 	)
-	defer logWrite(LogDebug, "leaving roc_receiver_set_multicast_group(): receiver=%p err=%v", r, err)
+	defer logWrite(LogDebug, "leaving Receiver.SetMulticastGroup(): receiver=%p err=%v", r, err)
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -292,9 +292,9 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err
 // Automatically initializes slot with given index if it's used first time.
 func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err error) {
 	logWrite(LogDebug,
-		"entering roc_receiver_set_reuseaddr(): slot=%v iface=%v enabled=%v", slot, iface, enabled,
+		"entering Receiver.SetReuseaddr(): slot=%v iface=%v enabled=%v", slot, iface, enabled,
 	)
-	defer logWrite(LogDebug, "leaving roc_receiver_set_reuseaddr(): receiver=%p err=%v", r, err)
+	defer logWrite(LogDebug, "leaving Receiver.SetReuseaddr(): receiver=%p err=%v", r, err)
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -334,9 +334,9 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err e
 // receiver was bound is written back to endpoint.
 func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err error) {
 	logWrite(LogDebug,
-		"entering roc_endpoint_allocate(): slot=%+v iface=%+v endpoint=%+v", slot, iface, endpoint,
+		"entering Receiver.Bind(): slot=%+v iface=%+v endpoint=%+v", slot, iface, endpoint,
 	)
-	defer logWrite(LogDebug, "leaving roc_endpoint_allocate(): receiver=%p err=%v", r, err)
+	defer logWrite(LogDebug, "leaving Receiver.Bind(): receiver=%p err=%v", r, err)
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -429,8 +429,8 @@ func (r *Receiver) ReadFloats(frame []float32) error {
 // should ensure that nobody uses the receiver during and after this call. If this
 // function fails, the receiver is kept opened and attached to the context.
 func (r *Receiver) Close() (err error) {
-	logWrite(LogDebug, "entering roc_receiver_close(): receiver=%p", r)
-	defer logWrite(LogDebug, "leaving roc_receiver_close(): receiver=%p err=%v", r, err)
+	logWrite(LogDebug, "entering Receiver.Close(): receiver=%p", r)
+	defer logWrite(LogDebug, "leaving Receiver.Close(): receiver=%p err=%v", r, err)
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
