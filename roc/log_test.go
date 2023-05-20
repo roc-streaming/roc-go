@@ -140,6 +140,40 @@ func TestLog_Func(t *testing.T) {
 	}
 }
 
+func TestLog__LogWrite(t *testing.T) {
+	SetLogLevel(LogDebug)
+	defer SetLogLevel(defaultLogLevel)
+
+	ch := make(chan LogMessage, 1)
+
+	SetLoggerFunc(func(msg LogMessage) {
+		if msg.Level == LogDebug {
+			select {
+			case ch <- msg:
+			default:
+			}
+		}
+	})
+	defer SetLoggerFunc(nil)
+
+	ctx, err := OpenContext(ContextConfig{})
+	require.NoError(t, err)
+	ctx.Close()
+
+	select {
+	case msg := <-ch:
+		assert.Equal(t, LogDebug, msg.Level, "Expected log level to be debug")
+		assert.NotEmpty(t, msg.Module)
+		assert.Equal(t, "roc_go", msg.Module)
+		assert.NotEmpty(t, msg.File)
+		assert.Equal(t, "log.go", msg.File)
+		assert.NotEmpty(t, msg.Line)
+		assert.Equal(t, 210, msg.Line)
+	case <-time.After(time.Minute):
+		t.Fatal("expected logs, didn't get them before timeout")
+	}
+}
+
 func TestLog_Levels(t *testing.T) {
 	tests := []struct {
 		level LogLevel
