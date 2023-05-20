@@ -71,6 +71,12 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
 
+      - name: gofmt
+        uses: Jerome1337/gofmt-action@v1.0.5
+        with:
+          gofmt-path: './roc'
+          gofmt-flags: '-s -l -d'
+
       - name: Build Roc
         run: |
           git clone https://github.com/roc-streaming/roc-toolkit.git /tmp/roc
