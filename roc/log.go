@@ -8,12 +8,9 @@ void rocGoLogHandlerProxy(const roc_log_message* message, void* argument);
 import "C"
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"os"
-	"runtime"
-	"strconv"
 	"sync/atomic"
 	"time"
 )
@@ -186,22 +183,14 @@ func loggerRoutine() {
 	}
 }
 
-func getGID() uint64 {
-	b := make([]byte, 64)
-	b = b[:runtime.Stack(b, false)]
-	b = bytes.TrimPrefix(b, []byte("goroutine "))
-	b = b[:bytes.IndexByte(b, ' ')]
-	n, _ := strconv.ParseUint(string(b), 10, 64)
-	return n
-}
-
 func logWrite(level LogLevel, text ...interface{}) {
-	if level >= LogDebug {
+	currentLogLevel := loggerFunc.Load().(LogLevel)
+	if level <= currentLogLevel {
 		loggerCh <- LogMessage{
-			Level:  level,
-			Time:   time.Now(),
-			Pid:    uint64(os.Getpid()),
-			Tid:    uint64(getGID()),
+			Level: level,
+			Time:  time.Now(),
+			Pid:   uint64(os.Getpid()),
+			//Tid:    -get from C module-
 			Module: "roc_go",
 			File:   "log.go",
 			Line:   210,
