@@ -172,7 +172,7 @@ type Receiver struct {
 // Open a new receiver.
 // Allocates and initializes a new receiver, and attaches it to the context.
 func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, err error) {
-	logWrite(LogDebug, "entering OpenReceiver(): config=%+v context=%p", config, context)
+	logWrite(LogDebug, "entering OpenReceiver(): context=%+v config=%p", context, config)
 	defer logWrite(LogDebug,
 		"leaving OpenReceiver(): context=%p receiver=%p err=%v", context, receiver, err,
 	)
@@ -180,14 +180,16 @@ func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, 
 	checkVersionFn()
 
 	if context == nil {
-		return nil, errors.New("context is nil")
+		err = errors.New("context is nil")
+		return nil, err
 	}
 
 	context.mu.RLock()
 	defer context.mu.RUnlock()
 
 	if context.cPtr == nil {
-		return nil, errors.New("context is closed")
+		err = errors.New("context is closed")
+		return nil, err
 	}
 
 	cConfig := C.struct_roc_receiver_config{
@@ -208,17 +210,18 @@ func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, 
 	var cRecv *C.roc_receiver
 	errCode := C.roc_receiver_open(context.cPtr, &cConfig, &cRecv)
 	if errCode != 0 {
-		return nil, newNativeErr("roc_receiver_open()", errCode)
+		err = newNativeErr("roc_receiver_open()", errCode)
+		return nil, err
 	}
 	if cRecv == nil {
 		panic("roc_receiver_open() returned nil")
 	}
 
-	recv := &Receiver{
+	receiver = &Receiver{
 		cPtr: cRecv,
 	}
 
-	return recv, nil
+	return receiver, nil
 }
 
 // Set receiver interface multicast group.
@@ -244,7 +247,7 @@ func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, 
 // Automatically initializes slot with given index if it's used first time.
 func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err error) {
 	logWrite(LogDebug,
-		"entering Receiver.SetMulticastGroup(): slot=%v iface=%v ip=%v", slot, iface, ip,
+		"entering Receiver.SetMulticastGroup(): receiver=%p slot=%v iface=%v ip=%v", r, slot, iface, ip,
 	)
 	defer logWrite(LogDebug, "leaving Receiver.SetMulticastGroup(): receiver=%p err=%v", r, err)
 
@@ -252,12 +255,14 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err
 	defer r.mu.RUnlock()
 
 	if r.cPtr == nil {
-		return errors.New("receiver is closed")
+		err = errors.New("receiver is closed")
+		return err
 	}
 
-	cIP, err := go2cStr(ip)
-	if err != nil {
-		return fmt.Errorf("invalid ip: %w", err)
+	cIP, parseErr := go2cStr(ip)
+	if parseErr != nil {
+		err = fmt.Errorf("invalid ip: %w", err)
+		return err
 	}
 	errCode := C.roc_receiver_set_multicast_group(
 		r.cPtr,
@@ -265,7 +270,8 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err
 		(C.roc_interface)(iface),
 		(*C.char)(&cIP[0]))
 	if errCode != 0 {
-		return newNativeErr("roc_receiver_set_multicast_group()", errCode)
+		err = newNativeErr("roc_receiver_set_multicast_group()", errCode)
+		return err
 	}
 
 	return nil
@@ -292,7 +298,8 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err
 // Automatically initializes slot with given index if it's used first time.
 func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err error) {
 	logWrite(LogDebug,
-		"entering Receiver.SetReuseaddr(): slot=%v iface=%v enabled=%v", slot, iface, enabled,
+		"entering Receiver.SetReuseaddr(): receiver=%p slot=%v iface=%v enabled=%v",
+		r, slot, iface, enabled,
 	)
 	defer logWrite(LogDebug, "leaving Receiver.SetReuseaddr(): receiver=%p err=%v", r, err)
 
@@ -300,7 +307,8 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err e
 	defer r.mu.RUnlock()
 
 	if r.cPtr == nil {
-		return errors.New("receiver is closed")
+		err = errors.New("receiver is closed")
+		return err
 	}
 
 	cEnabled := go2cBool(enabled)
@@ -313,7 +321,8 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err e
 	)
 
 	if errCode != 0 {
-		return newNativeErr("roc_receiver_set_reuseaddr()", errCode)
+		err = newNativeErr("roc_receiver_set_reuseaddr()", errCode)
+		return err
 	}
 
 	return nil
@@ -334,7 +343,7 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err e
 // receiver was bound is written back to endpoint.
 func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err error) {
 	logWrite(LogDebug,
-		"entering Receiver.Bind(): slot=%+v iface=%+v endpoint=%+v", slot, iface, endpoint,
+		"entering Receiver.Bind(): receiver=%p slot=%+v iface=%+v endpoint=%+v", r, slot, iface, endpoint,
 	)
 	defer logWrite(LogDebug, "leaving Receiver.Bind(): receiver=%p err=%v", r, err)
 
@@ -342,11 +351,13 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err err
 	defer r.mu.RUnlock()
 
 	if r.cPtr == nil {
-		return errors.New("receiver is closed")
+		err = errors.New("receiver is closed")
+		return err
 	}
 
 	if endpoint == nil {
-		return errors.New("endpoint is nil")
+		err = errors.New("endpoint is nil")
+		return err
 	}
 
 	var errCode C.int
@@ -367,7 +378,7 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err err
 		}
 	}()
 
-	if err := endpoint.toC(cEndp); err != nil {
+	if err = endpoint.toC(cEndp); err != nil {
 		return err
 	}
 
@@ -377,10 +388,11 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err err
 		(C.roc_interface)(iface),
 		cEndp)
 	if errCode != 0 {
-		return newNativeErr("roc_receiver_bind()", errCode)
+		err = newNativeErr("roc_receiver_bind()", errCode)
+		return err
 	}
 
-	if err := endpoint.fromC(cEndp); err != nil {
+	if err = endpoint.fromC(cEndp); err != nil {
 		return err
 	}
 
@@ -438,7 +450,8 @@ func (r *Receiver) Close() (err error) {
 	if r.cPtr != nil {
 		errCode := C.roc_receiver_close(r.cPtr)
 		if errCode != 0 {
-			return newNativeErr("roc_receiver_close()", errCode)
+			err = newNativeErr("roc_receiver_close()", errCode)
+			return err
 		}
 
 		r.cPtr = nil

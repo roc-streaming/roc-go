@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"sync/atomic"
 	"time"
 )
@@ -86,7 +87,7 @@ type Logger interface {
 func SetLogLevel(level LogLevel) {
 	checkVersionFn()
 
-	logLevel.Store(level)
+	loggerLevel = level
 	C.roc_log_set_level(C.roc_log_level(level))
 }
 
@@ -150,9 +151,9 @@ func (standardLogger) Print(v ...interface{}) {
 }
 
 var (
-	logLevel   atomic.Value
-	loggerFunc atomic.Value
-	loggerCh   = make(chan LogMessage, 1024)
+	loggerLevel LogLevel
+	loggerFunc  atomic.Value
+	loggerCh    = make(chan LogMessage, 1024)
 )
 
 //export rocGoLogHandler
@@ -187,19 +188,18 @@ func loggerRoutine() {
 }
 
 func logWrite(level LogLevel, text ...interface{}) {
-	currentLogLevel := logLevel.Load()
-	if currentLogLevel != nil {
-		if currentLogLevel := currentLogLevel.(LogLevel); level <= currentLogLevel {
-			loggerCh <- LogMessage{
-				Level: level,
-				Time:  time.Now(),
-				Pid:   uint64(os.Getpid()),
-				//Tid:    -get from C module-
-				Module: "roc_go",
-				File:   "log.go",
-				Line:   210,
-				Text:   fmt.Sprintf("%+v", text),
-			}
+	if level <= loggerLevel {
+		_, file, line, _ := runtime.Caller(0)
+
+		loggerCh <- LogMessage{
+			Level:  level,
+			Time:   time.Now(),
+			Pid:    uint64(os.Getpid()),
+			Tid:    uint64(C.rocGoThreadID()),
+			Module: "roc_go",
+			File:   file,
+			Line:   line,
+			Text:   fmt.Sprintf("%v", text...),
 		}
 	}
 }

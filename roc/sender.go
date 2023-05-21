@@ -141,7 +141,7 @@ type Sender struct {
 // Open a new sender.
 // Allocates and initializes a new sender, and attaches it to the context.
 func OpenSender(context *Context, config SenderConfig) (sender *Sender, err error) {
-	logWrite(LogDebug, "entering OpenSender(): config=%+v context=%p", config, context)
+	logWrite(LogDebug, "entering OpenSender(): context=%+v config=%p", context, config)
 	defer logWrite(LogDebug,
 		"leaving OpenSender(): context=%p sender=%p err=%v", context, sender, err,
 	)
@@ -149,14 +149,16 @@ func OpenSender(context *Context, config SenderConfig) (sender *Sender, err erro
 	checkVersionFn()
 
 	if context == nil {
-		return nil, errors.New("context is nil")
+		err = errors.New("context is nil")
+		return nil, err
 	}
 
 	context.mu.RLock()
 	defer context.mu.RUnlock()
 
 	if context.cPtr == nil {
-		return nil, errors.New("context is closed")
+		err = errors.New("context is closed")
+		return nil, err
 	}
 
 	cConfig := C.struct_roc_sender_config{
@@ -179,7 +181,8 @@ func OpenSender(context *Context, config SenderConfig) (sender *Sender, err erro
 	var cSender *C.roc_sender
 	errCode := C.roc_sender_open(context.cPtr, &cConfig, &cSender)
 	if errCode != 0 {
-		return nil, newNativeErr("roc_sender_open()", errCode)
+		err = newNativeErr("roc_sender_open()", errCode)
+		return nil, err
 	}
 	if cSender == nil {
 		panic("roc_sender_open() returned nil")
@@ -213,7 +216,7 @@ func OpenSender(context *Context, config SenderConfig) (sender *Sender, err erro
 // Automatically initializes slot with given index if it's used first time.
 func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) (err error) {
 	logWrite(LogDebug,
-		"entering Sender.SetOutgoingAddress(): slot=%v iface=%v ip=%v", slot, iface, ip,
+		"entering Sender.SetOutgoingAddress(): sender=%p slot=%v iface=%v ip=%v", s, slot, iface, ip,
 	)
 	defer logWrite(LogDebug, "leaving Sender.SetOutgoingAddress(): sender=%p err=%v", s, err)
 
@@ -221,12 +224,14 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) (err 
 	defer s.mu.RUnlock()
 
 	if s.cPtr == nil {
-		return errors.New("sender is closed")
+		err = errors.New("sender is closed")
+		return err
 	}
 
 	cIP, err := go2cStr(ip)
 	if err != nil {
-		return fmt.Errorf("invalid ip: %w", err)
+		err = fmt.Errorf("invalid ip: %w", err)
+		return err
 	}
 	errCode := C.roc_sender_set_outgoing_address(
 		s.cPtr,
@@ -234,7 +239,8 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) (err 
 		(C.roc_interface)(iface),
 		(*C.char)(&cIP[0]))
 	if errCode != 0 {
-		return newNativeErr("roc_sender_set_outgoing_address()", errCode)
+		err = newNativeErr("roc_sender_set_outgoing_address()", errCode)
+		return err
 	}
 
 	return nil
@@ -261,7 +267,7 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) (err 
 // Automatically initializes slot with given index if it's used first time.
 func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err error) {
 	logWrite(LogDebug,
-		"entering Sender.SetReuseaddr(): slot=%v iface=%v enabled=%v", slot, iface, enabled,
+		"entering Sender.SetReuseaddr(): sender=%p slot=%v iface=%v enabled=%v", s, slot, iface, enabled,
 	)
 	defer logWrite(LogDebug, "leaving Sender.SetReuseaddr(): sender=%p err=%v", s, err)
 
@@ -269,7 +275,8 @@ func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err err
 	defer s.mu.RUnlock()
 
 	if s.cPtr == nil {
-		return errors.New("sender is closed")
+		err = errors.New("sender is closed")
+		return err
 	}
 
 	cEnabled := go2cBool(enabled)
@@ -282,7 +289,8 @@ func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err err
 	)
 
 	if errCode != 0 {
-		return newNativeErr("roc_sender_set_reuseaddr()", errCode)
+		err = newNativeErr("roc_sender_set_reuseaddr()", errCode)
+		return err
 	}
 
 	return nil
@@ -299,7 +307,7 @@ func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err err
 // Automatically initializes slot with given index if it's used first time.
 func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) (err error) {
 	logWrite(LogDebug,
-		"entering Sender.Connect(): slot=%+v iface=%+v endpoint=%+v", slot, iface, endpoint,
+		"entering Sender.Connect(): sender=%p slot=%+v iface=%+v endpoint=%+v", s, slot, iface, endpoint,
 	)
 	defer logWrite(LogDebug, "leaving Sender.Connect(): sender=%p err=%v", s, err)
 
@@ -307,11 +315,13 @@ func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) (err er
 	defer s.mu.RUnlock()
 
 	if s.cPtr == nil {
-		return errors.New("sender is closed")
+		err = errors.New("sender is closed")
+		return err
 	}
 
 	if endpoint == nil {
-		return errors.New("endpoint is nil")
+		err = errors.New("endpoint is nil")
+		return err
 	}
 
 	var errCode C.int
@@ -332,7 +342,7 @@ func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) (err er
 		}
 	}()
 
-	if err := endpoint.toC(cEndp); err != nil {
+	if err = endpoint.toC(cEndp); err != nil {
 		return err
 	}
 
@@ -342,7 +352,8 @@ func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) (err er
 		(C.roc_interface)(iface),
 		cEndp)
 	if errCode != 0 {
-		return newNativeErr("roc_sender_connect()", errCode)
+		err = newNativeErr("roc_sender_connect()", errCode)
+		return err
 	}
 
 	return nil
@@ -400,7 +411,8 @@ func (s *Sender) Close() (err error) {
 	if s.cPtr != nil {
 		errCode := C.roc_sender_close(s.cPtr)
 		if errCode != 0 {
-			return newNativeErr("roc_sender_close()", errCode)
+			err = newNativeErr("roc_sender_close()", errCode)
+			return err
 		}
 
 		s.cPtr = nil

@@ -84,12 +84,11 @@ func (vi VersionInfo) Validate() error {
 }
 
 func checkVersion() {
-	var vi VersionInfo
-	logWrite(LogDebug, "entering versionCheck()")
-	defer logWrite(LogDebug, "leaving versionCheck(): version=%+v", vi)
-
 	if atomic.CompareAndSwapInt32(&versionCheckOnce, 0, 1) {
-		vi = fetchVersion()
+		vi := fetchVersion()
+
+		logWrite(LogDebug, "entering versionCheck()")
+		defer logWrite(LogDebug, "leaving versionCheck(): version=%+v", vi)
 
 		if err := vi.Validate(); err != nil {
 			panic(err.Error())

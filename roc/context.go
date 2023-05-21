@@ -81,7 +81,8 @@ func (c *Context) Close() (err error) {
 	if c.cPtr != nil {
 		errCode := C.roc_context_close(c.cPtr)
 		if errCode != 0 {
-			return newNativeErr("roc_context_close()", errCode)
+			err = newNativeErr("roc_context_close()", errCode)
+			return err
 		}
 
 		c.cPtr = nil
