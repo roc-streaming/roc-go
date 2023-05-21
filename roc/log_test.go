@@ -1,7 +1,6 @@
 package roc
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -174,7 +173,6 @@ func TestLog_LogWrite(t *testing.T) {
 		assert.NotEmpty(t, msg.Tid)
 		assert.True(t, msg.Time.After(testStartTime), "Time assertion failed: test time is less than start time of the test")
 		assert.Contains(t, msg.Text, "entering OpenContext()")
-		fmt.Printf("%v", msg.Text)
 	case <-time.After(time.Minute):
 		t.Fatal("expected logs, didn't get them before timeout")
 	}
