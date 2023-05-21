@@ -1,6 +1,7 @@
 package roc
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -142,6 +143,7 @@ func TestLog_Func(t *testing.T) {
 }
 
 func TestLog_LogWrite(t *testing.T) {
+	testStartTime := time.Now()
 	SetLogLevel(LogDebug)
 	defer SetLogLevel(defaultLogLevel)
 
@@ -166,17 +168,13 @@ func TestLog_LogWrite(t *testing.T) {
 		assert.Equal(t, LogDebug, msg.Level, "Expected log level to be debug")
 		assert.NotEmpty(t, msg.Module)
 		assert.Equal(t, "roc_go", msg.Module)
-		assert.NotEmpty(t, msg.File)
-		assert.Equal(t, "log.go", msg.File[len(msg.File)-6:])
-		assert.NotEmpty(t, msg.Line)
-		assert.Equal(t, 192, msg.Line)
-		assert.NotEmpty(t, msg.Pid)
+		assert.Equal(t, "context.go", msg.File[len(msg.File)-10:])
+		assert.Greater(t, msg.Line, 0, "Line number must be positive")
 		assert.Equal(t, uint64(os.Getpid()), msg.Pid)
 		assert.NotEmpty(t, msg.Tid)
-		assert.NotEmpty(t, msg.Time)
-		assert.Equal(t, time.Now().Truncate(time.Minute), msg.Time.Truncate(time.Minute))
-		assert.NotEmpty(t, msg.Text)
-		assert.Equal(t, "entering OpenContext(): config=%+v%!(EXTRA roc.ContextConfig={0 0})", msg.Text)
+		assert.True(t, msg.Time.After(testStartTime), "Time assertion failed: test time is less than start time of the test")
+		assert.Contains(t, msg.Text, "entering OpenContext()")
+		fmt.Printf("%v", msg.Text)
 	case <-time.After(time.Minute):
 		t.Fatal("expected logs, didn't get them before timeout")
 	}

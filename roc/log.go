@@ -87,7 +87,7 @@ type Logger interface {
 func SetLogLevel(level LogLevel) {
 	checkVersionFn()
 
-	loggerLevel = level
+	atomic.StoreInt32(&loggerLevel, int32(level))
 	C.roc_log_set_level(C.roc_log_level(level))
 }
 
@@ -151,7 +151,7 @@ func (standardLogger) Print(v ...interface{}) {
 }
 
 var (
-	loggerLevel LogLevel
+	loggerLevel int32
 	loggerFunc  atomic.Value
 	loggerCh    = make(chan LogMessage, 1024)
 )
@@ -188,8 +188,8 @@ func loggerRoutine() {
 }
 
 func logWrite(level LogLevel, text ...interface{}) {
-	if level <= loggerLevel {
-		_, file, line, _ := runtime.Caller(0)
+	if storedLogLevel := atomic.LoadInt32(&loggerLevel); level <= LogLevel(storedLogLevel) {
+		_, file, line, _ := runtime.Caller(1)
 
 		loggerCh <- LogMessage{
 			Level:  level,

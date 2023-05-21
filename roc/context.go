@@ -54,7 +54,8 @@ func OpenContext(config ContextConfig) (ctx *Context, err error) {
 	var cCtx *C.roc_context
 	errCode := C.roc_context_open(&cConfig, &cCtx)
 	if errCode != 0 {
-		return nil, newNativeErr("roc_context_open()", errCode)
+		err = newNativeErr("roc_context_open()", errCode)
+		return
 	}
 	if cCtx == nil {
 		panic("roc_context_open() returned nil")
@@ -64,7 +65,8 @@ func OpenContext(config ContextConfig) (ctx *Context, err error) {
 		cPtr: cCtx,
 	}
 
-	return ctx, nil
+	err = nil
+	return
 }
 
 // Close the context.
@@ -82,11 +84,12 @@ func (c *Context) Close() (err error) {
 		errCode := C.roc_context_close(c.cPtr)
 		if errCode != 0 {
 			err = newNativeErr("roc_context_close()", errCode)
-			return err
+			return
 		}
 
 		c.cPtr = nil
 	}
 
-	return nil
+	err = nil
+	return
 }
