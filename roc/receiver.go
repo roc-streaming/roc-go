@@ -261,7 +261,7 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err
 
 	cIP, parseErr := go2cStr(ip)
 	if parseErr != nil {
-		err = fmt.Errorf("invalid ip: %w", err)
+		err = fmt.Errorf("invalid ip: %w", parseErr)
 		return err
 	}
 	errCode := C.roc_receiver_set_multicast_group(

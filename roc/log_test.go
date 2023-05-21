@@ -145,7 +145,7 @@ func TestLog_LogWrite(t *testing.T) {
 	SetLogLevel(LogDebug)
 	defer SetLogLevel(defaultLogLevel)
 
-	ch := make(chan LogMessage, 1)
+	ch := make(chan LogMessage, 2)
 
 	SetLoggerFunc(func(msg LogMessage) {
 		if msg.Level == LogDebug {
