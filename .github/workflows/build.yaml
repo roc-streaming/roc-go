@@ -71,12 +71,6 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
 
-      - name: gofmt
-        uses: Jerome1337/gofmt-action@v1.0.5
-        with:
-          gofmt-path: './roc'
-          gofmt-flags: '-s -l -d'
-
       - name: Build Roc
         run: |
           git clone https://github.com/roc-streaming/roc-toolkit.git /tmp/roc
@@ -197,3 +191,17 @@ jobs:
                 >> "$GITHUB_OUTPUT"
             exit 1
           fi
+  
+  formatting:
+    runs-on: ubuntu-latest
+
+    name: Check formatting
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: gofmt
+        uses: Jerome1337/gofmt-action@v1.0.5
+        with:
+          gofmt-path: './roc'
+          gofmt-flags: '-s -l -d'
