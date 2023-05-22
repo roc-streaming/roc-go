@@ -189,7 +189,10 @@ func loggerRoutine() {
 }
 
 func logWrite(level LogLevel, text string, params ...interface{}) {
-	if storedLogLevel := atomic.LoadInt32(&loggerLevel); level <= LogLevel(storedLogLevel) {
+	storedLogLevel := LogLevel(atomic.LoadInt32(&loggerLevel))
+	if level > storedLogLevel {
+		return
+	} else if level <= storedLogLevel {
 		_, file, line, _ := runtime.Caller(1)
 
 		fileDir := path.Dir(file)

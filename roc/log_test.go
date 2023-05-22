@@ -141,49 +141,6 @@ func TestLog_Func(t *testing.T) {
 	}
 }
 
-func TestLog_Write(t *testing.T) {
-	testStartTime := time.Now()
-	SetLogLevel(LogDebug)
-	defer SetLogLevel(defaultLogLevel)
-
-	ch := make(chan LogMessage, 1)
-
-	SetLoggerFunc(func(msg LogMessage) {
-		if msg.Level == LogDebug {
-			select {
-			case ch <- msg:
-			default:
-			}
-		}
-	})
-	defer SetLoggerFunc(nil)
-
-	ctx, err := OpenContext(ContextConfig{})
-	require.NoError(t, err)
-
-	select {
-	case msg := <-ch:
-		if msg.Module == "roc_go" && strings.Contains(msg.Text, "entering OpenContext()") {
-			assert.Equal(t, LogDebug, msg.Level, "Expected log level to be debug")
-			assert.NotEmpty(t, msg.Module)
-			assert.Equal(t, "roc_go", msg.Module)
-			assert.Equal(t, "context.go", msg.File[len(msg.File)-10:])
-			assert.Greater(t, msg.Line, 0, "Line number must be positive")
-			assert.Equal(t, uint64(os.Getpid()), msg.Pid)
-			assert.NotEmpty(t, msg.Tid)
-			assert.True(t,
-				msg.Time.After(testStartTime),
-				"Time assertion failed: test time is less than start time of the test",
-			)
-			assert.Contains(t, msg.Text, "entering OpenContext()")
-		}
-	case <-time.After(time.Minute):
-		t.Fatal("expected logs, didn't get them before timeout")
-	}
-
-	ctx.Close()
-}
-
 func TestLog_Levels(t *testing.T) {
 	tests := []struct {
 		level LogLevel
@@ -223,4 +180,48 @@ func TestLog_Levels(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLog_Write(t *testing.T) {
+	SetLogLevel(LogDebug)
+	defer SetLogLevel(defaultLogLevel)
+
+	ch := make(chan LogMessage, 1)
+
+	SetLoggerFunc(func(msg LogMessage) {
+		if msg.Level == LogDebug && msg.Module == "roc_go" {
+			select {
+			case ch <- msg:
+			default:
+			}
+		}
+	})
+	defer SetLoggerFunc(nil)
+
+	testStartTime := time.Now()
+	ctx, err := OpenContext(ContextConfig{})
+	require.NoError(t, err)
+
+	select {
+	case msg := <-ch:
+		assert.Equal(t, LogDebug, msg.Level, "Expected log level to be debug")
+		assert.Equal(t, "roc_go", msg.Module)
+		assert.Equal(t, "roc/context.go", msg.File)
+		assert.Greater(t, msg.Line, 0, "Line number must be positive")
+		assert.Equal(t, uint64(os.Getpid()), msg.Pid)
+		assert.NotEmpty(t, msg.Tid)
+		assert.True(t,
+			msg.Time.After(testStartTime.Add(-time.Millisecond)) && msg.Time.Before(testStartTime.Add(time.Millisecond)),
+			"Time assertion failed: test time is not within the tolerance of the start time of the test",
+		)
+		assert.True(t,
+			msg.Time.After(time.Now().Add(-time.Millisecond)) && msg.Time.Before(time.Now().Add(time.Millisecond)),
+			"Time assertion failed: message time cannot be greater than the time now",
+		)
+		assert.Contains(t, msg.Text, "entering OpenContext()")
+	case <-time.After(time.Minute):
+		t.Fatal("expected logs, didn't get them before timeout")
+	}
+
+	ctx.Close()
 }

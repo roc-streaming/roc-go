@@ -352,11 +352,11 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err e
 // receiver was bound is written back to endpoint.
 func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err error) {
 	logWrite(LogDebug,
-		"entering Receiver.Bind(): receiver=%p slot=%v iface=%v endpoint=%p", r, slot, iface, endpoint,
+		"entering Receiver.Bind(): receiver=%p slot=%v iface=%v endpoint=%+v", r, slot, iface, endpoint,
 	)
 	defer func() {
 		logWrite(LogDebug,
-			"leaving Receiver.Bind(): receiver=%p endpoint=%p err=%#v", r, endpoint, err,
+			"leaving Receiver.Bind(): receiver=%p endpoint=%+v err=%#v", r, endpoint, err,
 		)
 	}()
 
