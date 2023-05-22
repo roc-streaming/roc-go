@@ -187,7 +187,7 @@ func loggerRoutine() {
 	}
 }
 
-func logWrite(level LogLevel, text ...interface{}) {
+func logWrite(level LogLevel, text string, params ...interface{}) {
 	if storedLogLevel := atomic.LoadInt32(&loggerLevel); level <= LogLevel(storedLogLevel) {
 		_, file, line, _ := runtime.Caller(1)
 
@@ -199,7 +199,7 @@ func logWrite(level LogLevel, text ...interface{}) {
 			Module: "roc_go",
 			File:   file,
 			Line:   line,
-			Text:   fmt.Sprintf("%v", text...),
+			Text:   fmt.Sprintf(text, params...),
 		}
 	}
 }
