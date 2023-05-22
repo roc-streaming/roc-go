@@ -189,7 +189,9 @@ func TestLog_Write(t *testing.T) {
 	ch := make(chan LogMessage, 1)
 
 	SetLoggerFunc(func(msg LogMessage) {
-		if msg.Level == LogDebug && msg.Module == "roc_go" {
+		if msg.Level == LogDebug &&
+			msg.Module == "roc_go" &&
+			strings.Contains(msg.Text, "entering OpenContext()") {
 			select {
 			case ch <- msg:
 			default:
@@ -211,11 +213,13 @@ func TestLog_Write(t *testing.T) {
 		assert.Equal(t, uint64(os.Getpid()), msg.Pid)
 		assert.NotEmpty(t, msg.Tid)
 		assert.True(t,
-			msg.Time.After(testStartTime.Add(-time.Millisecond)) && msg.Time.Before(testStartTime.Add(time.Millisecond)),
+			msg.Time.After(testStartTime.Add(-time.Millisecond)) &&
+				msg.Time.Before(testStartTime.Add(time.Millisecond)),
 			"Time assertion failed: test time is not within the tolerance of the start time of the test",
 		)
 		assert.True(t,
-			msg.Time.After(time.Now().Add(-time.Millisecond)) && msg.Time.Before(time.Now().Add(time.Millisecond)),
+			msg.Time.After(time.Now().Add(-time.Millisecond)) &&
+				msg.Time.Before(time.Now().Add(time.Millisecond)),
 			"Time assertion failed: message time cannot be greater than the time now",
 		)
 		assert.Contains(t, msg.Text, "entering OpenContext()")
