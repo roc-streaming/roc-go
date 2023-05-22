@@ -192,24 +192,24 @@ func logWrite(level LogLevel, text string, params ...interface{}) {
 	storedLogLevel := LogLevel(atomic.LoadInt32(&loggerLevel))
 	if level > storedLogLevel {
 		return
-	} else if level <= storedLogLevel {
-		_, file, line, _ := runtime.Caller(1)
+	}
+	
+	_, file, line, _ := runtime.Caller(1)
 
-		fileDir := path.Dir(file)
-		fileDir = path.Base(fileDir)
-		filePath := path.Base(file)
-		fileToLog := fmt.Sprintf("%s/%s", fileDir, filePath)
+	fileDir := path.Dir(file)
+	fileDir = path.Base(fileDir)
+	filePath := path.Base(file)
+	fileToLog := fmt.Sprintf("%s/%s", fileDir, filePath)
 
-		loggerCh <- LogMessage{
-			Level:  level,
-			Time:   time.Now(),
-			Pid:    uint64(os.Getpid()),
-			Tid:    uint64(C.rocGoThreadID()),
-			Module: "roc_go",
-			File:   fileToLog,
-			Line:   line,
-			Text:   fmt.Sprintf(text, params...),
-		}
+	loggerCh <- LogMessage{
+		Level:  level,
+		Time:   time.Now(),
+		Pid:    uint64(os.Getpid()),
+		Tid:    uint64(C.rocGoThreadID()),
+		Module: "roc_go",
+		File:   fileToLog,
+		Line:   line,
+		Text:   fmt.Sprintf(text, params...),
 	}
 }
 
