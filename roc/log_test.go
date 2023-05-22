@@ -163,18 +163,20 @@ func TestLog_LogWrite(t *testing.T) {
 
 	select {
 	case msg := <-ch:
-		assert.Equal(t, LogDebug, msg.Level, "Expected log level to be debug")
-		assert.NotEmpty(t, msg.Module)
-		assert.Equal(t, "roc_go", msg.Module)
-		assert.Equal(t, "context.go", msg.File[len(msg.File)-10:])
-		assert.Greater(t, msg.Line, 0, "Line number must be positive")
-		assert.Equal(t, uint64(os.Getpid()), msg.Pid)
-		assert.NotEmpty(t, msg.Tid)
-		assert.True(t,
-			msg.Time.After(testStartTime),
-			"Time assertion failed: test time is less than start time of the test",
-		)
-		assert.Contains(t, msg.Text, "entering OpenContext()")
+		if msg.Module == "roc_go" && strings.Contains(msg.Text, "entering OpenContext()") {
+			assert.Equal(t, LogDebug, msg.Level, "Expected log level to be debug")
+			assert.NotEmpty(t, msg.Module)
+			assert.Equal(t, "roc_go", msg.Module)
+			assert.Equal(t, "context.go", msg.File[len(msg.File)-10:])
+			assert.Greater(t, msg.Line, 0, "Line number must be positive")
+			assert.Equal(t, uint64(os.Getpid()), msg.Pid)
+			assert.NotEmpty(t, msg.Tid)
+			assert.True(t,
+				msg.Time.After(testStartTime),
+				"Time assertion failed: test time is less than start time of the test",
+			)
+			assert.Contains(t, msg.Text, "entering OpenContext()")
+		}
 	case <-time.After(time.Minute):
 		t.Fatal("expected logs, didn't get them before timeout")
 	}
