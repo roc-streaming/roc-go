@@ -212,16 +212,8 @@ func TestLog_Write(t *testing.T) {
 		assert.Greater(t, msg.Line, 0, "Line number must be positive")
 		assert.Equal(t, uint64(os.Getpid()), msg.Pid)
 		assert.NotEmpty(t, msg.Tid)
-		assert.True(t,
-			msg.Time.After(testStartTime.Add(-time.Millisecond)) &&
-				msg.Time.Before(testStartTime.Add(time.Millisecond)),
-			"Time assertion failed: test time is not within the tolerance of the start time of the test",
-		)
-		assert.True(t,
-			msg.Time.After(time.Now().Add(-time.Millisecond)) &&
-				msg.Time.Before(time.Now().Add(time.Millisecond)),
-			"Time assertion failed: message time cannot be greater than the time now",
-		)
+		assert.WithinRange(t, msg.Time, testStartTime, time.Now(),
+			"Time must have meaningful value")
 		assert.Contains(t, msg.Text, "entering OpenContext()")
 	case <-time.After(time.Minute):
 		t.Fatal("expected logs, didn't get them before timeout")
