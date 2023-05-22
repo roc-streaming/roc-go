@@ -144,7 +144,7 @@ func OpenSender(context *Context, config SenderConfig) (sender *Sender, err erro
 	logWrite(LogDebug, "entering OpenSender(): context=%p config=%+v", context, config)
 	defer func() {
 		logWrite(LogDebug,
-			"leaving OpenSender(): context=%p sender=%p err=%v", context, sender, err,
+			"leaving OpenSender(): context=%p sender=%p err=%#v", context, sender, err,
 		)
 	}()
 
@@ -222,7 +222,7 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) (err 
 		"entering Sender.SetOutgoingAddress(): sender=%p slot=%v iface=%v ip=%v", s, slot, iface, ip,
 	)
 	defer func() {
-		logWrite(LogDebug, "leaving Sender.SetOutgoingAddress(): sender=%p err=%v", s, err)
+		logWrite(LogDebug, "leaving Sender.SetOutgoingAddress(): sender=%p err=%#v", s, err)
 	}()
 
 	s.mu.RLock()
@@ -276,7 +276,7 @@ func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err err
 		"entering Sender.SetReuseaddr(): sender=%p slot=%v iface=%v enabled=%v", s, slot, iface, enabled,
 	)
 	defer func() {
-		logWrite(LogDebug, "leaving Sender.SetReuseaddr(): sender=%p err=%v", s, err)
+		logWrite(LogDebug, "leaving Sender.SetReuseaddr(): sender=%p err=%#v", s, err)
 	}()
 
 	s.mu.RLock()
@@ -319,7 +319,7 @@ func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) (err er
 		"entering Sender.Connect(): sender=%p slot=%+v iface=%+v endpoint=%+v", s, slot, iface, endpoint,
 	)
 	defer func() {
-		logWrite(LogDebug, "leaving Sender.Connect(): sender=%p err=%v", s, err)
+		logWrite(LogDebug, "leaving Sender.Connect(): sender=%p err=%#v", s, err)
 	}()
 
 	s.mu.RLock()
@@ -421,7 +421,7 @@ func (s *Sender) WriteFloats(frame []float32) (err error) {
 func (s *Sender) Close() (err error) {
 	logWrite(LogDebug, "entering Sender.Close(): sender=%p", s)
 	defer func() {
-		logWrite(LogDebug, "leaving Sender.Close(): sender=%p err=%v", s, err)
+		logWrite(LogDebug, "leaving Sender.Close(): sender=%p err=%#v", s, err)
 	}()
 
 	s.mu.Lock()

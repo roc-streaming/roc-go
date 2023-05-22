@@ -175,7 +175,7 @@ func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, 
 	logWrite(LogDebug, "entering OpenReceiver(): context=%p config=%+v", context, config)
 	defer func() {
 		logWrite(LogDebug,
-			"leaving OpenReceiver(): context=%p receiver=%p err=%v", context, receiver, err,
+			"leaving OpenReceiver(): context=%p receiver=%p err=%#v", context, receiver, err,
 		)
 	}()
 
@@ -253,7 +253,7 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err
 		"entering Receiver.SetMulticastGroup(): receiver=%p slot=%v iface=%v ip=%v", r, slot, iface, ip,
 	)
 	defer func() {
-		logWrite(LogDebug, "leaving Receiver.SetMulticastGroup(): receiver=%p err=%v", r, err)
+		logWrite(LogDebug, "leaving Receiver.SetMulticastGroup(): receiver=%p err=%#v", r, err)
 	}()
 
 	r.mu.RLock()
@@ -308,7 +308,7 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err e
 		r, slot, iface, enabled,
 	)
 	defer func() {
-		logWrite(LogDebug, "leaving Receiver.SetReuseaddr(): receiver=%p err=%v", r, err)
+		logWrite(LogDebug, "leaving Receiver.SetReuseaddr(): receiver=%p err=%#v", r, err)
 	}()
 
 	r.mu.RLock()
@@ -356,7 +356,7 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err err
 	)
 	defer func() {
 		logWrite(LogDebug,
-			"leaving Receiver.Bind(): receiver=%p endpoint=%p err=%v", r, endpoint, err,
+			"leaving Receiver.Bind(): receiver=%p endpoint=%p err=%#v", r, endpoint, err,
 		)
 	}()
 
@@ -462,7 +462,7 @@ func (r *Receiver) ReadFloats(frame []float32) (err error) {
 func (r *Receiver) Close() (err error) {
 	logWrite(LogDebug, "entering Receiver.Close(): receiver=%p", r)
 	defer func() {
-		logWrite(LogDebug, "leaving Receiver.Close(): receiver=%p err=%v", r, err)
+		logWrite(LogDebug, "leaving Receiver.Close(): receiver=%p err=%#v", r, err)
 	}()
 
 	r.mu.Lock()

@@ -43,7 +43,7 @@ type Context struct {
 func OpenContext(config ContextConfig) (ctx *Context, err error) {
 	logWrite(LogDebug, "entering OpenContext(): config=%+v", config)
 	defer func() {
-		logWrite(LogDebug, "leaving OpenContext(): context=%p err=%v", ctx, err)
+		logWrite(LogDebug, "leaving OpenContext(): context=%p err=%#v", ctx, err)
 	}()
 
 	checkVersionFn()
@@ -78,7 +78,7 @@ func OpenContext(config ContextConfig) (ctx *Context, err error) {
 func (c *Context) Close() (err error) {
 	logWrite(LogDebug, "entering Context.Close(): context=%p", c)
 	defer func() {
-		logWrite(LogDebug, "leaving Context.Close(): context=%p err=%v", c, err)
+		logWrite(LogDebug, "leaving Context.Close(): context=%p err=%#v", c, err)
 	}()
 
 	c.mu.Lock()
