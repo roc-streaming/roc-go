@@ -141,7 +141,7 @@ func TestLog_Func(t *testing.T) {
 	}
 }
 
-func TestLog_LogWrite(t *testing.T) {
+func TestLog_Write(t *testing.T) {
 	testStartTime := time.Now()
 	SetLogLevel(LogDebug)
 	defer SetLogLevel(defaultLogLevel)
