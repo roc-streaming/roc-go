@@ -160,7 +160,6 @@ func TestLog_LogWrite(t *testing.T) {
 
 	ctx, err := OpenContext(ContextConfig{})
 	require.NoError(t, err)
-	ctx.Close()
 
 	select {
 	case msg := <-ch:
@@ -179,6 +178,8 @@ func TestLog_LogWrite(t *testing.T) {
 	case <-time.After(time.Minute):
 		t.Fatal("expected logs, didn't get them before timeout")
 	}
+
+	ctx.Close()
 }
 
 func TestLog_Levels(t *testing.T) {
