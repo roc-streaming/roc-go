@@ -1,7 +1,10 @@
 GO111MODULE := on
 export GO111MODULE
 
-all: build lint test
+all: generate build lint test
+
+generate:
+	cd roc && go generate
 
 build:
 	cd roc && go build .
