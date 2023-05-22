@@ -195,7 +195,7 @@ func logWrite(level LogLevel, text string, params ...interface{}) {
 		fileDir := path.Dir(file)
 		fileDir = path.Base(fileDir)
 		filePath := path.Base(file)
-		fileToLog := fmt.Sprintf("%s/%s",fileDir, filePath)
+		fileToLog := fmt.Sprintf("%s/%s", fileDir, filePath)
 
 		loggerCh <- LogMessage{
 			Level:  level,
