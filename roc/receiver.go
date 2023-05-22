@@ -173,9 +173,11 @@ type Receiver struct {
 // Allocates and initializes a new receiver, and attaches it to the context.
 func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, err error) {
 	logWrite(LogDebug, "entering OpenReceiver(): context=%p config=%+v", context, config)
-	defer logWrite(LogDebug,
-		"leaving OpenReceiver(): context=%p receiver=%p err=%v", context, receiver, err,
-	)
+	defer func() {
+		logWrite(LogDebug,
+			"leaving OpenReceiver(): context=%p receiver=%p err=%v", context, receiver, err,
+		)
+	}()
 
 	checkVersionFn()
 
@@ -250,7 +252,9 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err
 	logWrite(LogDebug,
 		"entering Receiver.SetMulticastGroup(): receiver=%p slot=%v iface=%v ip=%v", r, slot, iface, ip,
 	)
-	defer logWrite(LogDebug, "leaving Receiver.SetMulticastGroup(): receiver=%p err=%v", r, err)
+	defer func() {
+		logWrite(LogDebug, "leaving Receiver.SetMulticastGroup(): receiver=%p err=%v", r, err)
+	}()
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -303,7 +307,9 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err e
 		"entering Receiver.SetReuseaddr(): receiver=%p slot=%v iface=%v enabled=%v",
 		r, slot, iface, enabled,
 	)
-	defer logWrite(LogDebug, "leaving Receiver.SetReuseaddr(): receiver=%p err=%v", r, err)
+	defer func() {
+		logWrite(LogDebug, "leaving Receiver.SetReuseaddr(): receiver=%p err=%v", r, err)
+	}()
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -348,9 +354,11 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err err
 	logWrite(LogDebug,
 		"entering Receiver.Bind(): receiver=%p slot=%v iface=%v endpoint=%p", r, slot, iface, endpoint,
 	)
-	defer logWrite(LogDebug,
-		"leaving Receiver.Bind(): receiver=%p endpoint=%p err=%v", r, endpoint, err,
-	)
+	defer func() {
+		logWrite(LogDebug,
+			"leaving Receiver.Bind(): receiver=%p endpoint=%p err=%v", r, endpoint, err,
+		)
+	}()
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -453,7 +461,9 @@ func (r *Receiver) ReadFloats(frame []float32) (err error) {
 // function fails, the receiver is kept opened and attached to the context.
 func (r *Receiver) Close() (err error) {
 	logWrite(LogDebug, "entering Receiver.Close(): receiver=%p", r)
-	defer logWrite(LogDebug, "leaving Receiver.Close(): receiver=%p err=%v", r, err)
+	defer func() {
+		logWrite(LogDebug, "leaving Receiver.Close(): receiver=%p err=%v", r, err)
+	}()
 
 	r.mu.Lock()
 	defer r.mu.Unlock()

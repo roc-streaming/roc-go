@@ -142,9 +142,11 @@ type Sender struct {
 // Allocates and initializes a new sender, and attaches it to the context.
 func OpenSender(context *Context, config SenderConfig) (sender *Sender, err error) {
 	logWrite(LogDebug, "entering OpenSender(): context=%p config=%+v", context, config)
-	defer logWrite(LogDebug,
-		"leaving OpenSender(): context=%p sender=%p err=%v", context, sender, err,
-	)
+	defer func() {
+		logWrite(LogDebug,
+			"leaving OpenSender(): context=%p sender=%p err=%v", context, sender, err,
+		)
+	}()
 
 	checkVersionFn()
 
@@ -219,7 +221,9 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) (err 
 	logWrite(LogDebug,
 		"entering Sender.SetOutgoingAddress(): sender=%p slot=%v iface=%v ip=%v", s, slot, iface, ip,
 	)
-	defer logWrite(LogDebug, "leaving Sender.SetOutgoingAddress(): sender=%p err=%v", s, err)
+	defer func() {
+		logWrite(LogDebug, "leaving Sender.SetOutgoingAddress(): sender=%p err=%v", s, err)
+	}()
 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -271,7 +275,9 @@ func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err err
 	logWrite(LogDebug,
 		"entering Sender.SetReuseaddr(): sender=%p slot=%v iface=%v enabled=%v", s, slot, iface, enabled,
 	)
-	defer logWrite(LogDebug, "leaving Sender.SetReuseaddr(): sender=%p err=%v", s, err)
+	defer func() {
+		logWrite(LogDebug, "leaving Sender.SetReuseaddr(): sender=%p err=%v", s, err)
+	}()
 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -312,7 +318,9 @@ func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) (err er
 	logWrite(LogDebug,
 		"entering Sender.Connect(): sender=%p slot=%+v iface=%+v endpoint=%+v", s, slot, iface, endpoint,
 	)
-	defer logWrite(LogDebug, "leaving Sender.Connect(): sender=%p err=%v", s, err)
+	defer func() {
+		logWrite(LogDebug, "leaving Sender.Connect(): sender=%p err=%v", s, err)
+	}()
 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -412,7 +420,9 @@ func (s *Sender) WriteFloats(frame []float32) (err error) {
 // function fails, the sender is kept opened and attached to the context.
 func (s *Sender) Close() (err error) {
 	logWrite(LogDebug, "entering Sender.Close(): sender=%p", s)
-	defer logWrite(LogDebug, "leaving Sender.Close(): sender=%p err=%v", s, err)
+	defer func() {
+		logWrite(LogDebug, "leaving Sender.Close(): sender=%p err=%v", s, err)
+	}()
 
 	s.mu.Lock()
 	defer s.mu.Unlock()

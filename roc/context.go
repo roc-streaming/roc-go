@@ -42,7 +42,9 @@ type Context struct {
 // User is responsible to call Context.Close to free context resources.
 func OpenContext(config ContextConfig) (ctx *Context, err error) {
 	logWrite(LogDebug, "entering OpenContext(): config=%+v", config)
-	defer logWrite(LogDebug, "leaving OpenContext(): context=%p err=%v", ctx, err)
+	defer func() {
+		logWrite(LogDebug, "leaving OpenContext(): context=%p err=%v", ctx, err)
+	}()
 
 	checkVersionFn()
 
@@ -75,7 +77,9 @@ func OpenContext(config ContextConfig) (ctx *Context, err error) {
 // If this function fails, the context is kept opened.
 func (c *Context) Close() (err error) {
 	logWrite(LogDebug, "entering Context.Close(): context=%p", c)
-	defer logWrite(LogDebug, "leaving Context.Close(): context=%p err=%v", c, err)
+	defer func() {
+		logWrite(LogDebug, "leaving Context.Close(): context=%p err=%v", c, err)
+	}()
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
