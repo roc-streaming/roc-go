@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"runtime"
 	"sync/atomic"
 	"time"
@@ -191,13 +192,18 @@ func logWrite(level LogLevel, text string, params ...interface{}) {
 	if storedLogLevel := atomic.LoadInt32(&loggerLevel); level <= LogLevel(storedLogLevel) {
 		_, file, line, _ := runtime.Caller(1)
 
+		fileDir := path.Dir(file)
+		fileDir = path.Base(fileDir)
+		filePath := path.Base(file)
+		fileToLog := fmt.Sprintf("%s/%s",fileDir, filePath)
+
 		loggerCh <- LogMessage{
 			Level:  level,
 			Time:   time.Now(),
 			Pid:    uint64(os.Getpid()),
 			Tid:    uint64(C.rocGoThreadID()),
 			Module: "roc_go",
-			File:   file,
+			File:   fileToLog,
 			Line:   line,
 			Text:   fmt.Sprintf(text, params...),
 		}
