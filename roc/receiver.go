@@ -348,7 +348,7 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err err
 	logWrite(LogDebug,
 		"entering Receiver.Bind(): receiver=%p slot=%v iface=%v endpoint=%p", r, slot, iface, endpoint,
 	)
-	defer logWrite(LogDebug, 
+	defer logWrite(LogDebug,
 		"leaving Receiver.Bind(): receiver=%p endpoint=%p err=%v", r, endpoint, err,
 	)
 
@@ -422,12 +422,12 @@ func (r *Receiver) ReadFloats(frame []float32) (err error) {
 
 	if r.cPtr == nil {
 		err = errors.New("receiver is closed")
-		return 
+		return
 	}
 
 	if frame == nil {
 		err = errors.New("frame is nil")
-		return 
+		return
 	}
 
 	if len(frame) == 0 {
@@ -439,7 +439,7 @@ func (r *Receiver) ReadFloats(frame []float32) (err error) {
 		r.cPtr, (*C.float)(&frame[0]), (C.ulong)(len(frame)))
 	if errCode != 0 {
 		err = newNativeErr("roc_receiver_read()", errCode)
-		return 
+		return
 	}
 
 	err = nil

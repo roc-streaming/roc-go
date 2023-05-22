@@ -381,12 +381,12 @@ func (s *Sender) WriteFloats(frame []float32) (err error) {
 
 	if s.cPtr == nil {
 		err = errors.New("sender is closed")
-		return 
+		return
 	}
 
 	if frame == nil {
 		err = errors.New("frame is nil")
-		return 
+		return
 	}
 
 	if len(frame) == 0 {
@@ -398,7 +398,7 @@ func (s *Sender) WriteFloats(frame []float32) (err error) {
 		s.cPtr, (*C.float)(&frame[0]), (C.ulong)(len(frame)))
 	if errCode != 0 {
 		err = newNativeErr("roc_sender_write()", errCode)
-		return 
+		return
 	}
 
 	err = nil

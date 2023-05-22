@@ -171,7 +171,10 @@ func TestLog_LogWrite(t *testing.T) {
 		assert.Greater(t, msg.Line, 0, "Line number must be positive")
 		assert.Equal(t, uint64(os.Getpid()), msg.Pid)
 		assert.NotEmpty(t, msg.Tid)
-		assert.True(t, msg.Time.After(testStartTime), "Time assertion failed: test time is less than start time of the test")
+		assert.True(t,
+			msg.Time.After(testStartTime),
+			"Time assertion failed: test time is less than start time of the test",
+		)
 		assert.Contains(t, msg.Text, "entering OpenContext()")
 	case <-time.After(time.Minute):
 		t.Fatal("expected logs, didn't get them before timeout")
