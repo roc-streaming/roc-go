@@ -168,18 +168,24 @@ go get github.com/roc-streaming/roc-go/roc
 
 ## Development
 
+Install development dependencies:
+
+* [golangci-lint](https://golangci-lint.run/usage/install/#local-installation)
+
+* [stringer](https://github.com/golang/tools)
+
+    `go install golang.org/x/tools/cmd/stringer@latest`
+
 Run all checks:
 
 ```
 make
 ```
 
-Only run specific checks:
+Run only specific checks:
 
 ```
-make build
-make lint
-make test
+make build|lint|test
 ```
 
 Update modules:
