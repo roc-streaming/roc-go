@@ -151,16 +151,14 @@ func OpenSender(context *Context, config SenderConfig) (sender *Sender, err erro
 	checkVersionFn()
 
 	if context == nil {
-		err = errors.New("context is nil")
-		return
+		return nil, errors.New("context is nil")
 	}
 
 	context.mu.RLock()
 	defer context.mu.RUnlock()
 
 	if context.cPtr == nil {
-		err = errors.New("context is closed")
-		return
+		return nil, errors.New("context is closed")
 	}
 
 	cConfig := C.struct_roc_sender_config{
@@ -183,8 +181,7 @@ func OpenSender(context *Context, config SenderConfig) (sender *Sender, err erro
 	var cSender *C.roc_sender
 	errCode := C.roc_sender_open(context.cPtr, &cConfig, &cSender)
 	if errCode != 0 {
-		err = newNativeErr("roc_sender_open()", errCode)
-		return
+		return nil, newNativeErr("roc_sender_open()", errCode)
 	}
 	if cSender == nil {
 		panic("roc_sender_open() returned nil")
@@ -194,8 +191,7 @@ func OpenSender(context *Context, config SenderConfig) (sender *Sender, err erro
 		cPtr: cSender,
 	}
 
-	err = nil
-	return
+	return sender, nil
 }
 
 // Set sender interface outgoing address.
@@ -229,14 +225,12 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) (err 
 	defer s.mu.RUnlock()
 
 	if s.cPtr == nil {
-		err = errors.New("sender is closed")
-		return
+		return errors.New("sender is closed")
 	}
 
 	cIP, err := go2cStr(ip)
 	if err != nil {
-		err = fmt.Errorf("invalid ip: %w", err)
-		return
+		return fmt.Errorf("invalid ip: %w", err)
 	}
 	errCode := C.roc_sender_set_outgoing_address(
 		s.cPtr,
@@ -244,12 +238,10 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) (err 
 		(C.roc_interface)(iface),
 		(*C.char)(&cIP[0]))
 	if errCode != 0 {
-		err = newNativeErr("roc_sender_set_outgoing_address()", errCode)
-		return
+		return newNativeErr("roc_sender_set_outgoing_address()", errCode)
 	}
 
-	err = nil
-	return
+	return nil
 }
 
 // Set sender interface address reuse option.
@@ -283,8 +275,7 @@ func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err err
 	defer s.mu.RUnlock()
 
 	if s.cPtr == nil {
-		err = errors.New("sender is closed")
-		return
+		return errors.New("sender is closed")
 	}
 
 	cEnabled := go2cBool(enabled)
@@ -297,12 +288,10 @@ func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err err
 	)
 
 	if errCode != 0 {
-		err = newNativeErr("roc_sender_set_reuseaddr()", errCode)
-		return
+		return newNativeErr("roc_sender_set_reuseaddr()", errCode)
 	}
 
-	err = nil
-	return
+	return nil
 }
 
 // Connect the sender interface to a remote receiver endpoint.
@@ -326,13 +315,11 @@ func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) (err er
 	defer s.mu.RUnlock()
 
 	if s.cPtr == nil {
-		err = errors.New("sender is closed")
-		return
+		return errors.New("sender is closed")
 	}
 
 	if endpoint == nil {
-		err = errors.New("endpoint is nil")
-		return
+		return errors.New("endpoint is nil")
 	}
 
 	var errCode C.int
@@ -354,7 +341,7 @@ func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) (err er
 	}()
 
 	if err = endpoint.toC(cEndp); err != nil {
-		return
+		return err
 	}
 
 	errCode = C.roc_sender_connect(
@@ -363,12 +350,10 @@ func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) (err er
 		(C.roc_interface)(iface),
 		cEndp)
 	if errCode != 0 {
-		err = newNativeErr("roc_sender_connect()", errCode)
-		return
+		return newNativeErr("roc_sender_connect()", errCode)
 	}
 
-	err = nil
-	return
+	return nil
 }
 
 // Encode samples to packets and transmit them to the receiver.
@@ -388,29 +373,24 @@ func (s *Sender) WriteFloats(frame []float32) (err error) {
 	defer s.mu.RUnlock()
 
 	if s.cPtr == nil {
-		err = errors.New("sender is closed")
-		return
+		return errors.New("sender is closed")
 	}
 
 	if frame == nil {
-		err = errors.New("frame is nil")
-		return
+		return errors.New("frame is nil")
 	}
 
 	if len(frame) == 0 {
-		err = nil
-		return
+		return nil
 	}
 
 	errCode := C.rocGoSenderWriteFloats(
 		s.cPtr, (*C.float)(&frame[0]), (C.ulong)(len(frame)))
 	if errCode != 0 {
-		err = newNativeErr("roc_sender_write()", errCode)
-		return
+		return newNativeErr("roc_sender_write()", errCode)
 	}
 
-	err = nil
-	return
+	return nil
 }
 
 // Close the sender.
@@ -430,13 +410,11 @@ func (s *Sender) Close() (err error) {
 	if s.cPtr != nil {
 		errCode := C.roc_sender_close(s.cPtr)
 		if errCode != 0 {
-			err = newNativeErr("roc_sender_close()", errCode)
-			return
+			return newNativeErr("roc_sender_close()", errCode)
 		}
 
 		s.cPtr = nil
 	}
 
-	err = nil
-	return
+	return nil
 }

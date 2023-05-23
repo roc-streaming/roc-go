@@ -193,7 +193,7 @@ func logWrite(level LogLevel, text string, params ...interface{}) {
 	if level > storedLogLevel {
 		return
 	}
-	
+
 	_, file, line, _ := runtime.Caller(1)
 
 	fileDir := path.Dir(file)
