@@ -18,7 +18,7 @@ func TestSender_Open(t *testing.T) {
 		{
 			name: "ok",
 			contextFunc: func() *Context {
-				ctx, err := OpenContext(ContextConfig{})
+				ctx, err := OpenContext(makeContextConfig())
 				require.NoError(t, err)
 				return ctx
 			},
@@ -28,7 +28,7 @@ func TestSender_Open(t *testing.T) {
 		{
 			name: "invalid config",
 			contextFunc: func() *Context {
-				ctx, err := OpenContext(ContextConfig{})
+				ctx, err := OpenContext(makeContextConfig())
 				require.NoError(t, err)
 				return ctx
 			},
@@ -46,7 +46,7 @@ func TestSender_Open(t *testing.T) {
 		{
 			name: "closed context",
 			contextFunc: func() *Context {
-				ctx, err := OpenContext(ContextConfig{})
+				ctx, err := OpenContext(makeContextConfig())
 				require.NoError(t, err)
 
 				err = ctx.Close()
@@ -124,7 +124,7 @@ func TestSender_SetOutgoingAddress(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx, err := OpenContext(ContextConfig{})
+			ctx, err := OpenContext(makeContextConfig())
 			require.NoError(t, err)
 
 			sender, err := OpenSender(ctx, makeSenderConfig())
@@ -169,7 +169,7 @@ func TestSender_SetReuseaddr(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx, err := OpenContext(ContextConfig{})
+			ctx, err := OpenContext(makeContextConfig())
 			require.NoError(t, err)
 
 			sender, err := OpenSender(ctx, makeSenderConfig())
@@ -231,7 +231,7 @@ func TestSender_Connect(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx, err := OpenContext(ContextConfig{})
+			ctx, err := OpenContext(makeContextConfig())
 			require.NoError(t, err)
 
 			sender, err := OpenSender(ctx, makeSenderConfig())
@@ -285,7 +285,7 @@ func TestSender_WriteFloats(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx, err := OpenContext(ContextConfig{})
+			ctx, err := OpenContext(makeContextConfig())
 			require.NoError(t, err)
 
 			sender, err := OpenSender(ctx, makeSenderConfig())
@@ -340,7 +340,7 @@ func TestSender_Close(t *testing.T) {
 		},
 	}
 	for _, tt := range cases {
-		ctx, err := OpenContext(ContextConfig{})
+		ctx, err := OpenContext(makeContextConfig())
 		require.NoError(t, err)
 		require.NotNil(t, ctx)
 

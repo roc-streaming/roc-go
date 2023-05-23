@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_go2cBool(t *testing.T) {
+func TestConvert_go2cBool(t *testing.T) {
 	tests := []struct {
 		arg    bool
 		result uint
@@ -23,7 +23,7 @@ func Test_go2cBool(t *testing.T) {
 	}
 }
 
-func Test_go2cStr(t *testing.T) {
+func TestConvert_go2cStr(t *testing.T) {
 	tests := []struct {
 		name    string
 		arg     string
@@ -64,7 +64,7 @@ func Test_go2cStr(t *testing.T) {
 	}
 }
 
-func Test_c2goStr(t *testing.T) {
+func TestConvert_c2goStr(t *testing.T) {
 	tests := []struct {
 		name   string
 		arg    []char
