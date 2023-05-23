@@ -191,7 +191,8 @@ func TestLog_Write(t *testing.T) {
 
 	SetLoggerFunc(func(msg LogMessage) {
 		if msg.Level == LogDebug &&
-			msg.Module == "roc_go" {
+			msg.Module == "roc_go" && 
+			strings.Contains(msg.Text, "OpenContext()") {
 			select {
 			case ch <- msg:
 			default:
