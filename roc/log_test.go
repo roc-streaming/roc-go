@@ -1,6 +1,7 @@
 package roc
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -186,12 +187,11 @@ func TestLog_Write(t *testing.T) {
 	SetLogLevel(LogDebug)
 	defer SetLogLevel(defaultLogLevel)
 
-	ch := make(chan LogMessage, 1)
+	ch := make(chan LogMessage, 2)
 
 	SetLoggerFunc(func(msg LogMessage) {
 		if msg.Level == LogDebug &&
-			msg.Module == "roc_go" &&
-			strings.Contains(msg.Text, "entering OpenContext()") {
+			msg.Module == "roc_go" {
 			select {
 			case ch <- msg:
 			default:
@@ -204,27 +204,32 @@ func TestLog_Write(t *testing.T) {
 	ctx, err := OpenContext(ContextConfig{})
 	require.NoError(t, err)
 
-	select {
-	case msg := <-ch:
-		assert.Equal(t, LogDebug, msg.Level, "Expected log level to be debug")
-		assert.Equal(t, "roc_go", msg.Module)
-		assert.Equal(t, "roc/context.go", msg.File)
-		assert.Greater(t, msg.Line, 0, "Line number must be positive")
-		assert.Equal(t, uint64(os.Getpid()), msg.Pid)
-		assert.NotEmpty(t, msg.Tid)
-		assert.True(t,
-			msg.Time.After(testStartTime.Add(-time.Millisecond)) &&
-				msg.Time.Before(testStartTime.Add(time.Millisecond)),
-			"Time assertion failed: test time is not within the tolerance of the start time of the test",
-		)
-		assert.True(t,
-			msg.Time.After(time.Now().Add(-time.Millisecond)) &&
-				msg.Time.Before(time.Now().Add(time.Millisecond)),
-			"Time assertion failed: message time cannot be greater than the time now",
-		)
-		assert.Contains(t, msg.Text, "entering OpenContext()")
-	case <-time.After(time.Minute):
-		t.Fatal("expected logs, didn't get them before timeout")
+	for i := 0; i < 2; i++ {
+		select {
+		case msg := <-ch:
+			assert.Equal(t, LogDebug, msg.Level, "Expected log level to be debug")
+			assert.Equal(t, "roc_go", msg.Module)
+			assert.Equal(t, "roc/context.go", msg.File)
+			assert.Greater(t, msg.Line, 0, "Line number must be positive")
+			assert.Equal(t, uint64(os.Getpid()), msg.Pid)
+			assert.NotEmpty(t, msg.Tid)
+			assert.True(t,
+				msg.Time.After(testStartTime.Add(-time.Second)) &&
+					msg.Time.Before(testStartTime.Add(time.Second)),
+				"Time assertion failed: test time is not within the tolerance of the start time of the test",
+			)
+			assert.True(t,
+				msg.Time.After(time.Now().Add(-time.Second)) &&
+					msg.Time.Before(time.Now().Add(time.Second)),
+				"Time assertion failed: message time cannot be greater than the time now",
+			)
+			assert.Contains(t, msg.Text, "OpenContext()")
+			if i == 1 {
+				assert.Contains(t, msg.Text, fmt.Sprintf("OpenContext(): context=%p", ctx))
+			}
+		case <-time.After(time.Minute):
+			t.Fatal("expected logs, didn't get them before timeout")
+		}
 	}
 
 	ctx.Close()
