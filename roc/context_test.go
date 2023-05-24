@@ -82,25 +82,17 @@ func TestContext_Close(t *testing.T) {
 				sender   *Sender
 			)
 
-			ctx, err := OpenContext(ContextConfig{})
+			ctx, err := OpenContext(makeContextConfig())
 			require.NoError(t, err)
 			require.NotNil(t, ctx)
 
 			if tt.hasReceivers {
-				receiver, err = OpenReceiver(ctx, ReceiverConfig{
-					FrameSampleRate: 44100,
-					FrameChannels:   ChannelSetStereo,
-					FrameEncoding:   FrameEncodingPcmFloat,
-				})
+				receiver, err = OpenReceiver(ctx, makeReceiverConfig())
 				require.NoError(t, err)
 				require.NotNil(t, receiver)
 			}
 			if tt.hasSenders {
-				sender, err = OpenSender(ctx, SenderConfig{
-					FrameSampleRate: 44100,
-					FrameChannels:   ChannelSetStereo,
-					FrameEncoding:   FrameEncodingPcmFloat,
-				})
+				sender, err = OpenSender(ctx, makeSenderConfig())
 				require.NoError(t, err)
 				require.NotNil(t, sender)
 			}
