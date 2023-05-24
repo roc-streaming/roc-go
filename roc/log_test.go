@@ -191,8 +191,7 @@ func TestLog_Write(t *testing.T) {
 
 	SetLoggerFunc(func(msg LogMessage) {
 		if msg.Level == LogDebug &&
-			msg.Module == "roc_go" &&
-			strings.Contains(msg.Text, "OpenContext()") {
+			msg.Module == "roc_go" {
 			select {
 			case ch <- msg:
 			default:
@@ -204,6 +203,7 @@ func TestLog_Write(t *testing.T) {
 	testStartTime := time.Now()
 	ctx, err := OpenContext(ContextConfig{})
 	require.NoError(t, err)
+	defer ctx.Close()
 
 	for i := 0; i < 2; i++ {
 		select {
@@ -214,16 +214,8 @@ func TestLog_Write(t *testing.T) {
 			assert.Greater(t, msg.Line, 0, "Line number must be positive")
 			assert.Equal(t, uint64(os.Getpid()), msg.Pid)
 			assert.NotEmpty(t, msg.Tid)
-			assert.True(t,
-				msg.Time.After(testStartTime.Add(-time.Second)) &&
-					msg.Time.Before(testStartTime.Add(time.Second)),
-				"Time assertion failed: test time is not within the tolerance of the start time of the test",
-			)
-			assert.True(t,
-				msg.Time.After(time.Now().Add(-time.Second)) &&
-					msg.Time.Before(time.Now().Add(time.Second)),
-				"Time assertion failed: message time cannot be greater than the time now",
-			)
+			assert.WithinRange(t, msg.Time, testStartTime, time.Now(),
+				"Time must have meaningful value")
 			assert.Contains(t, msg.Text, "OpenContext()")
 			if i == 1 {
 				assert.Contains(t, msg.Text, fmt.Sprintf("OpenContext(): context=%p", ctx))
@@ -232,6 +224,4 @@ func TestLog_Write(t *testing.T) {
 			t.Fatal("expected logs, didn't get them before timeout")
 		}
 	}
-
-	ctx.Close()
 }

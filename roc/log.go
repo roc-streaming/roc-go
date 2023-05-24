@@ -12,8 +12,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
+	"strings"
 	"sync/atomic"
 	"time"
 )
@@ -194,12 +195,21 @@ func logWrite(level LogLevel, text string, params ...interface{}) {
 		return
 	}
 
+	var finalPath string
 	_, file, line, _ := runtime.Caller(1)
 
-	fileDir := path.Dir(file)
-	fileDir = path.Base(fileDir)
-	filePath := path.Base(file)
-	fileToLog := fmt.Sprintf("%s/%s", fileDir, filePath)
+	dirs := strings.FieldsFunc(file, func(c rune) bool {
+		return c == '/' || c == '\\'
+	})
+	fileNameIndex := len(dirs) - 1
+	lastDirIndex := len(dirs) - 2
+
+	if lastDirIndex >= 0 {
+		fileName := dirs[fileNameIndex]
+		lastDir := dirs[lastDirIndex]
+
+		finalPath = filepath.Join(lastDir, fileName)
+	}
 
 	loggerCh <- LogMessage{
 		Level:  level,
@@ -207,7 +217,7 @@ func logWrite(level LogLevel, text string, params ...interface{}) {
 		Pid:    uint64(os.Getpid()),
 		Tid:    uint64(C.rocGoThreadID()),
 		Module: "roc_go",
-		File:   fileToLog,
+		File:   finalPath,
 		Line:   line,
 		Text:   fmt.Sprintf(text, params...),
 	}
