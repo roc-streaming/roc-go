@@ -203,7 +203,9 @@ func TestLog_Write(t *testing.T) {
 	testStartTime := time.Now()
 	ctx, err := OpenContext(ContextConfig{})
 	require.NoError(t, err)
-	defer ctx.Close()
+	defer func() {
+		 ctx.Close()
+	}()
 
 	for i := 0; i < 2; i++ {
 		select {
