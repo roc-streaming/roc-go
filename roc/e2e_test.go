@@ -78,7 +78,7 @@ func (e *e2e) close(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestEnd2End(t *testing.T) {
+func TestEnd2End_Default(t *testing.T) {
 	e := newE2E(t)
 	defer e.close(t)
 
