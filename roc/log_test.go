@@ -219,7 +219,7 @@ func TestLog_Write(t *testing.T) {
 				"Time must have meaningful value")
 			assert.Contains(t, msg.Text, "OpenContext()")
 			if i == 1 {
-				assert.Contains(t, msg.Text, fmt.Sprintf("OpenContext(): context=%p", ctx))
+				assert.Contains(t, msg.Text, fmt.Sprintf("context=%p", ctx))
 			}
 		case <-time.After(time.Minute):
 			t.Fatal("expected logs, didn't get them before timeout")
