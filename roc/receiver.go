@@ -171,7 +171,14 @@ type Receiver struct {
 
 // Open a new receiver.
 // Allocates and initializes a new receiver, and attaches it to the context.
-func OpenReceiver(context *Context, config ReceiverConfig) (*Receiver, error) {
+func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, err error) {
+	logWrite(LogDebug, "entering OpenReceiver(): context=%p config=%+v", context, config)
+	defer func() {
+		logWrite(LogDebug,
+			"leaving OpenReceiver(): context=%p receiver=%p err=%#v", context, receiver, err,
+		)
+	}()
+
 	checkVersionFn()
 
 	if context == nil {
@@ -209,11 +216,11 @@ func OpenReceiver(context *Context, config ReceiverConfig) (*Receiver, error) {
 		panic("roc_receiver_open() returned nil")
 	}
 
-	recv := &Receiver{
+	receiver = &Receiver{
 		cPtr: cRecv,
 	}
 
-	return recv, nil
+	return receiver, nil
 }
 
 // Set receiver interface multicast group.
@@ -237,7 +244,14 @@ func OpenReceiver(context *Context, config ReceiverConfig) (*Receiver, error) {
 // calling Receiver.Connect() for the interface.
 //
 // Automatically initializes slot with given index if it's used first time.
-func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) error {
+func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err error) {
+	logWrite(LogDebug,
+		"entering Receiver.SetMulticastGroup(): receiver=%p slot=%v iface=%v ip=%v", r, slot, iface, ip,
+	)
+	defer func() {
+		logWrite(LogDebug, "leaving Receiver.SetMulticastGroup(): receiver=%p err=%#v", r, err)
+	}()
+
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -245,9 +259,9 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) erro
 		return errors.New("receiver is closed")
 	}
 
-	cIP, err := go2cStr(ip)
-	if err != nil {
-		return fmt.Errorf("invalid ip: %w", err)
+	cIP, parseErr := go2cStr(ip)
+	if parseErr != nil {
+		return fmt.Errorf("invalid ip: %w", parseErr)
 	}
 	errCode := C.roc_receiver_set_multicast_group(
 		r.cPtr,
@@ -280,7 +294,15 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) erro
 // address, which may be useful if you're using socket activation mechanism.
 //
 // Automatically initializes slot with given index if it's used first time.
-func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
+func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err error) {
+	logWrite(LogDebug,
+		"entering Receiver.SetReuseaddr(): receiver=%p slot=%v iface=%v enabled=%v",
+		r, slot, iface, enabled,
+	)
+	defer func() {
+		logWrite(LogDebug, "leaving Receiver.SetReuseaddr(): receiver=%p err=%#v", r, err)
+	}()
+
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -300,6 +322,7 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error 
 	if errCode != 0 {
 		return newNativeErr("roc_receiver_set_reuseaddr()", errCode)
 	}
+
 	return nil
 }
 
@@ -316,7 +339,16 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) error 
 // If endpoint has explicitly set zero port, the receiver is bound to a randomly
 // chosen ephemeral port. If the function succeeds, the actual port to which the
 // receiver was bound is written back to endpoint.
-func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) error {
+func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err error) {
+	logWrite(LogDebug,
+		"entering Receiver.Bind(): receiver=%p slot=%v iface=%v endpoint=%+v", r, slot, iface, endpoint,
+	)
+	defer func() {
+		logWrite(LogDebug,
+			"leaving Receiver.Bind(): receiver=%p endpoint=%+v err=%#v", r, endpoint, err,
+		)
+	}()
+
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -346,7 +378,7 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) error {
 		}
 	}()
 
-	if err := endpoint.toC(cEndp); err != nil {
+	if err = endpoint.toC(cEndp); err != nil {
 		return err
 	}
 
@@ -359,7 +391,7 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) error {
 		return newNativeErr("roc_receiver_bind()", errCode)
 	}
 
-	if err := endpoint.fromC(cEndp); err != nil {
+	if err = endpoint.fromC(cEndp); err != nil {
 		return err
 	}
 
@@ -377,7 +409,7 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) error {
 //
 // Until the receiver is connected to at least one sender, it produces silence.
 // If the receiver is connected to multiple senders, it mixes their streams into one.
-func (r *Receiver) ReadFloats(frame []float32) error {
+func (r *Receiver) ReadFloats(frame []float32) (err error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -407,7 +439,12 @@ func (r *Receiver) ReadFloats(frame []float32) error {
 // Deinitializes and deallocates the receiver, and detaches it from the context. The user
 // should ensure that nobody uses the receiver during and after this call. If this
 // function fails, the receiver is kept opened and attached to the context.
-func (r *Receiver) Close() error {
+func (r *Receiver) Close() (err error) {
+	logWrite(LogDebug, "entering Receiver.Close(): receiver=%p", r)
+	defer func() {
+		logWrite(LogDebug, "leaving Receiver.Close(): receiver=%p err=%#v", r, err)
+	}()
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

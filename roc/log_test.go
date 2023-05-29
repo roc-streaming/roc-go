@@ -1,8 +1,10 @@
 package roc
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -178,5 +180,49 @@ func TestLog_Levels(t *testing.T) {
 				t.Fatal("expected logs, didn't get them before timeout")
 			}
 		})
+	}
+}
+
+func TestLog_Write(t *testing.T) {
+	SetLogLevel(LogDebug)
+	defer SetLogLevel(defaultLogLevel)
+
+	ch := make(chan LogMessage, 2)
+
+	SetLoggerFunc(func(msg LogMessage) {
+		if msg.Level == LogDebug &&
+			msg.Module == "roc_go" &&
+			strings.Contains(msg.Text, "OpenContext()") {
+			select {
+			case ch <- msg:
+			default:
+			}
+		}
+	})
+	defer SetLoggerFunc(nil)
+
+	testStartTime := time.Now()
+	ctx, err := OpenContext(ContextConfig{})
+	require.NoError(t, err)
+	defer ctx.Close()
+
+	for i := 0; i < 2; i++ {
+		select {
+		case msg := <-ch:
+			assert.Equal(t, LogDebug, msg.Level, "Expected log level to be debug")
+			assert.Equal(t, "roc_go", msg.Module)
+			assert.Equal(t, "roc/context.go", msg.File)
+			assert.Greater(t, msg.Line, 0, "Line number must be positive")
+			assert.Equal(t, uint64(os.Getpid()), msg.Pid)
+			assert.NotEmpty(t, msg.Tid)
+			assert.WithinRange(t, msg.Time, testStartTime, time.Now(),
+				"Time must have meaningful value")
+			assert.Contains(t, msg.Text, "OpenContext()")
+			if i == 1 {
+				assert.Contains(t, msg.Text, fmt.Sprintf("context=%p", ctx))
+			}
+		case <-time.After(time.Minute):
+			t.Fatal("expected logs, didn't get them before timeout")
+		}
 	}
 }

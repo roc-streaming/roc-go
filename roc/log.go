@@ -11,6 +11,10 @@ import "C"
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 	"sync/atomic"
 	"time"
 )
@@ -85,6 +89,7 @@ type Logger interface {
 func SetLogLevel(level LogLevel) {
 	checkVersionFn()
 
+	atomic.StoreInt32(&loggerLevel, int32(level))
 	C.roc_log_set_level(C.roc_log_level(level))
 }
 
@@ -148,8 +153,9 @@ func (standardLogger) Print(v ...interface{}) {
 }
 
 var (
-	loggerFunc atomic.Value
-	loggerCh   = make(chan LogMessage, 1024)
+	loggerLevel int32
+	loggerFunc  atomic.Value
+	loggerCh    = make(chan LogMessage, 1024)
 )
 
 //export rocGoLogHandler
@@ -181,6 +187,49 @@ func loggerRoutine() {
 			fn(message)
 		}
 	}
+}
+
+func logWrite(level LogLevel, text string, params ...interface{}) {
+	storedLogLevel := LogLevel(atomic.LoadInt32(&loggerLevel))
+	if level > storedLogLevel {
+		return
+	}
+
+	file, line := logLocation(2)
+
+	loggerCh <- LogMessage{
+		Level:  level,
+		Time:   time.Now(),
+		Pid:    uint64(os.Getpid()),
+		Tid:    uint64(C.rocGoThreadID()),
+		Module: "roc_go",
+		File:   file,
+		Line:   line,
+		Text:   fmt.Sprintf(text, params...),
+	}
+}
+
+func logLocation(stack int) (string, int) {
+	_, file, line, ok := runtime.Caller(stack)
+	if !ok {
+		return "", -1
+	}
+
+	parts := strings.FieldsFunc(file, func(c rune) bool {
+		return c == '/' || c == '\\'
+	})
+	if len(parts) == 0 {
+		return "", -1
+	}
+
+	for i := len(parts) - 1; i != 0; i-- {
+		if parts[i] == "roc" {
+			parts = parts[i:]
+			break
+		}
+	}
+
+	return filepath.Join(parts...), line
 }
 
 func init() {

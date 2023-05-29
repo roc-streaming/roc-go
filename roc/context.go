@@ -40,7 +40,12 @@ type Context struct {
 // Open a new context.
 // Allocates and initializes a new context. May start some background threads.
 // User is responsible to call Context.Close to free context resources.
-func OpenContext(config ContextConfig) (*Context, error) {
+func OpenContext(config ContextConfig) (ctx *Context, err error) {
+	logWrite(LogDebug, "entering OpenContext(): config=%+v", config)
+	defer func() {
+		logWrite(LogDebug, "leaving OpenContext(): context=%p err=%#v", ctx, err)
+	}()
+
 	checkVersionFn()
 
 	cConfig := C.struct_roc_context_config{
@@ -57,7 +62,7 @@ func OpenContext(config ContextConfig) (*Context, error) {
 		panic("roc_context_open() returned nil")
 	}
 
-	ctx := &Context{
+	ctx = &Context{
 		cPtr: cCtx,
 	}
 
@@ -68,7 +73,12 @@ func OpenContext(config ContextConfig) (*Context, error) {
 // Stops any started background threads, deinitializes and deallocates the context.
 // The user should ensure that nobody uses the context during and after this call.
 // If this function fails, the context is kept opened.
-func (c *Context) Close() error {
+func (c *Context) Close() (err error) {
+	logWrite(LogDebug, "entering Context.Close(): context=%p", c)
+	defer func() {
+		logWrite(LogDebug, "leaving Context.Close(): context=%p err=%#v", c, err)
+	}()
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
 

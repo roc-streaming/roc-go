@@ -140,7 +140,14 @@ type Sender struct {
 
 // Open a new sender.
 // Allocates and initializes a new sender, and attaches it to the context.
-func OpenSender(context *Context, config SenderConfig) (*Sender, error) {
+func OpenSender(context *Context, config SenderConfig) (sender *Sender, err error) {
+	logWrite(LogDebug, "entering OpenSender(): context=%p config=%+v", context, config)
+	defer func() {
+		logWrite(LogDebug,
+			"leaving OpenSender(): context=%p sender=%p err=%#v", context, sender, err,
+		)
+	}()
+
 	checkVersionFn()
 
 	if context == nil {
@@ -180,7 +187,7 @@ func OpenSender(context *Context, config SenderConfig) (*Sender, error) {
 		panic("roc_sender_open() returned nil")
 	}
 
-	sender := &Sender{
+	sender = &Sender{
 		cPtr: cSender,
 	}
 
@@ -206,7 +213,14 @@ func OpenSender(context *Context, config SenderConfig) (*Sender, error) {
 // called when calling Sender.Bind() for the interface.
 //
 // Automatically initializes slot with given index if it's used first time.
-func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) error {
+func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) (err error) {
+	logWrite(LogDebug,
+		"entering Sender.SetOutgoingAddress(): sender=%p slot=%v iface=%v ip=%v", s, slot, iface, ip,
+	)
+	defer func() {
+		logWrite(LogDebug, "leaving Sender.SetOutgoingAddress(): sender=%p err=%#v", s, err)
+	}()
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -249,7 +263,14 @@ func (s *Sender) SetOutgoingAddress(slot Slot, iface Interface, ip string) error
 // address, which may be useful if you're using socket activation mechanism.
 //
 // Automatically initializes slot with given index if it's used first time.
-func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
+func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err error) {
+	logWrite(LogDebug,
+		"entering Sender.SetReuseaddr(): sender=%p slot=%v iface=%v enabled=%v", s, slot, iface, enabled,
+	)
+	defer func() {
+		logWrite(LogDebug, "leaving Sender.SetReuseaddr(): sender=%p err=%#v", s, err)
+	}()
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -282,7 +303,14 @@ func (s *Sender) SetReuseaddr(slot Slot, iface Interface, enabled bool) error {
 // May be called multiple times for different slots or interfaces.
 //
 // Automatically initializes slot with given index if it's used first time.
-func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) error {
+func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) (err error) {
+	logWrite(LogDebug,
+		"entering Sender.Connect(): sender=%p slot=%+v iface=%+v endpoint=%+v", s, slot, iface, endpoint,
+	)
+	defer func() {
+		logWrite(LogDebug, "leaving Sender.Connect(): sender=%p err=%#v", s, err)
+	}()
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -312,7 +340,7 @@ func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) error {
 		}
 	}()
 
-	if err := endpoint.toC(cEndp); err != nil {
+	if err = endpoint.toC(cEndp); err != nil {
 		return err
 	}
 
@@ -340,7 +368,7 @@ func (s *Sender) Connect(slot Slot, iface Interface, endpoint *Endpoint) error {
 // Until the sender is connected to at least one receiver, the stream is just dropped.
 // If the sender is connected to multiple receivers, the stream is duplicated to
 // each of them.
-func (s *Sender) WriteFloats(frame []float32) error {
+func (s *Sender) WriteFloats(frame []float32) (err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -370,7 +398,12 @@ func (s *Sender) WriteFloats(frame []float32) error {
 // Deinitializes and deallocates the sender, and detaches it from the context. The user
 // should ensure that nobody uses the sender during and after this call. If this
 // function fails, the sender is kept opened and attached to the context.
-func (s *Sender) Close() error {
+func (s *Sender) Close() (err error) {
+	logWrite(LogDebug, "entering Sender.Close(): sender=%p", s)
+	defer func() {
+		logWrite(LogDebug, "leaving Sender.Close(): sender=%p err=%#v", s, err)
+	}()
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
