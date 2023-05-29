@@ -328,7 +328,7 @@ const (
 
 // Clock source for sender or receiver.
 //
-//go:generate stringer -type ClockSource -trimprefix ClockSource
+//go:generate stringer -type ClockSource -trimprefix Clock
 type ClockSource int
 
 const (
