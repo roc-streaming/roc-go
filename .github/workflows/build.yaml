@@ -201,6 +201,7 @@ jobs:
           go generate
 
       - name: Check for git changes
+        shell: bash -e {0}
         run: |
           if [[ $(git status --porcelain | grep -E "[MARCD].*\.go$") ]]; then
             echo "Run go generate and commit generated files"
