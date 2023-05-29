@@ -11,9 +11,9 @@ lint:
 	cd roc && golangci-lint run .
 
 test:
-	cd roc && go test .
+	cd roc && go test . -count=1 .
 	cd roc && GODEBUG=cgocheck=2 go test -count=1 .
-	cd roc && go test -race .
+	cd roc && go test -count=1 -race .
 
 clean:
 	cd roc && go clean -cache -testcache
