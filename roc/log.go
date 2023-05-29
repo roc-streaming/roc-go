@@ -155,9 +155,12 @@ func (standardLogger) Print(v ...interface{}) {
 var (
 	loggerLevel int32
 	loggerFunc  atomic.Value
-	loggerCh    = make(chan LogMessage, 1024)
+	loggerChan  = make(chan LogMessage, 1024)
 )
 
+// Write structured message to log.
+// Invoked from C library when it needs to log something.
+//
 //export rocGoLogHandler
 func rocGoLogHandler(cMessage *C.roc_log_message) {
 	message := LogMessage{
@@ -177,27 +180,19 @@ func rocGoLogHandler(cMessage *C.roc_log_message) {
 		message.Text = C.GoString(cMessage.text)
 	}
 
-	loggerCh <- message
+	loggerChan <- message
 }
 
-func loggerRoutine() {
-	for message := range loggerCh {
-		fn := loggerFunc.Load().(LoggerFunc)
-		if fn != nil {
-			fn(message)
-		}
-	}
-}
-
+// Write formatted message to log.
+// Invoked from Go code when it needs to log something.
 func logWrite(level LogLevel, text string, params ...interface{}) {
-	storedLogLevel := LogLevel(atomic.LoadInt32(&loggerLevel))
-	if level > storedLogLevel {
+	if level > logLevel() {
 		return
 	}
 
 	file, line := logLocation(2)
 
-	loggerCh <- LogMessage{
+	message := LogMessage{
 		Level:  level,
 		Time:   time.Now(),
 		Pid:    uint64(os.Getpid()),
@@ -207,6 +202,12 @@ func logWrite(level LogLevel, text string, params ...interface{}) {
 		Line:   line,
 		Text:   fmt.Sprintf(text, params...),
 	}
+
+	loggerChan <- message
+}
+
+func logLevel() LogLevel {
+	return LogLevel(atomic.LoadInt32(&loggerLevel))
 }
 
 func logLocation(stack int) (string, int) {
@@ -232,12 +233,24 @@ func logLocation(stack int) (string, int) {
 	return filepath.Join(parts...), line
 }
 
+func logRoutine() {
+	for message := range loggerChan {
+		fn := loggerFunc.Load().(LoggerFunc)
+		if fn != nil {
+			fn(message)
+		}
+	}
+}
+
 func init() {
 	SetLogLevel(LogError)
 	SetLoggerFunc(nil)
 
-	// rocGoLogHandlerProxy calls rocGoLogHandler
+	// rocGoLogHandlerProxy calls rocGoLogHandler,
+	// rocGoLogHandler writes messages to channel
 	C.roc_log_set_handler(C.roc_log_handler(C.rocGoLogHandlerProxy), nil)
 
-	go loggerRoutine()
+	// logRoutine reads messages from channel and passes them to
+	// Logger or LoggerFunc
+	go logRoutine()
 }
