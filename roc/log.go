@@ -195,21 +195,7 @@ func logWrite(level LogLevel, text string, params ...interface{}) {
 		return
 	}
 
-	var finalPath string
-	_, file, line, _ := runtime.Caller(1)
-
-	dirs := strings.FieldsFunc(file, func(c rune) bool {
-		return c == '/' || c == '\\'
-	})
-	fileNameIndex := len(dirs) - 1
-	lastDirIndex := len(dirs) - 2
-
-	if lastDirIndex >= 0 {
-		fileName := dirs[fileNameIndex]
-		lastDir := dirs[lastDirIndex]
-
-		finalPath = filepath.Join(lastDir, fileName)
-	}
+	file, line := logLocation(2)
 
 	loggerCh <- LogMessage{
 		Level:  level,
@@ -217,10 +203,33 @@ func logWrite(level LogLevel, text string, params ...interface{}) {
 		Pid:    uint64(os.Getpid()),
 		Tid:    uint64(C.rocGoThreadID()),
 		Module: "roc_go",
-		File:   finalPath,
+		File:   file,
 		Line:   line,
 		Text:   fmt.Sprintf(text, params...),
 	}
+}
+
+func logLocation(stack int) (string, int) {
+	_, file, line, ok := runtime.Caller(stack)
+	if !ok {
+		return "", -1
+	}
+
+	parts := strings.FieldsFunc(file, func(c rune) bool {
+		return c == '/' || c == '\\'
+	})
+	if len(parts) == 0 {
+		return "", -1
+	}
+
+	for i := len(parts) - 1; i != 0; i-- {
+		if parts[i] == "roc" {
+			parts = parts[i:]
+			break
+		}
+	}
+
+	return filepath.Join(parts...), line
 }
 
 func init() {
