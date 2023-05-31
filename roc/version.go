@@ -17,7 +17,7 @@ import (
 // Hard-coded version of bindings.
 // Should be updated manually each time a new release is tagged.
 // This variable is modified only in tests.
-var bindingsVersion = "0.2.0"
+var bindingsVersion = "0.2.1"
 
 // Validate version compatibility of Go bindings and native library.
 // Must be invoked at all library entry points at least once.
