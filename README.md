@@ -185,7 +185,7 @@ make
 Run only specific checks:
 
 ```
-make build|lint|test
+make gen|build|lint|test
 ```
 
 Update modules:
