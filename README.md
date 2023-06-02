@@ -202,16 +202,25 @@ make fmt
 
 ## Release
 
-To release new version:
+To release a new version:
 
-*	```
-	./tag.py --push <remote> <version>
-	e.g.
-	./tag.py --push origin 1.2.3
-	```
-	Or use **tag.py** without **--push** to only create a tag locally. And then push it manually.
-* Wait until CI completes
-* Edit GitHub release created by CI and publish it
+ * Create git tag
+ 
+    ```
+    ./tag.py --push <remote> <version>
+    ```
+    
+    e.g.
+    
+    ```
+    ./tag.py --push origin 1.2.3
+    ```
+    
+    Or use **tag.py** without **--push** to only create a tag locally, and then push it manually.
+
+* Wait until "Release" CI job completes and creates GitHub release draft.
+
+* Edit GitHub release created by CI and publish it.
 
 ## Authors
 
