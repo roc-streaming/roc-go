@@ -192,6 +192,26 @@ func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, 
 		return nil, errors.New("context is closed")
 	}
 
+	cTargetLatency, err := go2cUnsignedDuration(config.TargetLatency)
+	if err != nil {
+		return nil, fmt.Errorf("invalid config.TargetLatency: %w", err)
+	}
+
+	cMaxLatencyOverrun, err := go2cUnsignedDuration(config.MaxLatencyOverrun)
+	if err != nil {
+		return nil, fmt.Errorf("invalid config.MaxLatencyOverrun: %w", err)
+	}
+
+	cMaxLatencyUnderrun, err := go2cUnsignedDuration(config.MaxLatencyUnderrun)
+	if err != nil {
+		return nil, fmt.Errorf("invalid config.MaxLatencyUnderrun: %w", err)
+	}
+
+	cBreakageDetectionWindow, err := go2cUnsignedDuration(config.BreakageDetectionWindow)
+	if err != nil {
+		return nil, fmt.Errorf("invalid config.BreakageDetectionWindow: %w", err)
+	}
+
 	cConfig := C.struct_roc_receiver_config{
 		frame_sample_rate:         (C.uint)(config.FrameSampleRate),
 		frame_channels:            (C.roc_channel_set)(config.FrameChannels),
@@ -199,12 +219,12 @@ func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, 
 		clock_source:              (C.roc_clock_source)(config.ClockSource),
 		resampler_backend:         (C.roc_resampler_backend)(config.ResamplerBackend),
 		resampler_profile:         (C.roc_resampler_profile)(config.ResamplerProfile),
-		target_latency:            (C.ulonglong)(config.TargetLatency),
-		max_latency_overrun:       (C.ulonglong)(config.MaxLatencyOverrun),
-		max_latency_underrun:      (C.ulonglong)(config.MaxLatencyUnderrun),
+		target_latency:            cTargetLatency,
+		max_latency_overrun:       cMaxLatencyOverrun,
+		max_latency_underrun:      cMaxLatencyUnderrun,
 		no_playback_timeout:       (C.longlong)(config.NoPlaybackTimeout),
 		broken_playback_timeout:   (C.longlong)(config.BrokenPlaybackTimeout),
-		breakage_detection_window: (C.ulonglong)(config.BreakageDetectionWindow),
+		breakage_detection_window: cBreakageDetectionWindow,
 	}
 
 	var cRecv *C.roc_receiver

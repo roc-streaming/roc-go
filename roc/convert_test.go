@@ -2,8 +2,10 @@ package roc
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -78,6 +80,36 @@ func TestConvert_c2goStr(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.result, c2goStr(tt.arg))
+		})
+	}
+}
+
+func TestConvert_go2cUnsignedDuration(t *testing.T) {
+	tests := []struct {
+		name    string
+		arg     time.Duration
+		want    ulonglong
+		wantErr error
+	}{
+		{
+			name:    "gtezero",
+			arg:     1,
+			want:    (ulonglong)(1),
+			wantErr: nil,
+		},
+		{
+			name:    "ltzero",
+			arg:     -1,
+			want:    0,
+			wantErr: fmt.Errorf("unexpected negative duration: %v", (time.Duration)(-1)),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotErr := go2cUnsignedDuration(tt.arg)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.wantErr, gotErr)
 		})
 	}
 }
