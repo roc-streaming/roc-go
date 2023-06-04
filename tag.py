@@ -18,14 +18,14 @@ def check_tag_exists(tag):
         return False
 
 def write_version(version):
-    print(f'Updating version in roc/version.go to {version}')
+    print(f'--- Updating version in roc/version.go to {version}')
     version_line = re.compile(r'\bbindingsVersion\s*=\s*".*"')
     with fileinput.FileInput('roc/version.go', inplace=True) as f:
         for line in f:
             print(version_line.sub(f'bindingsVersion = "{version}"', line), end='')
 
 def run_command(args):
-    print(f'Running command: {" ".join(args)}')
+    print(f'--- Running command: {" ".join(args)}')
     subprocess.check_call(args)
 
 def commit_change(version):
@@ -42,17 +42,20 @@ def push_change(remote, tag):
 def main():
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--push', required=False, help='remote to push')
-    parser.add_argument('version', help='version to release')
+    parser = argparse.ArgumentParser(description='Create and push tag for new release')
+    parser.add_argument('--push', metavar='REMOTE', required=False,
+                        help='remote to push (e.g. "origin")')
+    parser.add_argument('version', metavar='VERSION',
+                        help='version to release ("N.N.N" or "vN.N.N")')
     args = parser.parse_args()
 
     version = args.version
     if not check_version_format(version):
-        print(f'Error: version "{version}" is not in correct format. Correct format is "x.y.z" or "vx.y.z"', file=sys.stderr)
+        print(f'Error: version "{version}" is not in correct format,'
+              ' expected "N.N.N" or "vN.N.N"', file=sys.stderr)
         sys.exit(1)
 
-    version = version.lstrip("v")
+    version = version.lstrip('v')
     remote = args.push
     tag = f'v{version}'
 
@@ -65,7 +68,7 @@ def main():
     create_tag(tag)
     if remote:
         push_change(remote, tag)
-    print(f'Successfully released {tag}')
+    print(f'--- Successfully released {tag}')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
