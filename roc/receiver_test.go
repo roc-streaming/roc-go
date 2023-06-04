@@ -12,7 +12,7 @@ func TestReceiver_Open(t *testing.T) {
 	tests := []struct {
 		name        string
 		contextFunc func() *Context
-		config      ReceiverConfig
+		configFunc  func() ReceiverConfig
 		wantErr     error
 	}{
 		{
@@ -22,26 +22,76 @@ func TestReceiver_Open(t *testing.T) {
 				require.NoError(t, err)
 				return ctx
 			},
-			config:  makeReceiverConfig(),
-			wantErr: nil,
+			configFunc: makeReceiverConfig,
+			wantErr:    nil,
 		},
 		{
-			name: "invalid config",
+			name: "invalid config.TargetLatency",
 			contextFunc: func() *Context {
 				ctx, err := OpenContext(makeContextConfig())
 				require.NoError(t, err)
 				return ctx
 			},
-			config:  ReceiverConfig{},
-			wantErr: newNativeErr("roc_receiver_open()", -1),
+			configFunc: func() ReceiverConfig {
+				rc := makeReceiverConfig()
+				rc.TargetLatency = -1
+				return rc
+			},
+			wantErr: fmt.Errorf("invalid config.TargetLatency: %w",
+				fmt.Errorf("unexpected negative duration: -1ns")),
+		},
+		{
+			name: "invalid config.MaxLatencyOverrun",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(makeContextConfig())
+				require.NoError(t, err)
+				return ctx
+			},
+			configFunc: func() ReceiverConfig {
+				rc := makeReceiverConfig()
+				rc.MaxLatencyOverrun = -1
+				return rc
+			},
+			wantErr: fmt.Errorf("invalid config.MaxLatencyOverrun: %w",
+				fmt.Errorf("unexpected negative duration: -1ns")),
+		},
+		{
+			name: "invalid config.MaxLatencyUnderrun",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(makeContextConfig())
+				require.NoError(t, err)
+				return ctx
+			},
+			configFunc: func() ReceiverConfig {
+				rc := makeReceiverConfig()
+				rc.MaxLatencyUnderrun = -1
+				return rc
+			},
+			wantErr: fmt.Errorf("invalid config.MaxLatencyUnderrun: %w",
+				fmt.Errorf("unexpected negative duration: -1ns")),
+		},
+		{
+			name: "invalid config.BreakageDetectionWindow",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(makeContextConfig())
+				require.NoError(t, err)
+				return ctx
+			},
+			configFunc: func() ReceiverConfig {
+				rc := makeReceiverConfig()
+				rc.BreakageDetectionWindow = -1
+				return rc
+			},
+			wantErr: fmt.Errorf("invalid config.BreakageDetectionWindow: %w",
+				fmt.Errorf("unexpected negative duration: -1ns")),
 		},
 		{
 			name: "nil context",
 			contextFunc: func() *Context {
 				return nil
 			},
-			config:  makeReceiverConfig(),
-			wantErr: errors.New("context is nil"),
+			configFunc: makeReceiverConfig,
+			wantErr:    errors.New("context is nil"),
 		},
 		{
 			name: "closed context",
@@ -53,8 +103,8 @@ func TestReceiver_Open(t *testing.T) {
 				require.NoError(t, err)
 				return ctx
 			},
-			config:  makeReceiverConfig(),
-			wantErr: errors.New("context is closed"),
+			configFunc: makeReceiverConfig,
+			wantErr:    errors.New("context is closed"),
 		},
 	}
 
@@ -62,7 +112,7 @@ func TestReceiver_Open(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := tt.contextFunc()
 
-			receiver, err := OpenReceiver(ctx, tt.config)
+			receiver, err := OpenReceiver(ctx, tt.configFunc())
 
 			if tt.wantErr == nil {
 				require.NoError(t, err)

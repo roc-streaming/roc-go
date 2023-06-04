@@ -25,6 +25,18 @@ func TestSender_Open(t *testing.T) {
 			config:  makeSenderConfig(),
 			wantErr: nil,
 		},
+
+		{
+			name: "invalid config.PacketLength",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
+				return ctx
+			},
+			config: invalidconfigPacketLength(),
+			wantErr: fmt.Errorf("invalid config.PacketLength: %w",
+				fmt.Errorf("unexpected negative duration: -1ns")),
+		},
 		{
 			name: "invalid config",
 			contextFunc: func() *Context {

@@ -3,9 +3,13 @@ package roc
 import (
 	"C"
 	"fmt"
+	"time"
 )
 
-type char = C.char
+type (
+	char      = C.char
+	ulonglong = C.ulonglong
+)
 
 func go2cStr(str string) ([]char, error) {
 	charArray := make([]char, len(str)+1)
@@ -36,4 +40,11 @@ func go2cBool(b bool) C.uint {
 		return 1
 	}
 	return 0
+}
+
+func go2cUnsignedDuration(d time.Duration) (ulonglong, error) {
+	if d < 0 {
+		return 0, fmt.Errorf("unexpected negative duration: %v", d)
+	}
+	return (ulonglong)(d), nil
 }

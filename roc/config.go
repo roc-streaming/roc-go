@@ -4,6 +4,7 @@ package roc
 #include "roc/config.h"
 */
 import "C"
+import "time"
 
 // Network slot.
 //
@@ -397,8 +398,8 @@ type SenderConfig struct {
 	// The samples written to the sender are buffered until the full packet is
 	// accumulated or the sender is flushed or closed. Larger number reduces
 	// packet overhead but also increases latency.
-	// If zero, default value is used.
-	PacketLength uint64
+	// If zero, default value is used. Should not be negative, otherwise an error is returned.
+	PacketLength time.Duration
 
 	// Enable packet interleaving.
 	// If true, the sender shuffles packets before sending them. This
@@ -472,29 +473,29 @@ type ReceiverConfig struct {
 	// The session will not start playing until it accumulates the requested latency.
 	// Then, if resampler is enabled, the session will adjust its clock to keep actual
 	// latency as close as possible to the target latency.
-	// If zero, default value is used.
-	TargetLatency uint64
+	// If zero, default value is used. Should not be negative, otherwise an error is returned.
+	TargetLatency time.Duration
 
 	// Maximum delta between current and target latency, in nanoseconds.
 	// If current latency becomes larger than the target latency plus this value, the
 	// session is terminated.
-	// If zero, default value is used.
-	MaxLatencyOverrun uint64
+	// If zero, default value is used. Should not be negative, otherwise an error is returned.
+	MaxLatencyOverrun time.Duration
 
 	// Maximum delta between target and current latency, in nanoseconds.
 	// If current latency becomes smaller than the target latency minus this value, the
 	// session is terminated.
 	// May be larger than the target latency because current latency may be negative,
 	// which means that the playback run ahead of the last packet received from network.
-	// If zero, default value is used.
-	MaxLatencyUnderrun uint64
+	// If zero, default value is used.  Should not be negative, otherwise an error is returned.
+	MaxLatencyUnderrun time.Duration
 
 	// Timeout for the lack of playback, in nanoseconds.
 	// If there is no playback during this period, the session is terminated.
 	// This mechanism allows to detect dead, hanging, or broken clients
 	// generating invalid packets.
 	// If zero, default value is used. If negative, the timeout is disabled.
-	NoPlaybackTimeout int64
+	NoPlaybackTimeout time.Duration
 
 	// Timeout for broken playback, in nanoseconds.
 	// If there the playback is considered broken during this period, the session
@@ -503,10 +504,10 @@ type ReceiverConfig struct {
 	// This mechanism allows to detect vicious circles like when all client packets
 	// are a bit late and receiver constantly drops them producing unpleasant noise.
 	// If zero, default value is used. If negative, the timeout is disabled.
-	BrokenPlaybackTimeout int64
+	BrokenPlaybackTimeout time.Duration
 
 	// Breakage detection window, in nanoseconds.
-	// If zero, default value is used.
+	// If zero, default value is used. Should not be negative, otherwise an error is returned.
 	// See BrokenPlaybackTimeout.
-	BreakageDetectionWindow uint64
+	BreakageDetectionWindow time.Duration
 }

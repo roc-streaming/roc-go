@@ -161,6 +161,11 @@ func OpenSender(context *Context, config SenderConfig) (sender *Sender, err erro
 		return nil, errors.New("context is closed")
 	}
 
+	cPacketLength, err := go2cUnsignedDuration(config.PacketLength)
+	if err != nil {
+		return nil, fmt.Errorf("invalid config.PacketLength: %w", err)
+	}
+
 	cConfig := C.struct_roc_sender_config{
 		frame_sample_rate:        (C.uint)(config.FrameSampleRate),
 		frame_channels:           (C.roc_channel_set)(config.FrameChannels),
@@ -168,7 +173,7 @@ func OpenSender(context *Context, config SenderConfig) (sender *Sender, err erro
 		packet_sample_rate:       (C.uint)(config.PacketSampleRate),
 		packet_channels:          (C.roc_channel_set)(config.PacketChannels),
 		packet_encoding:          (C.roc_packet_encoding)(config.PacketEncoding),
-		packet_length:            (C.ulonglong)(config.PacketLength),
+		packet_length:            cPacketLength,
 		packet_interleaving:      go2cBool(config.PacketInterleaving),
 		clock_source:             (C.roc_clock_source)(config.ClockSource),
 		resampler_backend:        (C.roc_resampler_backend)(config.ResamplerBackend),
