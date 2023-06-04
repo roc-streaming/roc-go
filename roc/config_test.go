@@ -18,12 +18,6 @@ func makeSenderConfig() SenderConfig {
 	}
 }
 
-func invalidconfigPacketLength() SenderConfig {
-	sc := makeSenderConfig()
-	sc.PacketLength = -1
-	return sc
-}
-
 func makeReceiverConfig() ReceiverConfig {
 	return ReceiverConfig{
 		FrameSampleRate:  44100,

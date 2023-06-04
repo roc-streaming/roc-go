@@ -18,6 +18,7 @@ func TestConvert_go2cBool(t *testing.T) {
 		{true, 1},
 		{false, 0},
 	}
+
 	for _, tt := range tests {
 		t.Run(strconv.FormatBool(tt.arg), func(t *testing.T) {
 			assert.Equal(t, tt.result, uint(go2cBool(tt.arg)))
@@ -57,6 +58,7 @@ func TestConvert_go2cStr(t *testing.T) {
 			wantErr: nil,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, gotErr := go2cStr(tt.arg)
@@ -77,6 +79,7 @@ func TestConvert_c2goStr(t *testing.T) {
 		{name: "str0str0", arg: []char{'s', 't', 'r', '\x00', 's', 't', 'r', '\x00'}, result: "str"},
 		{name: "0", arg: []char{'\x00'}, result: ""},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.result, c2goStr(tt.arg))
@@ -92,13 +95,19 @@ func TestConvert_go2cUnsignedDuration(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name:    "gtezero",
+			name:    "positive",
 			arg:     1,
 			want:    (ulonglong)(1),
 			wantErr: nil,
 		},
 		{
-			name:    "ltzero",
+			name:    "zero",
+			arg:     0,
+			want:    (ulonglong)(0),
+			wantErr: nil,
+		},
+		{
+			name:    "negative",
 			arg:     -1,
 			want:    0,
 			wantErr: fmt.Errorf("unexpected negative duration: %v", (time.Duration)(-1)),

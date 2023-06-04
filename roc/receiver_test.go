@@ -26,6 +26,69 @@ func TestReceiver_Open(t *testing.T) {
 			wantErr:    nil,
 		},
 		{
+			name: "nil context",
+			contextFunc: func() *Context {
+				return nil
+			},
+			configFunc: makeReceiverConfig,
+			wantErr:    errors.New("context is nil"),
+		},
+		{
+			name: "closed context",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(makeContextConfig())
+				require.NoError(t, err)
+
+				err = ctx.Close()
+				require.NoError(t, err)
+				return ctx
+			},
+			configFunc: makeReceiverConfig,
+			wantErr:    errors.New("context is closed"),
+		},
+		{
+			name: "invalid config.FrameSampleRate",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(makeContextConfig())
+				require.NoError(t, err)
+				return ctx
+			},
+			configFunc: func() ReceiverConfig {
+				rc := makeReceiverConfig()
+				rc.FrameSampleRate = 0
+				return rc
+			},
+			wantErr: newNativeErr("roc_receiver_open()", -1),
+		},
+		{
+			name: "invalid config.FrameChannels",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(makeContextConfig())
+				require.NoError(t, err)
+				return ctx
+			},
+			configFunc: func() ReceiverConfig {
+				rc := makeReceiverConfig()
+				rc.FrameChannels = 0
+				return rc
+			},
+			wantErr: newNativeErr("roc_receiver_open()", -1),
+		},
+		{
+			name: "invalid config.FrameEncoding",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(makeContextConfig())
+				require.NoError(t, err)
+				return ctx
+			},
+			configFunc: func() ReceiverConfig {
+				rc := makeReceiverConfig()
+				rc.FrameEncoding = 0
+				return rc
+			},
+			wantErr: newNativeErr("roc_receiver_open()", -1),
+		},
+		{
 			name: "invalid config.TargetLatency",
 			contextFunc: func() *Context {
 				ctx, err := OpenContext(makeContextConfig())
@@ -84,27 +147,6 @@ func TestReceiver_Open(t *testing.T) {
 			},
 			wantErr: fmt.Errorf("invalid config.BreakageDetectionWindow: %w",
 				fmt.Errorf("unexpected negative duration: -1ns")),
-		},
-		{
-			name: "nil context",
-			contextFunc: func() *Context {
-				return nil
-			},
-			configFunc: makeReceiverConfig,
-			wantErr:    errors.New("context is nil"),
-		},
-		{
-			name: "closed context",
-			contextFunc: func() *Context {
-				ctx, err := OpenContext(makeContextConfig())
-				require.NoError(t, err)
-
-				err = ctx.Close()
-				require.NoError(t, err)
-				return ctx
-			},
-			configFunc: makeReceiverConfig,
-			wantErr:    errors.New("context is closed"),
 		},
 	}
 

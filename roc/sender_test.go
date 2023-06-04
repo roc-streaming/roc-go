@@ -12,7 +12,7 @@ func TestSender_Open(t *testing.T) {
 	tests := []struct {
 		name        string
 		contextFunc func() *Context
-		config      SenderConfig
+		configFunc  func() SenderConfig
 		wantErr     error
 	}{
 		{
@@ -22,38 +22,16 @@ func TestSender_Open(t *testing.T) {
 				require.NoError(t, err)
 				return ctx
 			},
-			config:  makeSenderConfig(),
-			wantErr: nil,
-		},
-
-		{
-			name: "invalid config.PacketLength",
-			contextFunc: func() *Context {
-				ctx, err := OpenContext(ContextConfig{})
-				require.NoError(t, err)
-				return ctx
-			},
-			config: invalidconfigPacketLength(),
-			wantErr: fmt.Errorf("invalid config.PacketLength: %w",
-				fmt.Errorf("unexpected negative duration: -1ns")),
-		},
-		{
-			name: "invalid config",
-			contextFunc: func() *Context {
-				ctx, err := OpenContext(makeContextConfig())
-				require.NoError(t, err)
-				return ctx
-			},
-			config:  SenderConfig{},
-			wantErr: newNativeErr("roc_sender_open()", -1),
+			configFunc: makeSenderConfig,
+			wantErr:    nil,
 		},
 		{
 			name: "nil context",
 			contextFunc: func() *Context {
 				return nil
 			},
-			config:  makeSenderConfig(),
-			wantErr: errors.New("context is nil"),
+			configFunc: makeSenderConfig,
+			wantErr:    errors.New("context is nil"),
 		},
 		{
 			name: "closed context",
@@ -65,8 +43,65 @@ func TestSender_Open(t *testing.T) {
 				require.NoError(t, err)
 				return ctx
 			},
-			config:  makeSenderConfig(),
-			wantErr: errors.New("context is closed"),
+			configFunc: makeSenderConfig,
+			wantErr:    errors.New("context is closed"),
+		},
+		{
+			name: "invalid config.FrameSampleRate",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(makeContextConfig())
+				require.NoError(t, err)
+				return ctx
+			},
+			configFunc: func() SenderConfig {
+				sc := makeSenderConfig()
+				sc.FrameSampleRate = 0
+				return sc
+			},
+			wantErr: newNativeErr("roc_sender_open()", -1),
+		},
+		{
+			name: "invalid config.FrameChannels",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(makeContextConfig())
+				require.NoError(t, err)
+				return ctx
+			},
+			configFunc: func() SenderConfig {
+				sc := makeSenderConfig()
+				sc.FrameChannels = 0
+				return sc
+			},
+			wantErr: newNativeErr("roc_sender_open()", -1),
+		},
+		{
+			name: "invalid config.FrameEncoding",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(makeContextConfig())
+				require.NoError(t, err)
+				return ctx
+			},
+			configFunc: func() SenderConfig {
+				sc := makeSenderConfig()
+				sc.FrameEncoding = 0
+				return sc
+			},
+			wantErr: newNativeErr("roc_sender_open()", -1),
+		},
+		{
+			name: "invalid config.PacketLength",
+			contextFunc: func() *Context {
+				ctx, err := OpenContext(ContextConfig{})
+				require.NoError(t, err)
+				return ctx
+			},
+			configFunc: func() SenderConfig {
+				sc := makeSenderConfig()
+				sc.PacketLength = -1
+				return sc
+			},
+			wantErr: fmt.Errorf("invalid config.PacketLength: %w",
+				fmt.Errorf("unexpected negative duration: -1ns")),
 		},
 	}
 
@@ -74,7 +109,7 @@ func TestSender_Open(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := tt.contextFunc()
 
-			sender, err := OpenSender(ctx, tt.config)
+			sender, err := OpenSender(ctx, tt.configFunc())
 
 			if tt.wantErr == nil {
 				require.NoError(t, err)
