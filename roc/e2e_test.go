@@ -1,7 +1,9 @@
 package roc
 
 import (
+	"fmt"
 	"math"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -9,6 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+const NumChannels = 2
 
 type e2e struct {
 	Context  *Context
@@ -86,10 +90,10 @@ func TestEnd2End_Default(t *testing.T) {
 	defer e.close(t)
 
 	samplesCnt := 100
-	samples := make([]float32, samplesCnt)
-	for i := 0; i < samplesCnt/2; i++ {
-		samples[i*2] = float32(i+1) / 100
-		samples[i*2+1] = -float32(i+1) / 100
+	testSamples := make([]float32, samplesCnt)
+	for i := 0; i < samplesCnt/NumChannels; i++ {
+		testSamples[i*NumChannels] = float32(i+1) / 100
+		testSamples[i*NumChannels+1] = -float32(i+1) / 100
 	}
 
 	var interval = time.Second / time.Duration(44100/samplesCnt)
@@ -106,7 +110,7 @@ func TestEnd2End_Default(t *testing.T) {
 		for {
 			select {
 			case <-sendTicker.C:
-				err := e.Sender.WriteFloats(samples)
+				err := e.Sender.WriteFloats(testSamples)
 				if err != nil {
 					t.Fail()
 				}
@@ -117,23 +121,36 @@ func TestEnd2End_Default(t *testing.T) {
 		}
 	}()
 
-	streamingStarted := false
-	resultSamples := make([]float32, 0, 10000)
-	recFloats := make([]float32, samplesCnt)
-	for len(resultSamples) < cap(resultSamples) {
+	nonZeroSamplesCount := 0
+	prevL := 0
+	prevR := 0
+	samples := make([]float32, samplesCnt)
+	for nonZeroSamplesCount < 10000 {
 		select {
 		case <-receiveTicker.C:
-			err := e.Receiver.ReadFloats(recFloats)
+			err := e.Receiver.ReadFloats(samples)
 			if err != nil {
 				t.Fail()
 			}
-			for _, v := range recFloats {
-				if !streamingStarted && (v != 0) {
-					streamingStarted = true
+			samplesStr := samplesToString(samples)
+			for i := 0; i < len(samples); i += NumChannels {
+				valueL := int(math.Round(float64(samples[i] * 100)))
+				valueR := int(math.Round(float64(samples[i+1] * 100)))
+
+				if valueL == 0 { // packet loss or streaming not started yet
+					assert.Equal(t, 0, valueR)
+				} else {
+					nonZeroSamplesCount++
+					assert.Equal(t, valueL, -valueR)
+					if prevL != 0 {
+						require.Equal(t, valueL, prevL%(samplesCnt/NumChannels)+1,
+							"prevL: %d, valueL: %d, index: %d, samples: %s", prevL, valueL, i, samplesStr)
+						require.Equal(t, valueR, prevR%(samplesCnt/NumChannels)-1,
+							"prevR: %d, valueR: %d, index: %d, samples: %s", prevR, valueR, i+1, samplesStr)
+					}
 				}
-				if streamingStarted {
-					resultSamples = append(resultSamples, v)
-				}
+				prevL = valueL
+				prevR = valueR
 			}
 		}
 	}
@@ -141,22 +158,12 @@ func TestEnd2End_Default(t *testing.T) {
 	endChan <- struct{}{}
 	wait.Wait()
 
-	prevL := resultSamples[0]
-	prevR := resultSamples[1]
+}
 
-	for i := 1; i < len(resultSamples)/2; i++ {
-		valueL := resultSamples[i*2]
-		valueR := resultSamples[i*2+1]
-		if valueL == 0 { // packet loss
-			assert.Equal(t, 0, valueR)
-		} else {
-			assert.Equal(t, valueL, -valueR)
-			if math.Abs(float64(prevL-0.5)) >= 0.0001 {
-				assert.InDelta(t, valueL, prevL+0.01, 0.0001)
-				assert.InDelta(t, valueR, prevR-0.01, 0.0001)
-			}
-		}
-		prevL = valueL
-		prevR = valueR
+func samplesToString(samples []float32) string {
+	strValues := make([]string, len(samples))
+	for i, sample := range samples {
+		strValues[i] = fmt.Sprintf("%d=%.2f", i, sample)
 	}
+	return "[" + strings.Join(strValues, ", ") + "]"
 }
