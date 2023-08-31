@@ -15,9 +15,11 @@ import (
 const NumChannels = 2
 
 type e2e struct {
-	Context  *Context
-	Receiver *Receiver
-	Sender   *Sender
+	ReceiverConfig ReceiverConfig
+	SenderConfig   SenderConfig
+	Context        *Context
+	Receiver       *Receiver
+	Sender         *Sender
 }
 
 type e2eParams struct {
@@ -39,17 +41,17 @@ func newE2E(t *testing.T, params e2eParams) *e2e {
 	require.NotNil(t, e.Context)
 
 	// create receiver
-	receiverConfig := makeReceiverConfig()
-	receiverConfig.ClockSource = params.clockSource
-	e.Receiver, err = OpenReceiver(e.Context, receiverConfig)
+	e.ReceiverConfig = makeReceiverConfig()
+	e.ReceiverConfig.ClockSource = params.clockSource
+	e.Receiver, err = OpenReceiver(e.Context, e.ReceiverConfig)
 	require.NoError(t, err)
 	require.NotNil(t, e.Receiver)
 
 	// create sender
-	senderConfig := makeSenderConfig()
-	senderConfig.ClockSource = params.clockSource
-	senderConfig.FecEncoding = params.fecEncoding
-	e.Sender, err = OpenSender(e.Context, senderConfig)
+	e.SenderConfig = makeSenderConfig()
+	e.SenderConfig.ClockSource = params.clockSource
+	e.SenderConfig.FecEncoding = params.fecEncoding
+	e.Sender, err = OpenSender(e.Context, e.SenderConfig)
 	require.NoError(t, err)
 	require.NotNil(t, e.Sender)
 
@@ -132,11 +134,12 @@ func TestEnd2End_Default(t *testing.T) {
 			samplesCnt := 100
 			testSamples := generateTestSamples(samplesCnt)
 
-			var interval = time.Second / time.Duration(44100/samplesCnt)
-			sendTicker := time.NewTicker(interval)
+			senderInterval := time.Second / time.Duration(int(e.SenderConfig.FrameSampleRate)/samplesCnt)
+			sendTicker := time.NewTicker(senderInterval)
 			defer sendTicker.Stop()
 
-			receiveTicker := time.NewTicker(interval)
+			receiverInterval := time.Second / time.Duration(int(e.ReceiverConfig.FrameSampleRate)/samplesCnt)
+			receiveTicker := time.NewTicker(receiverInterval)
 			defer receiveTicker.Stop()
 
 			endChan := make(chan struct{})
