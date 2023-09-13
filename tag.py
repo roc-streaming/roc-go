@@ -29,13 +29,14 @@ def run_command(args):
     subprocess.check_call(args)
 
 def check_version_to_commit():
-    return subprocess.check_output(['git', 'diff', 'roc/version.go']) != b''
+    cmd = ['git', 'diff', '--cached', 'roc/version.go']
+    return subprocess.check_output(cmd) != b''
 
 def commit_change(version, force):
+    run_command(['git', 'add', 'roc/version.go'])
     if not check_version_to_commit():
         print('--- Version did not change, nothing to commit')
         return
-    run_command(['git', 'add', 'roc/version.go'])
     run_command(['git', 'commit', '-m', f'Release {version}'])
 
 def create_tag(tag, force):
