@@ -32,7 +32,7 @@ def check_version_to_commit():
     cmd = ['git', 'diff', '--cached', 'roc/version.go']
     return subprocess.check_output(cmd) != b''
 
-def commit_change(version, force):
+def commit_change(version):
     run_command(['git', 'add', 'roc/version.go'])
     if not check_version_to_commit():
         print('--- Version did not change, nothing to commit')
