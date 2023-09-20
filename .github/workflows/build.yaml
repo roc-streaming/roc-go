@@ -37,22 +37,22 @@ jobs:
             lint: no
             coverage: no
 
-          - name: Linux - Go 1.20
-            go: '1.20'
+          - name: Linux - Go 1.x
+            go: '1.x'
             build: yes
             test: yes
             lint: no
             coverage: no
 
           - name: Linters
-            go: '1.20'
+            go: '1.x'
             build: no
             test: no
             lint: yes
             coverage: no
 
           - name: Coverage
-            go: '1.20'
+            go: '1.x'
             build: yes
             test: yes
             lint: no
@@ -92,19 +92,19 @@ jobs:
         if: ${{ matrix.test == 'yes' }}
         run: |
           cd roc
-          go test -covermode=count -coverprofile=coverage.out
-
-      - name: Run tests with cgocheck
-        if: ${{ matrix.test == 'yes' }}
-        run: |
-          cd roc
-          GODEBUG=cgocheck=2 go test -count=1 .
+          go build && go test -count=1 -covermode=count -coverprofile=coverage.out
 
       - name: Run tests under race detector
         if: ${{ matrix.test == 'yes' }}
         run: |
           cd roc
-          go test -race
+          go build && go test -count=1 -race
+
+      - name: Run tests with cgocheck
+        if: ${{ matrix.test == 'yes' }}
+        run: |
+          cd roc
+          GOEXPERIMENT=cgocheck2 go build && go test -count=1 .
 
       - name: Run linters
         if: ${{ matrix.lint == 'yes' }}
@@ -141,7 +141,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: '1.20'
+          go-version: '1.x'
 
       - name: Build Roc
         run: |
@@ -158,17 +158,17 @@ jobs:
       - name: Run tests
         run: |
           cd roc
-          go test
-
-      - name: Run tests with cgocheck
-        run: |
-          cd roc
-          GODEBUG=cgocheck=2 go test -count=1 .
+          go build && go test -count=1
 
       - name: Run tests under race detector
         run: |
           cd roc
-          go test -race
+          go build && go test -count=1 -race
+
+      - name: Run tests with cgocheck
+        run: |
+          cd roc
+          GOEXPERIMENT=cgocheck2 go build && go test -count=1 .
 
   formatting:
     runs-on: ubuntu-latest
@@ -195,7 +195,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: '1.20'
+          go-version: 1.x
 
       - name: Install stringer
         run: go install golang.org/x/tools/cmd/stringer@latest
