@@ -1,7 +1,7 @@
 GO111MODULE := on
 export GO111MODULE
 
-all: gen build lint test
+all: gen build lint testall
 
 gen:
 	cd roc && go generate
@@ -15,8 +15,11 @@ lint:
 
 test:
 	cd roc && go test . -count=1 .
-	cd roc && GODEBUG=cgocheck=2 go test -count=1 .
+
+testall:
+	cd roc && go test . -count=1 .
 	cd roc && go test -count=1 -race .
+	cd roc && GOEXPERIMENT=cgocheck2 go build && go test -count=1 .
 
 clean:
 	cd roc && go clean -cache -testcache
