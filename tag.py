@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import argparse
+import fileinput
 import os
 import re
 import subprocess
-import fileinput
 import sys
 
 def check_version_format(version):
@@ -39,12 +39,14 @@ def commit_change(version):
         return
     run_command(['git', 'commit', '-m', f'Release {version}'])
 
+def show_status():
+    run_command(['git', 'status', '--porcelain'])
+
 def create_tag(tag, force):
     if force:
         run_command(['git', 'tag', '-f', tag])
     else:
         run_command(['git', 'tag', tag])
-
 
 def push_change(remote, tag, force):
     run_command(['git', 'push', remote, 'HEAD'])
@@ -81,7 +83,8 @@ def main():
         sys.exit(1)
 
     write_version(version)
-    commit_change(version, force)
+    commit_change(version)
+    show_status()
     create_tag(tag, force)
     if remote:
         push_change(remote, tag, force)
