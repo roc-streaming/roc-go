@@ -61,7 +61,7 @@ jobs:
     name: ${{ matrix.name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install system dependencies
         run: |
@@ -71,13 +71,13 @@ jobs:
             libtool intltool autoconf automake make cmake meson
 
       - name: Install Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
 
       - name: Build Roc
         run: |
-          git clone https://github.com/roc-streaming/roc-toolkit.git /tmp/roc
+          git clone -b v0.2.6 https://github.com/roc-streaming/roc-toolkit.git /tmp/roc
           scons -C /tmp/roc -Q --build-3rdparty=openfec
           sudo scons -C /tmp/roc -Q --build-3rdparty=openfec install
 
@@ -110,7 +110,7 @@ jobs:
         if: ${{ matrix.lint == 'yes' }}
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.52.2
+          version: v1.59.0
           working-directory: roc
 
       - name: Prepare coverage report
@@ -132,20 +132,20 @@ jobs:
     name: macOS
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install system dependencies
         run: |
           brew install scons ragel gengetopt libuv speexdsp sox cpputest
 
       - name: Install Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.x'
 
       - name: Build Roc
         run: |
-          git clone https://github.com/roc-streaming/roc-toolkit.git /tmp/roc
+          git clone -b v0.2.6 https://github.com/roc-streaming/roc-toolkit.git /tmp/roc
           scons -C /tmp/roc -Q --build-3rdparty=openfec
           sudo scons -C /tmp/roc -Q --build-3rdparty=openfec install
 
@@ -176,7 +176,7 @@ jobs:
     name: Code formatting
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run gofmt
         uses: Jerome1337/gofmt-action@v1.0.5
@@ -190,10 +190,10 @@ jobs:
     name: Code generation
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: 1.x
 
@@ -222,7 +222,7 @@ jobs:
     name: Release
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.ref }}
