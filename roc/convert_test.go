@@ -87,6 +87,37 @@ func TestConvert_c2goStr(t *testing.T) {
 	}
 }
 
+func TestConvert_go2cSignedDuration(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  time.Duration
+		want longlong
+	}{
+		{
+			name: "positive",
+			arg:  1,
+			want: (longlong)(1),
+		},
+		{
+			name: "zero",
+			arg:  0,
+			want: (longlong)(0),
+		},
+		{
+			name: "negative",
+			arg:  -1,
+			want: (longlong)(-1),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := go2cSignedDuration(tt.arg)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestConvert_go2cUnsignedDuration(t *testing.T) {
 	tests := []struct {
 		name    string

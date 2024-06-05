@@ -1,6 +1,7 @@
 package roc
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -42,7 +43,53 @@ func TestContext_Open(t *testing.T) {
 	}
 }
 
-func TestContext_Close(t *testing.T) {
+func TestContext_RegisterEncoding(t *testing.T) {
+	tests := []struct {
+		name       string
+		encodingID int
+		encodingFn func() MediaEncoding
+		wantErr    error
+	}{
+		{
+			name:       "ok",
+			encodingID: 50,
+			encodingFn: makeMediaEncoding,
+			wantErr:    nil,
+		},
+		{
+			name:       "bad id",
+			encodingID: 999999,
+			encodingFn: makeMediaEncoding,
+			wantErr:    newNativeErr("roc_context_register_encoding()", -1),
+		},
+		{
+			name:       "bad encoding",
+			encodingID: 50,
+			encodingFn: func() MediaEncoding {
+				enc := makeMediaEncoding()
+				enc.Format = 999999
+				return enc
+			},
+			wantErr: newNativeErr("roc_context_register_encoding()", -1),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, err := OpenContext(makeContextConfig())
+			require.NoError(t, err)
+			require.NotNil(t, ctx)
+
+			err = ctx.RegisterEncoding(tt.encodingID, tt.encodingFn())
+			require.Equal(t, tt.wantErr, err)
+
+			err = ctx.Close()
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestContext_ReferenceCounter(t *testing.T) {
 	tests := []struct {
 		name         string
 		hasReceivers bool
@@ -118,5 +165,29 @@ func TestContext_Close(t *testing.T) {
 				require.NoError(t, err)
 			}
 		})
+	}
+}
+
+func TestContext_Close(t *testing.T) {
+	cases := []struct {
+		name      string
+		operation func(context *Context) error
+	}{
+		{
+			name: "RegisterEncoding after close",
+			operation: func(context *Context) error {
+				return context.RegisterEncoding(50, makeMediaEncoding())
+			},
+		},
+	}
+	for _, tt := range cases {
+		ctx, err := OpenContext(makeContextConfig())
+		require.NoError(t, err)
+		require.NotNil(t, ctx)
+
+		err = ctx.Close()
+		require.NoError(t, err)
+
+		require.Equal(t, errors.New("context is closed"), tt.operation(ctx))
 	}
 }

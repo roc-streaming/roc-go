@@ -112,14 +112,14 @@ func TestEnd2End_Default(t *testing.T) {
 		{
 			name: "default",
 			params: e2eParams{
-				clockSource: ClockExternal,
+				clockSource: ClockSourceExternal,
 				fecEncoding: FecEncodingDisable,
 				sourceURI:   "rtp://127.0.0.1:0"},
 		},
 		{
 			name: "fec",
 			params: e2eParams{
-				clockSource: ClockExternal,
+				clockSource: ClockSourceExternal,
 				fecEncoding: FecEncodingRs8m,
 				sourceURI:   "rtp+rs8m://127.0.0.1:0",
 				repairURI:   "rs8m://127.0.0.1:0"},
@@ -134,11 +134,13 @@ func TestEnd2End_Default(t *testing.T) {
 			samplesCnt := 100
 			testSamples := generateTestSamples(samplesCnt)
 
-			senderInterval := time.Second / time.Duration(int(e.SenderConfig.FrameSampleRate)/samplesCnt)
+			senderInterval := time.Second /
+				time.Duration(int(e.SenderConfig.FrameEncoding.Rate)/samplesCnt)
 			sendTicker := time.NewTicker(senderInterval)
 			defer sendTicker.Stop()
 
-			receiverInterval := time.Second / time.Duration(int(e.ReceiverConfig.FrameSampleRate)/samplesCnt)
+			receiverInterval := time.Second /
+				time.Duration(int(e.ReceiverConfig.FrameEncoding.Rate)/samplesCnt)
 			receiveTicker := time.NewTicker(receiverInterval)
 			defer receiveTicker.Stop()
 
@@ -188,14 +190,14 @@ func TestEnd2End_Blocking(t *testing.T) {
 		{
 			name: "default",
 			params: e2eParams{
-				clockSource: ClockInternal,
+				clockSource: ClockSourceInternal,
 				fecEncoding: FecEncodingDisable,
 				sourceURI:   "rtp://127.0.0.1:0"},
 		},
 		{
 			name: "fec",
 			params: e2eParams{
-				clockSource: ClockInternal,
+				clockSource: ClockSourceInternal,
 				fecEncoding: FecEncodingRs8m,
 				sourceURI:   "rtp+rs8m://127.0.0.1:0",
 				repairURI:   "rs8m://127.0.0.1:0"},
