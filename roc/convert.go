@@ -8,6 +8,7 @@ import (
 
 type (
 	char      = C.char
+	longlong  = C.longlong
 	ulonglong = C.ulonglong
 )
 
@@ -40,6 +41,10 @@ func go2cBool(b bool) C.uint {
 		return 1
 	}
 	return 0
+}
+
+func go2cSignedDuration(d time.Duration) longlong {
+	return (longlong)(d)
 }
 
 func go2cUnsignedDuration(d time.Duration) (ulonglong, error) {

@@ -9,21 +9,33 @@ func makeContextConfig() ContextConfig {
 
 func makeSenderConfig() SenderConfig {
 	return SenderConfig{
-		FrameSampleRate:  44100,
-		FrameChannels:    ChannelSetStereo,
-		FrameEncoding:    FrameEncodingPcmFloat,
-		ClockSource:      ClockInternal,
-		ResamplerProfile: ResamplerProfileDisable,
-		FecEncoding:      FecEncodingRs8m,
+		FrameEncoding: makeMediaEncoding(),
+		ClockSource:   ClockSourceInternal,
+		FecEncoding:   FecEncodingRs8m,
 	}
 }
 
 func makeReceiverConfig() ReceiverConfig {
 	return ReceiverConfig{
-		FrameSampleRate:  44100,
-		FrameChannels:    ChannelSetStereo,
-		FrameEncoding:    FrameEncodingPcmFloat,
-		ClockSource:      ClockInternal,
-		ResamplerProfile: ResamplerProfileDisable,
+		FrameEncoding:    makeMediaEncoding(),
+		ClockSource:      ClockSourceInternal,
+		ClockSyncBackend: ClockSyncBackendDisable,
+	}
+}
+
+func makeInterfaceConfig() InterfaceConfig {
+	return InterfaceConfig{
+		OutgoingAddress: "127.0.0.1",
+		MulticastGroup:  "",
+		ReuseAddress:    true,
+	}
+}
+
+func makeMediaEncoding() MediaEncoding {
+	return MediaEncoding{
+		Rate:     44100,
+		Format:   FormatPcmFloat32,
+		Channels: ChannelLayoutStereo,
+		Tracks:   0,
 	}
 }

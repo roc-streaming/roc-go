@@ -3,6 +3,7 @@ package roc
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -47,7 +48,7 @@ func TestSender_Open(t *testing.T) {
 			wantErr:    errors.New("context is closed"),
 		},
 		{
-			name: "invalid config.FrameSampleRate",
+			name: "invalid config.FrameEncoding.Rate",
 			contextFunc: func() *Context {
 				ctx, err := OpenContext(makeContextConfig())
 				require.NoError(t, err)
@@ -55,13 +56,13 @@ func TestSender_Open(t *testing.T) {
 			},
 			configFunc: func() SenderConfig {
 				sc := makeSenderConfig()
-				sc.FrameSampleRate = 0
+				sc.FrameEncoding.Rate = 0
 				return sc
 			},
 			wantErr: newNativeErr("roc_sender_open()", -1),
 		},
 		{
-			name: "invalid config.FrameChannels",
+			name: "invalid config.FrameEncoding.Channels",
 			contextFunc: func() *Context {
 				ctx, err := OpenContext(makeContextConfig())
 				require.NoError(t, err)
@@ -69,13 +70,13 @@ func TestSender_Open(t *testing.T) {
 			},
 			configFunc: func() SenderConfig {
 				sc := makeSenderConfig()
-				sc.FrameChannels = 0
+				sc.FrameEncoding.Channels = 0
 				return sc
 			},
 			wantErr: newNativeErr("roc_sender_open()", -1),
 		},
 		{
-			name: "invalid config.FrameEncoding",
+			name: "invalid config.FrameEncoding.Format",
 			contextFunc: func() *Context {
 				ctx, err := OpenContext(makeContextConfig())
 				require.NoError(t, err)
@@ -83,7 +84,7 @@ func TestSender_Open(t *testing.T) {
 			},
 			configFunc: func() SenderConfig {
 				sc := makeSenderConfig()
-				sc.FrameEncoding = 0
+				sc.FrameEncoding.Format = 0
 				return sc
 			},
 			wantErr: newNativeErr("roc_sender_open()", -1),
@@ -130,42 +131,95 @@ func TestSender_Open(t *testing.T) {
 	}
 }
 
-func TestSender_SetOutgoingAddress(t *testing.T) {
+func TestSender_Configure(t *testing.T) {
 	cases := []struct {
-		name    string
-		slot    Slot
-		iface   Interface
-		ip      string
-		wantErr error
+		name       string
+		slot       Slot
+		iface      Interface
+		configFunc func() InterfaceConfig
+		wantErr    error
 	}{
 		{
-			name:    "ok",
-			slot:    SlotDefault,
-			iface:   InterfaceAudioSource,
-			ip:      "127.0.0.1",
-			wantErr: nil,
+			name:       "ok",
+			slot:       SlotDefault,
+			iface:      InterfaceAudioSource,
+			configFunc: makeInterfaceConfig,
+			wantErr:    nil,
 		},
 		{
-			name:    "bad iface",
-			slot:    SlotDefault,
-			iface:   -1,
-			ip:      "127.0.0.1",
-			wantErr: newNativeErr("roc_sender_set_outgoing_address()", -1),
+			name:       "bad iface",
+			slot:       SlotDefault,
+			iface:      -1,
+			configFunc: makeInterfaceConfig,
+			wantErr:    newNativeErr("roc_sender_configure()", -1),
 		},
 		{
-			name:  "invalid ip",
+			name:  "too long OutgoingAddress",
 			slot:  SlotDefault,
 			iface: InterfaceAudioSource,
-			ip:    "127.0.0.1\x00",
-			wantErr: fmt.Errorf("invalid ip: %w",
+			configFunc: func() InterfaceConfig {
+				ic := makeInterfaceConfig()
+				ic.OutgoingAddress = strings.Repeat("x", 500)
+				return ic
+			},
+			wantErr: errors.New("invalid config.OutgoingAddress: too long"),
+		},
+		{
+			name:  "invalid OutgoingAddress",
+			slot:  SlotDefault,
+			iface: InterfaceAudioSource,
+			configFunc: func() InterfaceConfig {
+				ic := makeInterfaceConfig()
+				ic.OutgoingAddress = "127.0.0.1\x00"
+				return ic
+			},
+			wantErr: fmt.Errorf("invalid config.OutgoingAddress: %w",
 				fmt.Errorf("unexpected zero byte in the string: \"127.0.0.1\\x00\"")),
 		},
 		{
-			name:    "out of range ip",
-			slot:    SlotDefault,
-			iface:   InterfaceAudioSource,
-			ip:      "256.256.256.256",
-			wantErr: newNativeErr("roc_sender_set_outgoing_address()", -1),
+			name:  "out of range OutgoingAddress",
+			slot:  SlotDefault,
+			iface: InterfaceAudioSource,
+			configFunc: func() InterfaceConfig {
+				ic := makeInterfaceConfig()
+				ic.OutgoingAddress = "256.256.256.256"
+				return ic
+			},
+			wantErr: newNativeErr("roc_sender_configure()", -1),
+		},
+		{
+			name:  "too long MulticastGroup",
+			slot:  SlotDefault,
+			iface: InterfaceAudioSource,
+			configFunc: func() InterfaceConfig {
+				ic := makeInterfaceConfig()
+				ic.MulticastGroup = strings.Repeat("x", 500)
+				return ic
+			},
+			wantErr: errors.New("invalid config.MulticastGroup: too long"),
+		},
+		{
+			name:  "invalid MulticastGroup",
+			slot:  SlotDefault,
+			iface: InterfaceAudioSource,
+			configFunc: func() InterfaceConfig {
+				ic := makeInterfaceConfig()
+				ic.MulticastGroup = "127.0.0.1\x00"
+				return ic
+			},
+			wantErr: fmt.Errorf("invalid config.MulticastGroup: %w",
+				fmt.Errorf("unexpected zero byte in the string: \"127.0.0.1\\x00\"")),
+		},
+		{
+			name:  "out of range MulticastGroup",
+			slot:  SlotDefault,
+			iface: InterfaceAudioSource,
+			configFunc: func() InterfaceConfig {
+				ic := makeInterfaceConfig()
+				ic.MulticastGroup = "256.256.256.256"
+				return ic
+			},
+			wantErr: newNativeErr("roc_sender_configure()", -1),
 		},
 	}
 
@@ -178,52 +232,7 @@ func TestSender_SetOutgoingAddress(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, sender)
 
-			err = sender.SetOutgoingAddress(tt.slot, tt.iface, tt.ip)
-			require.Equal(t, tt.wantErr, err)
-
-			err = sender.Close()
-			require.NoError(t, err)
-
-			err = ctx.Close()
-			require.NoError(t, err)
-		})
-	}
-}
-
-func TestSender_SetReuseaddr(t *testing.T) {
-	cases := []struct {
-		name    string
-		slot    Slot
-		iface   Interface
-		enabled bool
-		wantErr error
-	}{
-		{
-			name:    "ok",
-			slot:    SlotDefault,
-			iface:   InterfaceAudioSource,
-			enabled: true,
-			wantErr: nil,
-		},
-		{
-			name:    "bad iface",
-			slot:    SlotDefault,
-			iface:   -1,
-			enabled: true,
-			wantErr: newNativeErr("roc_sender_set_reuseaddr()", -1),
-		},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx, err := OpenContext(makeContextConfig())
-			require.NoError(t, err)
-
-			sender, err := OpenSender(ctx, makeSenderConfig())
-			require.NoError(t, err)
-			require.NotNil(t, sender)
-
-			err = sender.SetReuseaddr(tt.slot, tt.iface, tt.enabled)
+			err = sender.Configure(tt.slot, tt.iface, tt.configFunc())
 			require.Equal(t, tt.wantErr, err)
 
 			err = sender.Close()
@@ -286,6 +295,60 @@ func TestSender_Connect(t *testing.T) {
 			require.NotNil(t, sender)
 
 			err = sender.Connect(tt.slot, tt.iface, tt.endpoint)
+			require.Equal(t, tt.wantErr, err)
+
+			err = sender.Close()
+			require.NoError(t, err)
+
+			err = ctx.Close()
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestSender_Unlink(t *testing.T) {
+	baseEndpoint, err := ParseEndpoint("rtp+rs8m://127.0.0.1:123")
+	require.NoError(t, err)
+	require.NotNil(t, baseEndpoint)
+
+	cases := []struct {
+		name    string
+		slot    Slot
+		wantErr error
+	}{
+		{
+			name:    "slot 0",
+			slot:    0,
+			wantErr: nil,
+		},
+		{
+			name:    "slot 1",
+			slot:    1,
+			wantErr: nil,
+		},
+		{
+			name:    "bad slot",
+			slot:    2,
+			wantErr: newNativeErr("roc_sender_unlink()", -1),
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, err := OpenContext(makeContextConfig())
+			require.NoError(t, err)
+
+			sender, err := OpenSender(ctx, makeSenderConfig())
+			require.NoError(t, err)
+			require.NotNil(t, sender)
+
+			err = sender.Connect(0, InterfaceAudioSource, baseEndpoint)
+			require.NoError(t, err)
+
+			err = sender.Connect(1, InterfaceAudioSource, baseEndpoint)
+			require.NoError(t, err)
+
+			err = sender.Unlink(tt.slot)
 			require.Equal(t, tt.wantErr, err)
 
 			err = sender.Close()
@@ -361,21 +424,21 @@ func TestSender_Close(t *testing.T) {
 		operation func(sender *Sender) error
 	}{
 		{
-			name: "SetReuseaddr after close",
+			name: "Configure after close",
 			operation: func(sender *Sender) error {
-				return sender.SetReuseaddr(SlotDefault, InterfaceAudioSource, true)
-			},
-		},
-		{
-			name: "SetOutgoingAddress after close",
-			operation: func(sender *Sender) error {
-				return sender.SetOutgoingAddress(SlotDefault, InterfaceAudioSource, "127.0.0.1")
+				return sender.Configure(SlotDefault, InterfaceAudioSource, makeInterfaceConfig())
 			},
 		},
 		{
 			name: "Connect after close",
 			operation: func(sender *Sender) error {
 				return sender.Connect(SlotDefault, InterfaceAudioSource, nil)
+			},
+		},
+		{
+			name: "Unlink after close",
+			operation: func(sender *Sender) error {
+				return sender.Unlink(SlotDefault)
 			},
 		},
 		{

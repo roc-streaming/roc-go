@@ -11,11 +11,12 @@ func _() {
 	_ = x[ResamplerBackendDefault-0]
 	_ = x[ResamplerBackendBuiltin-1]
 	_ = x[ResamplerBackendSpeex-2]
+	_ = x[ResamplerBackendSpeexdec-3]
 }
 
-const _ResamplerBackend_name = "DefaultBuiltinSpeex"
+const _ResamplerBackend_name = "DefaultBuiltinSpeexSpeexdec"
 
-var _ResamplerBackend_index = [...]uint8{0, 7, 14, 19}
+var _ResamplerBackend_index = [...]uint8{0, 7, 14, 19, 27}
 
 func (i ResamplerBackend) String() string {
 	if i < 0 || i >= ResamplerBackend(len(_ResamplerBackend_index)-1) {

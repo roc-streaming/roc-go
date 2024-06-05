@@ -8,17 +8,18 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[PacketEncodingAvpL16-2]
+	_ = x[PacketEncodingAvpL16Mono-11]
+	_ = x[PacketEncodingAvpL16Stereo-10]
 }
 
-const _PacketEncoding_name = "AvpL16"
+const _PacketEncoding_name = "AvpL16StereoAvpL16Mono"
 
-var _PacketEncoding_index = [...]uint8{0, 6}
+var _PacketEncoding_index = [...]uint8{0, 12, 22}
 
 func (i PacketEncoding) String() string {
-	i -= 2
+	i -= 10
 	if i < 0 || i >= PacketEncoding(len(_PacketEncoding_index)-1) {
-		return "PacketEncoding(" + strconv.FormatInt(int64(i+2), 10) + ")"
+		return "PacketEncoding(" + strconv.FormatInt(int64(i+10), 10) + ")"
 	}
 	return _PacketEncoding_name[_PacketEncoding_index[i]:_PacketEncoding_index[i+1]]
 }

@@ -1,13 +1,11 @@
 package roc
 
 /*
- #include <roc/receiver.h>
- #include <roc/config.h>
+#include <roc/receiver.h>
 
-int rocGoReceiverReadFloats(roc_receiver* receiver, float* samples, unsigned long samples_size) {
-    roc_frame frame = {(void*)samples, samples_size*sizeof(float)};
-    return roc_receiver_read(receiver, &frame);
-}
+int rocGoSetOutgoingAddress(roc_interface_config* config, const char* value);
+int rocGoSetMulticastGroup(roc_interface_config* config, const char* value);
+int rocGoReceiverReadFloats(roc_receiver* receiver, float* samples, unsigned long samples_size);
 */
 import "C"
 
@@ -17,7 +15,7 @@ import (
 	"sync"
 )
 
-// Receiver peer.
+// Receiver node.
 //
 // Receiver gets the network packets from multiple senders, decodes audio streams
 // from them, mixes multiple streams into a single stream, and returns it to the user.
@@ -33,30 +31,27 @@ import (
 //
 // # Life cycle
 //
-// - A receiver is created using OpenReceiver().
+//   - A receiver is created using OpenReceiver().
 //
-//   - Optionally, the receiver parameters may be fine-tuned using Receiver.Set*()
-//     functions.
+//   - Optionally, the receiver parameters may be fine-tuned using Receiver.Configure().
 //
 //   - The receiver either binds local endpoints using Receiver.Bind(), allowing senders
 //     connecting to them, or itself connects to remote sender endpoints using
 //     Receiver.Connect(). What approach to use is up to the user.
 //
-//   - The audio stream is iteratively read from the receiver using Receiver.Read*().
+//   - The audio stream is iteratively read from the receiver using Receiver.ReadFloats().
 //     Receiver returns the mixed stream from all connected senders.
 //
 // - The receiver is destroyed using Receiver.Close().
 //
-// The user is responsible for closing any opened receiver before exiting the program.
-//
 // # Slots, interfaces, and endpoints
 //
-// Receiver has one or multiple slots, which may be independently bound or connected.
+// Receiver has one or multiple **slots**, which may be independently bound or connected.
 // Slots may be used to bind receiver to multiple addresses. Slots are numbered from
 // zero and are created automatically. In simple cases just use SlotDefault.
 //
-// Each slot has its own set of interfaces, one per each type defined in Interface
-// type. The interface defines the type of the communication with the remote peer
+// Each slot has its own set of *interfaces*, one per each type defined in Interface.
+// The interface defines the type of the communication with the remote node
 // and the set of the protocols supported by it.
 //
 // Supported actions with the interface:
@@ -72,13 +67,18 @@ import (
 // Supported interface configurations:
 //
 //   - Bind InterfaceConsolidated to a local endpoint (e.g. be an RTSP server).
-//
 //   - Connect InterfaceConsolidated to a remote endpoint (e.g. be an RTSP
 //     client).
-//
 //   - Bind InterfaceAudioSource, InterfaceAudioRepair (optionally,
 //     for FEC), and InterfaceAudioControl (optionally, for control messages)
 //     to local endpoints (e.g. be an RTP/FECFRAME/RTCP receiver).
+//
+// Slots can be removed using Receiver.Unlink(). Removing a slot also removes all its
+// interfaces and terminates all associated connections.
+//
+// Slots can be added and removed at any time on fly and from any thread. It is safe
+// to do it from another thread concurrently with reading frames. Operations with
+// slots won't block concurrent reads.
 //
 // # FEC scheme
 //
@@ -93,12 +93,12 @@ import (
 //     audio packets.
 //
 //   - If FEC is enabled, both InterfaceAudioSource and
-//     InterfaceAudioRepair interfaces should be configured. The second interface
-//     will be used to transmit redundant repair data.
+//     InterfaceAudioRepair interfaces should be configured. The second
+//     interface will be used to transmit redundant repair data.
 //
 // The protocols for the two interfaces should correspond to each other and to the FEC
 // scheme. For example, if FecEncodingRs8m is used, the protocols should be
-// ProtoRtpRs8mSource and ProtoRs8mRepair.
+// ProtoRtpRs8mSource and ProtoRtpRs8mRepair.
 //
 // # Sessions
 //
@@ -136,8 +136,7 @@ import (
 // factor between the sender and the receiver clocks is calculated dynamically for every
 // session based on the session incoming packet queue size.
 //
-// Resampling is a quite time-consuming operation. The user can choose between completely
-// disabling resampling (at the cost of occasional underruns or overruns) or several
+// Resampling is a quite time-consuming operation. The user can choose between several
 // resampler profiles providing different compromises between CPU consumption and quality.
 //
 // # Clock source
@@ -145,16 +144,16 @@ import (
 // Receiver should decode samples at a constant rate that is configured when the receiver
 // is created. There are two ways to accomplish this:
 //
-//   - If the user enabled internal clock (ClockInternal), the receiver employs a
-//     CPU timer to block reads until it's time to decode the next bunch of samples
-//     according to the configured sample rate.
+//   - If the user enabled internal clock (ClockSourceInternal), the receiver
+//     employs a CPU timer to block reads until it's time to decode the next bunch of
+//     samples according to the configured sample rate.
 //
 //     This mode is useful when the user passes samples to a non-realtime destination,
 //     e.g. to an audio file.
 //
-//   - If the user enabled external clock (ClockExternal), the samples read from
-//     the receiver are decoded immediately and hence the user is responsible to call
-//     read operation according to the sample rate.
+//   - If the user enabled external clock (ClockSourceExternal), the samples
+//     read from the receiver are decoded immediately and hence the user is responsible to
+//     call read operation according to the sample rate.
 //
 //     This mode is useful when the user passes samples to a realtime destination with its
 //     own clock, e.g. to an audio device. Internal clock should not be used in this case
@@ -197,34 +196,27 @@ func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, 
 		return nil, fmt.Errorf("invalid config.TargetLatency: %w", err)
 	}
 
-	cMaxLatencyOverrun, err := go2cUnsignedDuration(config.MaxLatencyOverrun)
+	cLatencyTolerance, err := go2cUnsignedDuration(config.LatencyTolerance)
 	if err != nil {
-		return nil, fmt.Errorf("invalid config.MaxLatencyOverrun: %w", err)
-	}
-
-	cMaxLatencyUnderrun, err := go2cUnsignedDuration(config.MaxLatencyUnderrun)
-	if err != nil {
-		return nil, fmt.Errorf("invalid config.MaxLatencyUnderrun: %w", err)
-	}
-
-	cBreakageDetectionWindow, err := go2cUnsignedDuration(config.BreakageDetectionWindow)
-	if err != nil {
-		return nil, fmt.Errorf("invalid config.BreakageDetectionWindow: %w", err)
+		return nil, fmt.Errorf("invalid config.LatencyTolerance: %w", err)
 	}
 
 	cConfig := C.struct_roc_receiver_config{
-		frame_sample_rate:         (C.uint)(config.FrameSampleRate),
-		frame_channels:            (C.roc_channel_set)(config.FrameChannels),
-		frame_encoding:            (C.roc_frame_encoding)(config.FrameEncoding),
-		clock_source:              (C.roc_clock_source)(config.ClockSource),
-		resampler_backend:         (C.roc_resampler_backend)(config.ResamplerBackend),
-		resampler_profile:         (C.roc_resampler_profile)(config.ResamplerProfile),
-		target_latency:            cTargetLatency,
-		max_latency_overrun:       cMaxLatencyOverrun,
-		max_latency_underrun:      cMaxLatencyUnderrun,
-		no_playback_timeout:       (C.longlong)(config.NoPlaybackTimeout),
-		broken_playback_timeout:   (C.longlong)(config.BrokenPlaybackTimeout),
-		breakage_detection_window: cBreakageDetectionWindow,
+		frame_encoding: C.struct_roc_media_encoding{
+			rate:     C.uint(config.FrameEncoding.Rate),
+			format:   C.roc_format(config.FrameEncoding.Format),
+			channels: C.roc_channel_layout(config.FrameEncoding.Channels),
+			tracks:   C.uint(config.FrameEncoding.Tracks),
+		},
+		clock_source:            C.roc_clock_source(config.ClockSource),
+		clock_sync_backend:      C.roc_clock_sync_backend(config.ClockSyncBackend),
+		clock_sync_profile:      C.roc_clock_sync_profile(config.ClockSyncProfile),
+		resampler_backend:       C.roc_resampler_backend(config.ResamplerBackend),
+		resampler_profile:       C.roc_resampler_profile(config.ResamplerProfile),
+		target_latency:          cTargetLatency,
+		latency_tolerance:       cLatencyTolerance,
+		no_playback_timeout:     go2cSignedDuration(config.NoPlaybackTimeout),
+		choppy_playback_timeout: go2cSignedDuration(config.ChoppyPlaybackTimeout),
 	}
 
 	var cRecv *C.roc_receiver
@@ -243,33 +235,24 @@ func OpenReceiver(context *Context, config ReceiverConfig) (receiver *Receiver, 
 	return receiver, nil
 }
 
-// Set receiver interface multicast group.
+// Set receiver interface configuration.
 //
-// Optional.
-//
-// Multicast group should be set only when binding receiver interface to an endpoint with
-// multicast IP address. If present, it defines an IP address of the OS network interface
-// on which to join the multicast group. If not present, no multicast group is joined.
-//
-// It's possible to receive multicast traffic from only those OS network interfaces, on
-// which the process has joined the multicast group. When using multicast, the user should
-// either call this function, or join multicast group manually using OS-specific API.
-//
-// It is allowed to set multicast group to `0.0.0.0` (for IPv4) or to `::` (for IPv6),
-// to be able to receive multicast traffic from all available interfaces. However, this
-// may not be desirable for security reasons.
-//
-// Each slot's interface can have only one multicast group. The function should be called
-// before calling roc_receiver_bind() for the interface. It should not be called when
-// calling Receiver.Connect() for the interface.
+// Updates configuration of specified interface of specified slot. If called, the
+// call should be done before calling Receiver.Bind() or Receiver.Connect()
+// for the same interface.
 //
 // Automatically initializes slot with given index if it's used first time.
-func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err error) {
+//
+// If an error happens during configure, the whole slot is disabled and marked broken.
+// The slot index remains reserved. The user is responsible for removing the slot
+// using Receiver.Unlink(), after which slot index can be reused.
+func (r *Receiver) Configure(slot Slot, iface Interface, config InterfaceConfig) (err error) {
 	logWrite(LogDebug,
-		"entering Receiver.SetMulticastGroup(): receiver=%p slot=%v iface=%v ip=%v", r, slot, iface, ip,
+		"entering Receiver.Configure(): receiver=%p slot=%+v iface=%+v config=%+v",
+		r, slot, iface, config,
 	)
 	defer func() {
-		logWrite(LogDebug, "leaving Receiver.SetMulticastGroup(): receiver=%p err=%#v", r, err)
+		logWrite(LogDebug, "leaving Receiver.Configure(): receiver=%p err=%#v", r, err)
 	}()
 
 	r.mu.RLock()
@@ -279,68 +262,38 @@ func (r *Receiver) SetMulticastGroup(slot Slot, iface Interface, ip string) (err
 		return errors.New("receiver is closed")
 	}
 
-	cIP, parseErr := go2cStr(ip)
-	if parseErr != nil {
-		return fmt.Errorf("invalid ip: %w", parseErr)
+	cOutgoingAddress, err := go2cStr(config.OutgoingAddress)
+	if err != nil {
+		return fmt.Errorf("invalid config.OutgoingAddress: %w", err)
 	}
-	errCode := C.roc_receiver_set_multicast_group(
+
+	cMulticastGroup, err := go2cStr(config.MulticastGroup)
+	if err != nil {
+		return fmt.Errorf("invalid config.MulticastGroup: %w", err)
+	}
+
+	var cConfig C.struct_roc_interface_config
+	var errCode C.int
+
+	errCode = C.rocGoSetOutgoingAddress(&cConfig, (*C.char)(&cOutgoingAddress[0]))
+	if errCode != 0 {
+		return fmt.Errorf("invalid config.OutgoingAddress: too long")
+	}
+
+	errCode = C.rocGoSetMulticastGroup(&cConfig, (*C.char)(&cMulticastGroup[0]))
+	if errCode != 0 {
+		return fmt.Errorf("invalid config.MulticastGroup: too long")
+	}
+
+	cConfig.reuse_address = (C.int)(go2cBool(config.ReuseAddress))
+
+	errCode = C.roc_receiver_configure(
 		r.cPtr,
 		(C.roc_slot)(slot),
 		(C.roc_interface)(iface),
-		(*C.char)(&cIP[0]))
+		&cConfig)
 	if errCode != 0 {
-		return newNativeErr("roc_receiver_set_multicast_group()", errCode)
-	}
-
-	return nil
-}
-
-// Set receiver interface address reuse option.
-//
-// Optional.
-//
-// When set to true, SO_REUSEADDR is enabled for interface socket, regardless of socket
-// type, unless binding to ephemeral port (port explicitly set to zero).
-//
-// When set to false, SO_REUSEADDR is enabled only for multicast sockets, unless binding
-// to ephemeral port (port explicitly set to zero).
-//
-// By default set to false.
-//
-// For TCP-based protocols, SO_REUSEADDR allows immediate reuse of recently closed socket
-// in TIME_WAIT state, which may be useful you want to be able to restart server quickly.
-//
-// For UDP-based protocols, SO_REUSEADDR allows multiple processes to bind to the same
-// address, which may be useful if you're using socket activation mechanism.
-//
-// Automatically initializes slot with given index if it's used first time.
-func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err error) {
-	logWrite(LogDebug,
-		"entering Receiver.SetReuseaddr(): receiver=%p slot=%v iface=%v enabled=%v",
-		r, slot, iface, enabled,
-	)
-	defer func() {
-		logWrite(LogDebug, "leaving Receiver.SetReuseaddr(): receiver=%p err=%#v", r, err)
-	}()
-
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	if r.cPtr == nil {
-		return errors.New("receiver is closed")
-	}
-
-	cEnabled := go2cBool(enabled)
-
-	errCode := C.roc_receiver_set_reuseaddr(
-		r.cPtr,
-		(C.roc_slot)(slot),
-		(C.roc_interface)(iface),
-		(C.int)(cEnabled),
-	)
-
-	if errCode != 0 {
-		return newNativeErr("roc_receiver_set_reuseaddr()", errCode)
+		return newNativeErr("roc_receiver_configure()", errCode)
 	}
 
 	return nil
@@ -356,9 +309,13 @@ func (r *Receiver) SetReuseaddr(slot Slot, iface Interface, enabled bool) (err e
 //
 // Automatically initializes slot with given index if it's used first time.
 //
-// If endpoint has explicitly set zero port, the receiver is bound to a randomly
+// If an error happens during bind, the whole slot is disabled and marked broken.
+// The slot index remains reserved. The user is responsible for removing the slot
+// using Receiver.Unlink(), after which slot index can be reused.
+//
+// If endpoint has explicitly zero port, the receiver is bound to a randomly
 // chosen ephemeral port. If the function succeeds, the actual port to which the
-// receiver was bound is written back to endpoint.
+// receiver was bound is written back to endpoint struct.
 func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err error) {
 	logWrite(LogDebug,
 		"entering Receiver.Bind(): receiver=%p slot=%v iface=%v endpoint=%+v", r, slot, iface, endpoint,
@@ -413,6 +370,39 @@ func (r *Receiver) Bind(slot Slot, iface Interface, endpoint *Endpoint) (err err
 
 	if err = endpoint.fromC(cEndp); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// Delete receiver slot.
+//
+// Disconnects, unbinds, and removes all slot interfaces and removes the slot.
+// All associated connections to remote nodes are properly terminated.
+//
+// After unlinking the slot, it can be re-created again by re-using slot index.
+func (r *Receiver) Unlink(slot Slot) (err error) {
+	logWrite(LogDebug,
+		"entering Receiver.Unlink(): receiver=%p slot=%+v", r, slot,
+	)
+	defer func() {
+		logWrite(LogDebug, "leaving Receiver.Unlink(): receiver=%p err=%#v", r, err)
+	}()
+
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	if r.cPtr == nil {
+		return errors.New("receiver is closed")
+	}
+
+	var errCode C.int
+
+	errCode = C.roc_receiver_unlink(
+		r.cPtr,
+		(C.roc_slot)(slot))
+	if errCode != 0 {
+		return newNativeErr("roc_receiver_unlink()", errCode)
 	}
 
 	return nil

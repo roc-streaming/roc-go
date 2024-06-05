@@ -6,6 +6,7 @@ package roc
 import "C"
 
 import (
+	"errors"
 	"sync"
 )
 
@@ -67,6 +68,57 @@ func OpenContext(config ContextConfig) (ctx *Context, err error) {
 	}
 
 	return ctx, nil
+}
+
+// Register custom encoding.
+//
+// Registers encoding with given encodingID. Registered encodings complement
+// built-in encodings defined by \ref roc_packet_encoding enum. Whenever you need to
+// specify packet encoding, you can use both built-in and registered encodings.
+//
+// On sender, you should register custom encoding and set to PacketEncoding field
+// of SenderConfig, if you need to force specific encoding of packets, but
+// built-in set of encodings is not enough.
+//
+// On receiver, you should register custom encoding with same id and specification,
+// if you did so on sender, and you're not using any signaling protocol (like RTSP)
+// that is capable of automatic exchange of encoding information.
+//
+// In case of RTP, encoding id is mapped directly to payload type field (PT).
+func (c *Context) RegisterEncoding(encodingID int, encoding MediaEncoding) (err error) {
+	logWrite(LogDebug,
+		"entering Context.RegisterEncoding(): context=%p id=%+v encoding=%+v",
+		c, encodingID, encoding,
+	)
+	defer func() {
+		logWrite(LogDebug, "leaving Context.RegisterEncoding(): context=%p err=%#v", c, err)
+	}()
+
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.cPtr == nil {
+		return errors.New("context is closed")
+	}
+
+	cEncoding := C.struct_roc_media_encoding{
+		rate:     C.uint(encoding.Rate),
+		format:   C.roc_format(encoding.Format),
+		channels: C.roc_channel_layout(encoding.Channels),
+		tracks:   C.uint(encoding.Tracks),
+	}
+
+	var errCode C.int
+
+	errCode = C.roc_context_register_encoding(
+		c.cPtr,
+		C.int(encodingID),
+		&cEncoding)
+	if errCode != 0 {
+		return newNativeErr("roc_context_register_encoding()", errCode)
+	}
+
+	return nil
 }
 
 // Close the context.
