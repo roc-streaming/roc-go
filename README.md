@@ -44,11 +44,13 @@ if err != nil {
 defer context.Close()
 
 sender, err := roc.OpenSender(roc.SenderConfig{
-	FrameSampleRate:  44100,
-	FrameChannels:    roc.ChannelSetStereo,
-	FrameEncoding:    roc.FrameEncodingPcmFloat,
-	FecEncoding:      roc.FecEncodingRs8m,
-	ClockSource:      roc.ClockInternal,
+	FrameEncoding: roc.MediaEncoding{
+		Rate:     44100,
+		Format:   roc.FormatPcmFloat32,
+		Channels: roc.ChannelLayoutStereo,
+	},
+	FecEncoding: roc.FecEncodingRs8m,
+	ClockSource: roc.ClockSourceInternal,
 })
 if err != nil {
 	panic(err)
@@ -65,12 +67,22 @@ if err != nil {
 	panic(err)
 }
 
+controlEndpoint, err := roc.ParseEndpoint("rtcp://192.168.0.1:10003")
+if err != nil {
+	panic(err)
+}
+
 err = sender.Connect(roc.SlotDefault, roc.InterfaceAudioSource, sourceEndpoint)
 if err != nil {
 	panic(err)
 }
 
 err = sender.Connect(roc.SlotDefault, roc.InterfaceAudioRepair, repairEndpoint)
+if err != nil {
+	panic(err)
+}
+
+err = sender.Connect(roc.SlotDefault, roc.InterfaceAudioControl, controlEndpoint)
 if err != nil {
 	panic(err)
 }
@@ -101,10 +113,12 @@ if err != nil {
 defer context.Close()
 
 receiver, err := roc.OpenReceiver(roc.ReceiverConfig{
-	FrameSampleRate:  44100,
-	FrameChannels:    roc.ChannelSetStereo,
-	FrameEncoding:    roc.FrameEncodingPcmFloat,
-	ClockSource:      roc.ClockInternal,
+	FrameEncoding: roc.MediaEncoding{
+		Rate:     44100,
+		Format:   roc.FormatPcmFloat32,
+		Channels: roc.ChannelLayoutStereo,
+	},
+	ClockSource: roc.ClockSourceInternal,
 })
 if err != nil {
 	panic(err)
@@ -121,12 +135,22 @@ if err != nil {
 	panic(err)
 }
 
+controlEndpoint, err := roc.ParseEndpoint("rtcp://0.0.0.0:10003")
+if err != nil {
+	panic(err)
+}
+
 err = receiver.Bind(roc.SlotDefault, roc.InterfaceAudioSource, sourceEndpoint)
 if err != nil {
 	panic(err)
 }
 
 err = receiver.Bind(roc.SlotDefault, roc.InterfaceAudioRepair, repairEndpoint)
+if err != nil {
+	panic(err)
+}
+
+err = receiver.Bind(roc.SlotDefault, roc.InterfaceAudioControl, controlEndpoint)
 if err != nil {
 	panic(err)
 }
