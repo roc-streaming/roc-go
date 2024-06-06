@@ -18,9 +18,9 @@ Key features of Roc Toolkit:
 Compatible Roc Toolkit senders and receivers include:
 
 * [cross-platform command-line tools](https://roc-streaming.org/toolkit/docs/tools/command_line_tools.html)
-* [modules for sound servers](https://roc-streaming.org/toolkit/docs/tools/sound_server_modules.html) (PulseAudio, PipeWire)
+* [modules for sound servers](https://roc-streaming.org/toolkit/docs/tools/sound_server_modules.html) (PulseAudio, PipeWire, macOS CoreAudio)
 * [C library](https://roc-streaming.org/toolkit/docs/api.html) and [bindings for other languages](https://roc-streaming.org/toolkit/docs/api/bindings.html)
-* [end-user apps](https://roc-streaming.org/toolkit/docs/tools/applications.html)
+* [applications](https://roc-streaming.org/toolkit/docs/tools/applications.html) (Android)
 
 ## Documentation
 
