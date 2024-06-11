@@ -73,7 +73,7 @@ func OpenContext(config ContextConfig) (ctx *Context, err error) {
 // Register custom encoding.
 //
 // Registers encoding with given encodingID. Registered encodings complement
-// built-in encodings defined by \ref roc_packet_encoding enum. Whenever you need to
+// built-in encodings defined by PacketEncoding enum. Whenever you need to
 // specify packet encoding, you can use both built-in and registered encodings.
 //
 // On sender, you should register custom encoding and set to PacketEncoding field
