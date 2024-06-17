@@ -9,24 +9,20 @@ func makeContextConfig() ContextConfig {
 
 func makeSenderConfig() SenderConfig {
 	return SenderConfig{
-		FrameEncoding: makeMediaEncoding(),
-		ClockSource:   ClockSourceInternal,
-		FecEncoding:   FecEncodingRs8m,
+		FrameEncoding:  makeMediaEncoding(),
+		PacketEncoding: PacketEncodingAvpL16Stereo,
 	}
 }
 
 func makeReceiverConfig() ReceiverConfig {
 	return ReceiverConfig{
-		FrameEncoding:    makeMediaEncoding(),
-		ClockSource:      ClockSourceInternal,
-		ClockSyncBackend: ClockSyncBackendDisable,
+		FrameEncoding: makeMediaEncoding(),
 	}
 }
 
 func makeInterfaceConfig() InterfaceConfig {
 	return InterfaceConfig{
 		OutgoingAddress: "127.0.0.1",
-		MulticastGroup:  "",
 		ReuseAddress:    true,
 	}
 }
@@ -36,6 +32,5 @@ func makeMediaEncoding() MediaEncoding {
 		Rate:     44100,
 		Format:   FormatPcmFloat32,
 		Channels: ChannelLayoutStereo,
-		Tracks:   0,
 	}
 }

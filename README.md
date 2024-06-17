@@ -49,8 +49,9 @@ sender, err := roc.OpenSender(roc.SenderConfig{
 		Format:   roc.FormatPcmFloat32,
 		Channels: roc.ChannelLayoutStereo,
 	},
-	FecEncoding: roc.FecEncodingRs8m,
-	ClockSource: roc.ClockSourceInternal,
+	PacketEncoding: roc.PacketEncodingAvpL16Stereo,
+	FecEncoding:    roc.FecEncodingRs8m,
+	ClockSource:    roc.ClockSourceInternal,
 })
 if err != nil {
 	panic(err)
