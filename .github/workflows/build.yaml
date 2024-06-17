@@ -67,7 +67,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get -y install g++ pkg-config scons ragel gengetopt \
-            libuv1-dev libunwind-dev libspeexdsp-dev libsox-dev libpulse-dev \
+            libuv1-dev libunwind-dev libspeexdsp-dev libsox-dev libsndfile1-dev libpulse-dev \
             libtool intltool autoconf automake make cmake meson
 
       - name: Install Go
@@ -136,7 +136,7 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          brew install scons ragel gengetopt libuv speexdsp sox cpputest
+          brew install scons ragel gengetopt libuv speexdsp sox libsndfile cpputest
 
       - name: Install Go
         uses: actions/setup-go@v5
