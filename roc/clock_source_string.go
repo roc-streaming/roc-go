@@ -8,13 +8,14 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[ClockSourceExternal-0]
-	_ = x[ClockSourceInternal-1]
+	_ = x[ClockSourceDefault-0]
+	_ = x[ClockSourceExternal-1]
+	_ = x[ClockSourceInternal-2]
 }
 
-const _ClockSource_name = "ExternalInternal"
+const _ClockSource_name = "DefaultExternalInternal"
 
-var _ClockSource_index = [...]uint8{0, 8, 16}
+var _ClockSource_index = [...]uint8{0, 7, 15, 23}
 
 func (i ClockSource) String() string {
 	if i < 0 || i >= ClockSource(len(_ClockSource_index)-1) {

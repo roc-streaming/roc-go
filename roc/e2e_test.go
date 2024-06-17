@@ -13,6 +13,7 @@ import (
 )
 
 const NumChannels = 2
+const TargetLatency = 200 * time.Millisecond
 
 type e2e struct {
 	ReceiverConfig ReceiverConfig
@@ -43,6 +44,9 @@ func newE2E(t *testing.T, params e2eParams) *e2e {
 	// create receiver
 	e.ReceiverConfig = makeReceiverConfig()
 	e.ReceiverConfig.ClockSource = params.clockSource
+	e.ReceiverConfig.LatencyTunerBackend = LatencyTunerBackendDefault
+	e.ReceiverConfig.LatencyTunerProfile = LatencyTunerProfileIntact
+	e.ReceiverConfig.TargetLatency = TargetLatency
 	e.Receiver, err = OpenReceiver(e.Context, e.ReceiverConfig)
 	require.NoError(t, err)
 	require.NotNil(t, e.Receiver)
@@ -51,6 +55,8 @@ func newE2E(t *testing.T, params e2eParams) *e2e {
 	e.SenderConfig = makeSenderConfig()
 	e.SenderConfig.ClockSource = params.clockSource
 	e.SenderConfig.FecEncoding = params.fecEncoding
+	e.SenderConfig.LatencyTunerBackend = LatencyTunerBackendDefault
+	e.SenderConfig.LatencyTunerProfile = LatencyTunerProfileIntact
 	e.Sender, err = OpenSender(e.Context, e.SenderConfig)
 	require.NoError(t, err)
 	require.NotNil(t, e.Sender)

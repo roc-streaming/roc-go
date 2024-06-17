@@ -12,35 +12,34 @@ import (
 
 // Shared context.
 //
-// Context contains memory pools and network worker threads, shared among objects attached
-// to the context. It is allowed both to create a separate context for every object, or
-// to create a single context shared between multiple objects.
+// Context contains memory pools and network worker threads, shared among
+// objects attached to the context. It is allowed both to create a separate
+// context for every object, or to create a single context shared between
+// multiple objects.
 //
 // # Life cycle
 //
 // A context is created using OpenContext() and destroyed using Context.Close().
-//
-// Objects can be attached and detached to an opened context at any moment from any
-// thread. However, the user should ensure that the context is not closed until there
-// are no objects attached to the context.
-//
-// The user is responsible for closing any opened context before exiting the program.
+// Objects can be attached and detached to an opened context at any moment from
+// any thread. However, the user should ensure that the context is not closed
+// until there are no objects attached to the context.
 //
 // # Thread safety
 //
-// Can be used concurrently.
+// Can be used concurrently
 //
 // # See also
 //
-// See also Sender, Receiver.
+// See also Sender, Receiver
 type Context struct {
 	mu   sync.RWMutex
 	cPtr *C.roc_context
 }
 
 // Open a new context.
+//
 // Allocates and initializes a new context. May start some background threads.
-// User is responsible to call Context.Close to free context resources.
+// Overrides the provided Result pointer with the newly created context.
 func OpenContext(config ContextConfig) (ctx *Context, err error) {
 	logWrite(LogDebug, "entering OpenContext(): config=%+v", config)
 	defer func() {
@@ -72,17 +71,18 @@ func OpenContext(config ContextConfig) (ctx *Context, err error) {
 
 // Register custom encoding.
 //
-// Registers encoding with given encodingID. Registered encodings complement
+// Registers Encoding with given EncodingId. Registered encodings complement
 // built-in encodings defined by PacketEncoding enum. Whenever you need to
 // specify packet encoding, you can use both built-in and registered encodings.
 //
-// On sender, you should register custom encoding and set to PacketEncoding field
-// of SenderConfig, if you need to force specific encoding of packets, but
+// On sender, you should register custom encoding and set to PacketEncoding
+// field of SenderConfig, if you need to force specific encoding of packets, but
 // built-in set of encodings is not enough.
 //
-// On receiver, you should register custom encoding with same id and specification,
-// if you did so on sender, and you're not using any signaling protocol (like RTSP)
-// that is capable of automatic exchange of encoding information.
+// On receiver, you should register custom encoding with same id and
+// specification, if you did so on sender, and you're not using any signaling
+// protocol (like RTSP) that is capable of automatic exchange of encoding
+// information.
 //
 // In case of RTP, encoding id is mapped directly to payload type field (PT).
 func (c *Context) RegisterEncoding(encodingID int, encoding MediaEncoding) (err error) {
@@ -122,8 +122,11 @@ func (c *Context) RegisterEncoding(encodingID int, encoding MediaEncoding) (err 
 }
 
 // Close the context.
-// Stops any started background threads, deinitializes and deallocates the context.
-// The user should ensure that nobody uses the context during and after this call.
+//
+// Stops any started background threads, deinitializes and deallocates the
+// context. The user should ensure that nobody uses the context during and after
+// this call.
+//
 // If this function fails, the context is kept opened.
 func (c *Context) Close() (err error) {
 	logWrite(LogDebug, "entering Context.Close(): context=%p", c)
