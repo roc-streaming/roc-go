@@ -170,7 +170,7 @@ for {
 
 ## Installation
 
-You will need to have Roc Toolkit library and headers installed system-wide. Refer to official build [instructions](https://roc-streaming.org/toolkit/docs/building.html) on how to install it.
+You will need to have Roc Toolkit library and headers installed system-wide. Refer to official build [instructions](https://roc-streaming.org/toolkit/docs/building/user_cookbook.html) on how to install it.
 
 After installing libroc, you can install bindings using regular `go get`:
 
