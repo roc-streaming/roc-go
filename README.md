@@ -168,6 +168,16 @@ for {
 }
 ```
 
+## Installation
+
+You will need to have Roc Toolkit library and headers installed system-wide. Refer to official build [instructions](https://roc-streaming.org/toolkit/docs/building.html) on how to install it.
+
+After installing libroc, you can install bindings using regular `go get`:
+
+```
+go get github.com/roc-streaming/roc-go/roc
+```
+
 ## Versioning
 
 Go bindings and the C library both use [semantic versioning](https://semver.org/).
@@ -181,71 +191,11 @@ Patch versions of bindings and C library are independent.
 
 For example, version 1.2.3 of the bindings would be compatible with 1.2.x and 1.3.x, but not with 1.1.x (minor version is lower) or 2.x.x (major version is different).
 
-## Installation
+## Hacking
 
-You will need to have Roc Toolkit library and headers installed system-wide. Refer to official build [instructions](https://roc-streaming.org/toolkit/docs/building.html) on how to install it.
+Contributions are always welcome! You can find issues needing help using [help wanted](https://github.com/roc-streaming/roc-vad/labels/help%20wanted) and [good first issue](https://github.com/roc-streaming/roc-vad/labels/good%20first%20issue) labels.
 
-After installing libroc, you can install bindings using regular `go get`:
-
-```
-go get github.com/roc-streaming/roc-go/roc
-```
-
-## Development
-
-Install development dependencies:
-
-* [golangci-lint](https://golangci-lint.run/usage/install/#local-installation)
-
-* [stringer](https://github.com/golang/tools)
-
-    `go install golang.org/x/tools/cmd/stringer@latest`
-
-Run all checks:
-
-```
-make
-```
-
-Run only specific checks:
-
-```
-make gen|build|lint|test|testall
-```
-
-Update modules:
-
-```
-make tidy
-```
-
-Format code:
-
-```
-make fmt
-```
-
-## Release
-
-To release a new version:
-
- * Create git tag
-
-    ```
-    ./tag.py --push <remote> <version>
-    ```
-
-    e.g.
-
-    ```
-    ./tag.py --push origin 1.2.3
-    ```
-
-    Or use **tag.py** without **--push** to only create a tag locally, and then push it manually.
-
-* Wait until "Release" CI job completes and creates GitHub release draft.
-
-* Edit GitHub release created by CI and publish it.
+See [HACKING.md](HACKING.md) for details about the project internals.
 
 ## Authors
 
