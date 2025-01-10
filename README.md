@@ -43,7 +43,7 @@ if err != nil {
 }
 defer context.Close()
 
-sender, err := roc.OpenSender(roc.SenderConfig{
+sender, err := roc.OpenSender(context, roc.SenderConfig{
 	FrameEncoding: roc.MediaEncoding{
 		Rate:     44100,
 		Format:   roc.FormatPcmFloat32,
@@ -113,7 +113,7 @@ if err != nil {
 }
 defer context.Close()
 
-receiver, err := roc.OpenReceiver(roc.ReceiverConfig{
+receiver, err := roc.OpenReceiver(context, roc.ReceiverConfig{
 	FrameEncoding: roc.MediaEncoding{
 		Rate:     44100,
 		Format:   roc.FormatPcmFloat32,
