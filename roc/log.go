@@ -244,6 +244,17 @@ func logRoutine() {
 	}
 }
 
+func logDrain() {
+	for {
+		select {
+		case <-loggerChan:
+			continue
+		default:
+			return
+		}
+	}
+}
+
 func init() {
 	SetLogLevel(LogError)
 	SetLoggerFunc(nil)
