@@ -1,11 +1,6 @@
-name: build
+name: "build"
 
 on:
-  pull_request:
-    branches:
-      - main
-      - v*
-
   push:
     branches:
       - main
@@ -13,20 +8,23 @@ on:
     tags:
       - v*
 
+  pull_request:
+
   repository_dispatch:
+    types:
+      - trigger_build
+
   workflow_dispatch:
 
   schedule:
     - cron: '0 0 * * 1'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: build-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   linux:
-    runs-on: ubuntu-latest
-
     strategy:
       matrix:
         include:
@@ -59,6 +57,8 @@ jobs:
             coverage: yes
 
     name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -127,9 +127,9 @@ jobs:
           path-to-lcov: roc/coverage.lcov
 
   macos:
+    name: macOS
     runs-on: macos-latest
 
-    name: macOS
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -171,9 +171,9 @@ jobs:
           GOEXPERIMENT=cgocheck2 go build && go test -count=1 .
 
   formatting:
+    name: Code formatting
     runs-on: ubuntu-latest
 
-    name: Code formatting
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -185,9 +185,9 @@ jobs:
           gofmt-flags: '-s -l -d'
 
   generation:
+    name: Code generation
     runs-on: ubuntu-latest
 
-    name: Code generation
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -214,12 +214,15 @@ jobs:
           fi
 
   release:
-    runs-on: ubuntu-latest
-
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: [linux, macos, formatting, generation]
+    if: |
+      github.repository_owner == 'roc-streaming' &&
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/tags/v')
 
     name: Release
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
