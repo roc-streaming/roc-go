@@ -12,7 +12,7 @@ else
 gotest := go test
 endif
 
-all: gen build lint testall
+all: gen build lint test_all
 
 gen:
 	cd roc && go generate

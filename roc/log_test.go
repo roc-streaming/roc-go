@@ -65,6 +65,8 @@ func TestLog_Default(t *testing.T) {
 		{name: "set_logger", setupFn: func() { SetLogger(nil) }},
 	}
 
+	logDrain()
+
 	SetLogLevel(LogDebug)
 	defer SetLogLevel(defaultLogLevel)
 
@@ -89,6 +91,8 @@ func TestLog_Default(t *testing.T) {
 }
 
 func TestLog_Interface(t *testing.T) {
+	logDrain()
+
 	SetLogLevel(LogDebug)
 	defer SetLogLevel(defaultLogLevel)
 
@@ -108,6 +112,8 @@ func TestLog_Interface(t *testing.T) {
 }
 
 func TestLog_Func(t *testing.T) {
+	logDrain()
+
 	SetLogLevel(LogTrace)
 	defer SetLogLevel(defaultLogLevel)
 
@@ -143,6 +149,8 @@ func TestLog_Func(t *testing.T) {
 }
 
 func TestLog_Levels(t *testing.T) {
+	logDrain()
+
 	tests := []struct {
 		level LogLevel
 		str   string
@@ -184,15 +192,15 @@ func TestLog_Levels(t *testing.T) {
 }
 
 func TestLog_Write(t *testing.T) {
+	logDrain()
+
 	SetLogLevel(LogDebug)
 	defer SetLogLevel(defaultLogLevel)
 
-	ch := make(chan LogMessage, 2)
+	ch := make(chan LogMessage, 10)
 
 	SetLoggerFunc(func(msg LogMessage) {
-		if msg.Level == LogDebug &&
-			msg.Module == "roc_go" &&
-			strings.Contains(msg.Text, "OpenContext()") {
+		if msg.Module == "roc_go" && msg.File == "roc/context.go" {
 			select {
 			case ch <- msg:
 			default:
@@ -206,7 +214,9 @@ func TestLog_Write(t *testing.T) {
 	require.NoError(t, err)
 	defer ctx.Close()
 
-	for i := 0; i < 2; i++ {
+	var entered, leaved bool
+
+	for !(entered && leaved) {
 		select {
 		case msg := <-ch:
 			assert.Equal(t, LogDebug, msg.Level, "Expected log level to be debug")
@@ -216,10 +226,12 @@ func TestLog_Write(t *testing.T) {
 			assert.Equal(t, uint64(os.Getpid()), msg.Pid)
 			assert.NotEmpty(t, msg.Tid)
 			assert.WithinRange(t, msg.Time, testStartTime.Add(-time.Millisecond),
-				time.Now().Add(time.Millisecond),
-				"Time must have meaningful value")
-			assert.Contains(t, msg.Text, "OpenContext()")
-			if i == 1 {
+				time.Now().Add(time.Millisecond), "Time must have meaningful value")
+			if strings.Contains(msg.Text, "entering OpenContext()") {
+				entered = true
+			}
+			if entered && strings.Contains(msg.Text, "leaving OpenContext()") {
+				leaved = true
 				assert.Contains(t, msg.Text, fmt.Sprintf("context=%p", ctx))
 			}
 		case <-time.After(time.Minute):
