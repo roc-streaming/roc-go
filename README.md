@@ -199,9 +199,7 @@ See [HACKING.md](HACKING.md) for details about the project internals.
 
 ## Authors
 
-You can find list of authors and contributors [here](AUTHORS.md).
-
-Feel free to send a pull request if you're missing from the list or want to change your appearance.
+You can find list of authors and contributors [here](AUTHORS.md). Feel free to send a pull request if you're missing from the list or want to change your appearance.
 
 For Roc Toolkit authors, see [here](https://roc-streaming.org/toolkit/docs/about_project/authors.html).
 
