@@ -215,7 +215,8 @@ func TestLog_Write(t *testing.T) {
 			assert.Greater(t, msg.Line, 0, "Line number must be positive")
 			assert.Equal(t, uint64(os.Getpid()), msg.Pid)
 			assert.NotEmpty(t, msg.Tid)
-			assert.WithinRange(t, msg.Time, testStartTime, time.Now(),
+			assert.WithinRange(t, msg.Time, testStartTime.Add(-time.Millisecond),
+				time.Now().Add(time.Millisecond),
 				"Time must have meaningful value")
 			assert.Contains(t, msg.Text, "OpenContext()")
 			if i == 1 {

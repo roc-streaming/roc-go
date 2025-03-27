@@ -108,20 +108,22 @@ jobs:
 
       - name: Run linters
         if: ${{ matrix.lint == 'yes' }}
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6.5.0
+        timeout-minutes: 20
         with:
-          version: v1.59.0
+          version: v1.63.4
           working-directory: roc
+          args: --timeout=20m
 
       - name: Prepare coverage report
         if: ${{ matrix.coverage == 'yes' }}
-        uses: jandelgado/gcov2lcov-action@v1.0.9
+        uses: jandelgado/gcov2lcov-action@v1.1.1
         with:
           working-directory: roc
 
       - name: Send coverage report
         if: ${{ matrix.coverage == 'yes' }}
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2.3.6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: roc/coverage.lcov

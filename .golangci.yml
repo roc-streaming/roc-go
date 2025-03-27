@@ -4,7 +4,6 @@ linters:
     - revive
     - staticcheck
     - exhaustruct
-    - exportloopref
     - lll
     - misspell
     - dupword
