@@ -27,7 +27,7 @@ lint:
 test:
 	cd roc && $(gotest) -count=1 .
 
-testall:
+test_all:
 	cd roc && $(gotest) -count=1 .
 	cd roc && $(gotest) -count=1 -race .
 	cd roc && GOEXPERIMENT=cgocheck2 go build && $(gotest) -count=1 .
@@ -40,3 +40,6 @@ tidy:
 
 fmt:
 	cd roc && gofmt -s -w .
+
+md:
+	md-authors --format modern --append AUTHORS.md

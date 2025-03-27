@@ -21,7 +21,7 @@ make
 Run specific step:
 
 ```
-make gen|build|lint|test|testall
+make gen|build|lint|test|test_all
 ```
 
 Update go modules:
