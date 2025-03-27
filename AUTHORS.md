@@ -4,17 +4,17 @@ roc-go authors, ordered by first contribution:
 
 <!-- authors -->
 
-- Victor Gaydov `gavv`
-- Asal Mirzaieva `Asalle`
-- Andrey Bushmin `ortex`
-- Dhanu Saputra `dhanusaputra`
-- Piotr Lewandowski `PiotrLewandowski323`
-- Darrel Idiagbor `Darrellbor`
-- Fastbyte `fastbyt3`
-- Paras Raba `ParasRaba155`
-- Wataru Nakanishi `wataru-nakanishi`
-- g41797 `g41797`
-- Geoffrey Jount `pypaut`
-- Maximiliano Estudies `maxiestudies`
+1. Asal Mirzaieva `Asalle`
+2. Victor Gaydov `gavv`
+3. Andrey Bushmin `ortex`
+4. Dhanu Saputra `dhanusaputra`
+5. Piotr Lewandowski `PiotrLewandowski323`
+6. Darrel Idiagbor `Darrellbor`
+7. Fastbyte `fastbyt3`
+8. Paras Raba `ParasRaba155`
+9. Wataru Nakanishi `wataru-nakanishi`
+10. g41797 `g41797`
+11. Geoffrey Jount `pypaut`
+12. Maximiliano Estudies `maxiestudies`
 
 <!-- endauthors -->
