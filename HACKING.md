@@ -4,7 +4,7 @@
 
 Additional dependencies needed for development:
 
-* [golangci-lint](https://golangci-lint.run/usage/install/#local-installation)
+* [golangci-lint](https://golangci-lint.run/welcome/install/#local-installation)
 
 * [stringer](https://github.com/golang/tools)
 
