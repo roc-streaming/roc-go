@@ -26,7 +26,7 @@ import (
 //
 // # Thread safety
 //
-// Can be used concurrently
+// # Can be used concurrently
 //
 // # See also
 //

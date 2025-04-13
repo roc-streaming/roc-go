@@ -33,16 +33,16 @@ import (
 //
 // # Life cycle
 //
-//  - A receiver is created using OpenReceiver().
-//  - Optionally, the receiver parameters may be fine-tuned using
-//    Receiver.Configure().
-//  - The receiver either binds local endpoints using Receiver.Bind(), allowing
-//    senders connecting to them, or itself connects to remote sender endpoints
-//    using Receiver.Connect(). What approach to use is up to the user.
-//  - The audio stream is iteratively read from the receiver using
-//    Receiver.ReadFloats(). Receiver returns the mixed stream from all connected
-//    senders.
-//  - The receiver is destroyed using Receiver.Close().
+//   - A receiver is created using OpenReceiver().
+//   - Optionally, the receiver parameters may be fine-tuned using
+//     Receiver.Configure().
+//   - The receiver either binds local endpoints using Receiver.Bind(), allowing
+//     senders connecting to them, or itself connects to remote sender endpoints
+//     using Receiver.Connect(). What approach to use is up to the user.
+//   - The audio stream is iteratively read from the receiver using
+//     Receiver.ReadFloats(). Receiver returns the mixed stream from all connected
+//     senders.
+//   - The receiver is destroyed using Receiver.Close().
 //
 // # Slots, interfaces, and endpoints
 //
@@ -57,21 +57,21 @@ import (
 //
 // Supported actions with the interface:
 //
-//  - Call Receiver.Bind() to bind the interface to a local Endpoint. In this
-//    case the receiver accepts connections from senders mixes their streams
-//    into the single output stream.
-//  - Call Receiver.Connect() to connect the interface to a remote Endpoint.
-//    In this case the receiver initiates connection to the sender and requests
-//    it to start sending media stream to the receiver.
+//   - Call Receiver.Bind() to bind the interface to a local Endpoint. In this
+//     case the receiver accepts connections from senders mixes their streams
+//     into the single output stream.
+//   - Call Receiver.Connect() to connect the interface to a remote Endpoint.
+//     In this case the receiver initiates connection to the sender and requests
+//     it to start sending media stream to the receiver.
 //
 // Supported interface configurations:
 //
-//  - Bind InterfaceConsolidated to a local endpoint (e.g. be an RTSP server).
-//  - Connect InterfaceConsolidated to a remote endpoint (e.g. be an RTSP
-//    client).
-//  - Bind InterfaceAudioSource, InterfaceAudioRepair (optionally, for FEC), and
-//    InterfaceAudioControl (optionally, for control messages) to local
-//    endpoints (e.g. be an RTP/FECFRAME/RTCP receiver).
+//   - Bind InterfaceConsolidated to a local endpoint (e.g. be an RTSP server).
+//   - Connect InterfaceConsolidated to a remote endpoint (e.g. be an RTSP
+//     client).
+//   - Bind InterfaceAudioSource, InterfaceAudioRepair (optionally, for FEC), and
+//     InterfaceAudioControl (optionally, for control messages) to local
+//     endpoints (e.g. be an RTP/FECFRAME/RTCP receiver).
 //
 // Slots can be removed using Receiver.Unlink(). Removing a slot also removes all
 // its interfaces and terminates all associated connections.
@@ -88,11 +88,11 @@ import (
 // Otherwise, the user should manually configure InterfaceAudioSource and
 // InterfaceAudioRepair interfaces:
 //
-//  - If FEC is disabled (FecEncodingDisable), only InterfaceAudioSource should
-//    be configured. It will be used to transmit audio packets.
-//  - If FEC is enabled, both InterfaceAudioSource and InterfaceAudioRepair
-//    interfaces should be configured. The second interface will be used to
-//    transmit redundant repair data.
+//   - If FEC is disabled (FecEncodingDisable), only InterfaceAudioSource should
+//     be configured. It will be used to transmit audio packets.
+//   - If FEC is enabled, both InterfaceAudioSource and InterfaceAudioRepair
+//     interfaces should be configured. The second interface will be used to
+//     transmit redundant repair data.
 //
 // The protocols for the two interfaces should correspond to each other and to
 // the FEC scheme. For example, if FecEncodingRs8m is used, the protocols should
@@ -156,19 +156,19 @@ import (
 // Receiver should decode samples at a constant rate that is configured when the
 // receiver is created. There are two ways to accomplish this:
 //
-//  - If the user enabled internal clock (ClockSourceInternal), the receiver
-//    employs a CPU timer to block reads until it's time to decode the next
-//    bunch of samples according to the configured sample rate. This mode is
-//    useful when the user passes samples to a non-realtime destination, e.g. to
-//    an audio file.
-//  - If the user enabled external clock (ClockSourceExternal), the samples read
-//    from the receiver are decoded immediately and hence the user is
-//    responsible to call read operation according to the sample rate. This mode
-//    is useful when the user passes samples to a realtime destination with its
-//    own clock, e.g. to an audio device. Internal clock should not be used in
-//    this case because the audio device and the CPU might have slightly
-//    different clocks, and the difference will eventually lead to an underrun
-//    or an overrun.
+//   - If the user enabled internal clock (ClockSourceInternal), the receiver
+//     employs a CPU timer to block reads until it's time to decode the next
+//     bunch of samples according to the configured sample rate. This mode is
+//     useful when the user passes samples to a non-realtime destination, e.g. to
+//     an audio file.
+//   - If the user enabled external clock (ClockSourceExternal), the samples read
+//     from the receiver are decoded immediately and hence the user is
+//     responsible to call read operation according to the sample rate. This mode
+//     is useful when the user passes samples to a realtime destination with its
+//     own clock, e.g. to an audio device. Internal clock should not be used in
+//     this case because the audio device and the CPU might have slightly
+//     different clocks, and the difference will eventually lead to an underrun
+//     or an overrun.
 //
 // # Thread safety
 //

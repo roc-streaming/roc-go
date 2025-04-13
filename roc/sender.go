@@ -32,16 +32,16 @@ import (
 //
 // # Life cycle
 //
-//  - A sender is created using OpenSender().
-//  - Optionally, the sender parameters may be fine-tuned using
-//    Sender.Configure().
-//  - The sender either binds local endpoints using Sender.Bind(), allowing
-//    receivers connecting to them, or itself connects to remote receiver
-//    endpoints using Sender.Connect(). What approach to use is up to the user.
-//  - The audio stream is iteratively written to the sender using Sender.WriteFloats().
-//    The sender encodes the stream into packets and send to connected
-//    receiver(s).
-//  - The sender is destroyed using Sender.Close().
+//   - A sender is created using OpenSender().
+//   - Optionally, the sender parameters may be fine-tuned using
+//     Sender.Configure().
+//   - The sender either binds local endpoints using Sender.Bind(), allowing
+//     receivers connecting to them, or itself connects to remote receiver
+//     endpoints using Sender.Connect(). What approach to use is up to the user.
+//   - The audio stream is iteratively written to the sender using Sender.WriteFloats().
+//     The sender encodes the stream into packets and send to connected
+//     receiver(s).
+//   - The sender is destroyed using Sender.Close().
 //
 // # Slots, interfaces, and endpoints
 //
@@ -56,21 +56,21 @@ import (
 //
 // Supported actions with the interface:
 //
-//  - Call Sender.Bind() to bind the interface to a local Endpoint. In this
-//    case the sender accepts connections from receivers and sends media stream
-//    to all connected receivers.
-//  - Call Sender.Connect() to connect the interface to a remote Endpoint. In
-//    this case the sender initiates connection to the receiver and starts
-//    sending media stream to it.
+//   - Call Sender.Bind() to bind the interface to a local Endpoint. In this
+//     case the sender accepts connections from receivers and sends media stream
+//     to all connected receivers.
+//   - Call Sender.Connect() to connect the interface to a remote Endpoint. In
+//     this case the sender initiates connection to the receiver and starts
+//     sending media stream to it.
 //
 // Supported interface configurations:
 //
-//  - Connect InterfaceConsolidated to a remote endpoint (e.g. be an RTSP
-//    client).
-//  - Bind InterfaceConsolidated to a local endpoint (e.g. be an RTSP server).
-//  - Connect InterfaceAudioSource, InterfaceAudioRepair (optionally, for FEC),
-//    and InterfaceAudioControl (optionally, for control messages) to remote
-//    endpoints (e.g. be an RTP/FECFRAME/RTCP sender).
+//   - Connect InterfaceConsolidated to a remote endpoint (e.g. be an RTSP
+//     client).
+//   - Bind InterfaceConsolidated to a local endpoint (e.g. be an RTSP server).
+//   - Connect InterfaceAudioSource, InterfaceAudioRepair (optionally, for FEC),
+//     and InterfaceAudioControl (optionally, for control messages) to remote
+//     endpoints (e.g. be an RTP/FECFRAME/RTCP sender).
 //
 // Slots can be removed using Sender.Unlink(). Removing a slot also removes all
 // its interfaces and terminates all associated connections.
@@ -87,11 +87,11 @@ import (
 // Otherwise, the user should manually configure InterfaceAudioSource and
 // InterfaceAudioRepair interfaces:
 //
-//  - If FEC is disabled (FecEncodingDisable), only InterfaceAudioSource should
-//    be configured. It will be used to transmit audio packets.
-//  - If FEC is enabled, both InterfaceAudioSource and InterfaceAudioRepair
-//    interfaces should be configured. The second interface will be used to
-//    transmit redundant repair data.
+//   - If FEC is disabled (FecEncodingDisable), only InterfaceAudioSource should
+//     be configured. It will be used to transmit audio packets.
+//   - If FEC is enabled, both InterfaceAudioSource and InterfaceAudioRepair
+//     interfaces should be configured. The second interface will be used to
+//     transmit redundant repair data.
 //
 // The protocols for the two interfaces should correspond to each other and to
 // the FEC scheme. For example, if FecEncodingRs8m is used, the protocols should
@@ -130,19 +130,19 @@ import (
 // Sender should encode samples at a constant rate that is configured when the
 // sender is created. There are two ways to accomplish this:
 //
-//  - If the user enabled internal clock (ClockSourceInternal), the sender
-//    employs a CPU timer to block writes until it's time to encode the next
-//    bunch of samples according to the configured sample rate. This mode is
-//    useful when the user gets samples from a non-realtime source, e.g. from an
-//    audio file.
-//  - If the user enabled external clock (ClockSourceExternal), the samples
-//    written to the sender are encoded and sent immediately, and hence the user
-//    is responsible to call write operation according to the sample rate. This
-//    mode is useful when the user gets samples from a realtime source with its
-//    own clock, e.g. from an audio device. Internal clock should not be used in
-//    this case because the audio device and the CPU might have slightly
-//    different clocks, and the difference will eventually lead to an underrun
-//    or an overrun.
+//   - If the user enabled internal clock (ClockSourceInternal), the sender
+//     employs a CPU timer to block writes until it's time to encode the next
+//     bunch of samples according to the configured sample rate. This mode is
+//     useful when the user gets samples from a non-realtime source, e.g. from an
+//     audio file.
+//   - If the user enabled external clock (ClockSourceExternal), the samples
+//     written to the sender are encoded and sent immediately, and hence the user
+//     is responsible to call write operation according to the sample rate. This
+//     mode is useful when the user gets samples from a realtime source with its
+//     own clock, e.g. from an audio device. Internal clock should not be used in
+//     this case because the audio device and the CPU might have slightly
+//     different clocks, and the difference will eventually lead to an underrun
+//     or an overrun.
 //
 // # Thread safety
 //
