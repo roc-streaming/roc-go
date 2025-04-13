@@ -1,0 +1,47 @@
+name: "release"
+
+on:
+  push:
+    tags:
+      - v*
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  release:
+    needs: [build]
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check version
+        shell: bash
+        run: |
+          version_git="$(git describe --tags --abbrev=0 | sed s/v//g)"
+          version_src="$(sed -rn 's,.*bindingsVersion\s*=\s*"(\S+)".*,\1,p' ./roc/version.go)"
+
+          if [[ "$version_git" != "$version_src" ]]; then
+            echo "please update hardcoded version to current git version \"$version_git\"" \
+                >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

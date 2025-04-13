@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-      - v*
-    tags:
-      - v*
 
   pull_request:
 
@@ -15,9 +12,13 @@ on:
       - trigger_build
 
   workflow_dispatch:
+  workflow_call:
 
   schedule:
     - cron: '0 0 * * 1'
+
+permissions:
+  contents: read
 
 concurrency:
   group: build-${{ github.event.pull_request.number || github.ref }}
@@ -214,39 +215,3 @@ jobs:
             echo "please run 'go generate' and commit generated files"
             exit 1
           fi
-
-  release:
-    needs: [linux, macos, formatting, generation]
-    if: |
-      github.repository_owner == 'roc-streaming' &&
-      github.event_name == 'push' &&
-      startsWith(github.ref, 'refs/tags/v')
-
-    name: Release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.ref }}
-
-      - name: Check version
-        shell: bash
-        run: |
-          version_git="$(git describe --tags --abbrev=0 | sed s/v//g)"
-          version_src="$(sed -rn 's,.*bindingsVersion\s*=\s*"(\S+)".*,\1,p' ./roc/version.go)"
-
-          if [[ "$version_git" != "$version_src" ]]; then
-            echo "please update hardcoded version to current git version \"$version_git\"" \
-                >> "$GITHUB_OUTPUT"
-            exit 1
-          fi
-
-      - name: Create release
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
