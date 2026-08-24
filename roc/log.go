@@ -21,7 +21,7 @@ import (
 
 // LogLevel defines the logging verbosity.
 //
-//go:generate stringer -type LogLevel -trimprefix Log
+//go:generate go run golang.org/x/tools/cmd/stringer -type LogLevel -trimprefix Log
 type LogLevel int
 
 const (
