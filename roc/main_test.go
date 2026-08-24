@@ -1,7 +1,7 @@
 package roc
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"testing"
@@ -9,6 +9,6 @@ import (
 
 func TestMain(m *testing.M) {
 	// by default, disable logging; can be overridden by specific tests
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }

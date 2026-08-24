@@ -115,7 +115,7 @@ jobs:
         uses: golangci/golangci-lint-action@v9
         timeout-minutes: 20
         with:
-          version: v1.63.4
+          version: v2.12.2
           working-directory: roc
           args: --timeout=20m
 

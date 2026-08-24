@@ -2,7 +2,7 @@ package roc
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -75,7 +75,7 @@ func TestLog_Default(t *testing.T) {
 			tw := makeTestWriter()
 
 			log.SetOutput(&tw)
-			defer log.SetOutput(ioutil.Discard)
+			defer log.SetOutput(io.Discard)
 
 			tt.setupFn()
 
