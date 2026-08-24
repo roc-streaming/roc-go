@@ -1,14 +1,16 @@
 # Hacking guide
 
-## Development dependencies
+## Toolkit version
+
+Make sure you've installed matching Roc Toolkit version. If you've installed it via package manager, it may be outdated, and you may need to install from sources.
+
+Versioning policy and installation instructions are documented in README.
+
+## Go dependencies
 
 Additional dependencies needed for development:
 
 * [golangci-lint](https://golangci-lint.run/welcome/install/#local-installation)
-
-* [stringer](https://github.com/golang/tools)
-
-    `go install golang.org/x/tools/cmd/stringer@latest`
 
 ## Makefile targets
 
